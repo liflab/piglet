@@ -15,10 +15,11 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
+import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.EqualAssertionFinder;
@@ -27,6 +28,8 @@ import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder.CompoundAssertionToken;
 import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder.ConditionalAssertionToken;
 import ca.uqac.lif.codefinder.assertion.EqualAssertionFinder.EqualAssertionToken;
+import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder;
+import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder.EqualNonPrimitiveToken;
 import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder.IteratedAssertionToken;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
@@ -44,7 +47,9 @@ public class Main
 	public static void main(String[] args) throws FileSystemException, IOException
 	{
 		/* Setup parser (boilerplate code) */
-		TypeSolver typeSolver = new CombinedTypeSolver();
+		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
+		typeSolver.add(new ReflectionTypeSolver());
+		//typeSolver.add(new JavaParserTypeSolver(new HardDisk().open().getPath()));
 		ParserConfiguration parserConfiguration =
 				new ParserConfiguration().setSymbolResolver(
 						new JavaSymbolSolver(typeSolver));
@@ -68,11 +73,14 @@ public class Main
 			providers[i] = new FileSystemProvider(new HardDisk(files.get(i)));
 		}
 		UnionProvider fsp = new UnionProvider(providers);
+		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
+		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(found)));
 
 		// Read file(s)
-		Set<FoundToken> found = new HashSet<>();
+		
 		processBatch(parser, fsp, found);
 		System.out.println(fsp.filesProvided() + " file(s) analyzed");
+		System.out.println(found.size() + " assertion(s) found");
 		System.out.println();
 		displayResults(System.out, found);
 		HardDisk hd = new HardDisk("/").open();
@@ -92,11 +100,12 @@ public class Main
 	}
 
 	protected static void createReport(PrintStream out, Set<FoundToken> found)
-	{
+	{ 
 		List<FoundToken> compound = new ArrayList<FoundToken>();
 		List<FoundToken> conditional = new ArrayList<FoundToken>();
 		List<FoundToken> equal = new ArrayList<FoundToken>();
 		List<FoundToken> iterated = new ArrayList<FoundToken>();
+		List<FoundToken> equal_np = new ArrayList<FoundToken>();
 		for (FoundToken t : found)
 		{
 			if (t instanceof CompoundAssertionToken)
@@ -107,16 +116,20 @@ public class Main
 				equal.add(t);
 			if (t instanceof IteratedAssertionToken)
 				iterated.add(t);
+			if (t instanceof EqualNonPrimitiveToken)
+				equal_np.add(t);
 		}
 		out.println("<!DOCTYPE html>");
 		out.println("<html>");
 		out.println("<body>");
 		out.println("<h2>Summary</h2>");
+		out.println("<p>Total assertions found: " + found.size() + "</p>");
 		out.println("<ul>");
 		out.println("<li><a href=\"#compound\">Compound assertions</a></li>");
 		out.println("<li><a href=\"#conditional\">Conditional assertions</a></li>");
 		out.println("<li><a href=\"#equal\">Equal assertions</a></li>");
 		out.println("<li><a href=\"#iterated\">Iterated assertions</a></li>");
+		out.println("<li><a href=\"#equal_np\">Equal non primitive assertions</a></li>");
 		out.println("</ul>");
 		out.println("<h2><a name=\"compound\"></a>Compound assertions</h2>");
 		reportTokens(out, compound);
@@ -126,6 +139,8 @@ public class Main
 		reportTokens(out, equal);
 		out.println("<h2><a name=\"iterated\"></a>Iterated assertions</h2>");
 		reportTokens(out, iterated);
+		out.println("<h2><a name=\"equal_np\"></a>Equal non primitive assertions</h2>");
+		reportTokens(out, equal_np);
 		out.println("</body>");
 		out.println("</html>");
 	}
@@ -135,7 +150,14 @@ public class Main
 		out.println("<dl>");
 		for (FoundToken t : found)
 		{
-			out.println("<dt>" + t + "</dt>");
+			String clear_fn = t.getFilename().substring(1);
+			out.print("<dt><a href=\"");
+			out.print(clear_fn);
+			out.print("\">");
+			out.print(clear_fn);
+			out.print("</a> ");
+			out.print(t.getLocation());
+			out.println("</dt>");
 			out.println("<dd><pre>" + escape(t.getSnippet()) + "</pre></dd>");
 		}
 		out.println("</dl>");
@@ -147,6 +169,7 @@ public class Main
 		List<FoundToken> conditional = new ArrayList<FoundToken>();
 		List<FoundToken> equal = new ArrayList<FoundToken>();
 		List<FoundToken> iterated = new ArrayList<FoundToken>();
+		List<FoundToken> equal_np = new ArrayList<FoundToken>();
 		for (FoundToken t : found)
 		{
 			if (t instanceof CompoundAssertionToken)
@@ -157,6 +180,8 @@ public class Main
 				equal.add(t);
 			if (t instanceof IteratedAssertionToken)
 				iterated.add(t);
+			if (t instanceof EqualNonPrimitiveToken)
+				equal_np.add(t);
 		}
 		out.println("Compound assertions");
 		displayTokens(out, compound);
@@ -169,6 +194,9 @@ public class Main
 		out.println();
 		out.println("Iterated assertions");
 		displayTokens(out, iterated);
+		out.println();
+		out.println("Equal non primitive assertions");
+		displayTokens(out, equal_np);
 		out.println();
 	}
 
@@ -188,22 +216,31 @@ public class Main
 		{
 			CompilationUnit u = p.parse(is).getResult().get();
 			List<MethodDeclaration> methods = getTestCases(u);
+			if (methods.isEmpty())
+			{
+				// No test cases in this file
+				System.err.println("WARNING: No test cases found in " + file);
+			}
 			for (MethodDeclaration m : methods)
 			{
 				{
-					ConditionalAssertionFinder finder = new ConditionalAssertionFinder(file);
+					AssertionFinder finder = new ConditionalAssertionFinder(file);
 					finder.visit(m, found);
 				}
 				{
-					CompoundAssertionFinder finder = new CompoundAssertionFinder(file);
+					AssertionFinder finder = new CompoundAssertionFinder(file);
 					finder.visit(m, found);
 				}
 				{
-					IteratedAssertionFinder finder = new IteratedAssertionFinder(file);
+					AssertionFinder finder = new IteratedAssertionFinder(file);
 					finder.visit(m, found);
 				}
 				{
-					EqualAssertionFinder finder = new EqualAssertionFinder(file);
+					AssertionFinder finder = new EqualAssertionFinder(file);
+					finder.visit(m, found);
+				}
+				{
+					AssertionFinder finder = new EqualNonPrimitiveFinder(file);
 					finder.visit(m, found);
 				}
 			}
@@ -211,6 +248,7 @@ public class Main
 		catch (NoSuchElementException e)
 		{
 			// Ignore this file
+			System.err.println("Could not parse " + file);
 		}
 	}
 
@@ -246,6 +284,23 @@ public class Main
 		s = s.replace("<", "&lt;");
 		s = s.replace(">", "&gt;");
 		return s;
+	}
+	
+	protected static class EndRunnable implements Runnable
+	{
+		private final Set<FoundToken> m_found;
+		
+		public EndRunnable(Set<FoundToken> found)
+		{
+			super();
+			m_found = found;
+		}
+		
+		@Override
+		public void run()
+		{
+			displayResults(System.out, m_found);
+		}
 	}
 
 }

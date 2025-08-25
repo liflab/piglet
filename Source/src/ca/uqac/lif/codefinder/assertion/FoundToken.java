@@ -61,7 +61,25 @@ public class FoundToken implements Comparable<FoundToken>
 	@Override
 	public String toString()
 	{
-		return m_filename + " L" + (m_startLine == m_endLine ? m_startLine : m_startLine + "-" + m_endLine);
+		return m_filename + ": " + getLocation();
+	}
+	
+	/**
+	 * Returns the filename where the token was found.
+	 * @return The filename
+	 */
+	public String getFilename()
+	{
+		return m_filename;
+	}
+	
+	/**
+	 * Returns a string representing the location of the token in the file.
+	 * @return A string in the format "Lstart-end" or "Lstart" if start and end are the same
+	 */
+	public String getLocation()
+	{
+		return "L" + (m_startLine == m_endLine ? m_startLine : m_startLine + "-" + m_endLine);
 	}
 
 	/**
