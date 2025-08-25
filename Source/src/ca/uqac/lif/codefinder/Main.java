@@ -34,35 +34,49 @@ import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.HardDisk;
+import ca.uqac.lif.util.CliParser;
+import ca.uqac.lif.util.CliParser.Argument;
+import ca.uqac.lif.util.CliParser.ArgumentMap;
 
 public class Main
 {
 
 	public static void main(String[] args) throws FileSystemException, IOException
 	{
-		// Setup parser
+		/* Setup parser (boilerplate code) */
 		TypeSolver typeSolver = new CombinedTypeSolver();
 		ParserConfiguration parserConfiguration =
 				new ParserConfiguration().setSymbolResolver(
 						new JavaSymbolSolver(typeSolver));
 		JavaParser parser = new JavaParser(parserConfiguration);
+		
+		/* Setup command line options */
+		CliParser cli = new CliParser();
+		cli.addArgument(new Argument().withShortName("o").withLongName("output").withDescription("Output file (default: report.html)").withArgument("file"));
+		ArgumentMap map = cli.parse(args);
+		String output_file = "/tmp/report.html";
+		if (map.containsKey("o"))
+		{
+			output_file = map.getOptionValue("o");
+		}
+		
+		/* Setup the file provider */
+		List<String> files = map.getOthers(); // The files to read from
+		FileSystemProvider[] providers = new FileSystemProvider[files.size()];
+		for (int i = 0; i < files.size(); i++)
+		{
+			providers[i] = new FileSystemProvider(new HardDisk(files.get(i)));
+		}
+		UnionProvider fsp = new UnionProvider(providers);
 
-		// Read file
-		UnionProvider fsp = new UnionProvider(
-				//new FileSystemProvider(new HardDisk("/home/sylvain/Workspaces/repos/or-tools")),
-				//new FileSystemProvider(new HardDisk("/home/sylvain/Workspaces/repos/okio"))
-				new FileSystemProvider(new HardDisk("/home/sylvain/Workspaces/repos/intellij-community"))
-				//new FileSystemProvider(new HardDisk("/home/sylvain/Workspaces/beepbeep/core/CoreTest/src")),
-				//new FileSystemProvider(new HardDisk("/home/sylvain/Workspaces/lif-units/Source/srctest")),
-				//new FileSystemProvider(new HardDisk("/home/sylvain/Workspaces/Azrael/Source"))
-				);
+		// Read file(s)
 		Set<FoundToken> found = new HashSet<>();
 		processBatch(parser, fsp, found);
 		System.out.println(fsp.filesProvided() + " file(s) analyzed");
 		System.out.println();
 		displayResults(System.out, found);
-		HardDisk hd = new HardDisk("/tmp").open();
-		createReport(new PrintStream(hd.writeTo("report.html")), found);
+		HardDisk hd = new HardDisk("/").open();
+		createReport(new PrintStream(hd.writeTo(output_file)), found);
 		hd.close();
 	}
 

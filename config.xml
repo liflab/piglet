@@ -37,12 +37,14 @@
 
   <jar>
 	  <filename>codefinder</filename>
+	  <withdoc>false</withdoc>
   </jar>
 
   <srcdir>Source/src</srcdir>
   <bindir>Source/bin</bindir>
   <depdir>Source/dep</depdir>
   <docdir>Source/doc</docdir>
+
   
   <test>
     <!-- The filename pattern to recognize test files -->
@@ -69,7 +71,10 @@
      <name>JGit</name>
       <classname>org.eclipse.jgit.gitrepo.RepoProject</classname>
       <files>
-	      <jar>https://repo1.maven.org/maven2/org/eclipse/jgit/org.eclipse.jgit/7.3.0.202506031305-r/org.eclipse.jgit-7.3.0.202506031305-r.jar</jar>
+	      <!--
+		      <jar>https://repo1.maven.org/maven2/org/eclipse/jgit/org.eclipse.jgit/7.3.0.202506031305-r/org.eclipse.jgit-7.3.0.202506031305-r.jar</jar>
+	      Other version necessary to work with Java 11 -->
+	<jar>https://repo1.maven.org/maven2/org/eclipse/jgit/org.eclipse.jgit/6.4.0.202211300538-r/org.eclipse.jgit-6.4.0.202211300538-r.jar</jar>
       </files>
      <bundle>true</bundle>
     </dependency>
@@ -86,6 +91,14 @@
      <classname>ca.uqac.lif.fs.FileSystem</classname>
       <files>
 	      <jar>https://github.com/liflab/lif-fs/releases/download/v0.2.2/lif-fs-core-0.2.2.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
+     <dependency>
+     <name>Bullwinkle</name>
+     <classname>ca.uqac.lif.util.CliParser</classname>
+      <files>
+	      <jar>https://github.com/sylvainhalle/Bullwinkle/releases/download/v1.4.6/bullwinkle-1.4.6.jar</jar>
       </files>
      <bundle>true</bundle>
     </dependency>
