@@ -22,7 +22,7 @@ public class EqualAssertionFinder extends AssertionFinder
 	public void visit(MethodCallExpr n, Set<FoundToken> set)
 	{
 		super.visit(n, set);
-		if (isAssertion(n) && containsEquals(n))
+		if (isAssertionEquals(n) && containsEquals(n))
 		{
 			set.add(new EqualAssertionToken(m_filename, n.getBegin().get().line, n.toString()));
 		}

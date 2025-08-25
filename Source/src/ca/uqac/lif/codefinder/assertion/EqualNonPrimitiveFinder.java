@@ -16,7 +16,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	public void visit(MethodCallExpr n, Set<FoundToken> set)
 	{
 		super.visit(n, set);
-		if (isAssertion(n) && hasNonPrimitive(n))
+		if (isAssertionEquals(n) && hasNonPrimitive(n))
 		{
 			set.add(new EqualNonPrimitiveToken(m_filename, n.getBegin().get().line, n.toString()));
 		}

@@ -24,6 +24,12 @@ public abstract class AssertionFinder extends VoidVisitorAdapter<Set<FoundToken>
 				* name.compareTo("assertFalse") == 0;
 	}
 	
+	protected static boolean isAssertionEquals(MethodCallExpr m)
+	{
+		String name = m.getName().asString();
+		return name.compareTo("assertEquals") == 0;
+	}
+	
 	protected static boolean isAssertionNotEquals(MethodCallExpr m)
 	{
 		String name = m.getName().asString();
