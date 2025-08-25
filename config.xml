@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Configuration file for AntRun.
+  
+  Use this file to override the default properties contained
+  in build.xml. For example, to override the build.jar.filename
+  property (which sets the name of the compiled jar file), add
+  an element
+  
+  <jar>
+    <filename>foo</filename>
+  </jar>
+  
+  inside the <build> element.
+  
+  **Caveat emptor:** in some cases, changing this file and running ant
+  again will result in Ant using a cached version of the old file! Run
+  "ant dummy" to make sure that the correct data is being read. Otherwise
+  you might need to run "ant clean" and start over.
+-->
+<build>
+  <!-- Uncomment any of these if you want to override the build
+       script's default values -->
+
+  <!-- The project's name -->
+  <name>Code Finder</name>
+  
+  <!-- The project's author. Currently this only
+  shows up in the footer of the Javadoc documentation. -->
+  <!-- <author>Marty McFly</author> -->
+  
+  <!-- The project's main class -->
+  <mainclass>ca.uqac.lif.codefinder.Main</mainclass>
+  
+  <!-- The target JDK for which we are compiling -->
+  <targetjdk>11</targetjdk>
+
+  <jar>
+	  <filename>codefinder</filename>
+  </jar>
+
+  <srcdir>Source/src</srcdir>
+  <bindir>Source/bin</bindir>
+  <depdir>Source/dep</depdir>
+  <docdir>Source/doc</docdir>
+  
+  <test>
+    <!-- The filename pattern to recognize test files -->
+    <!-- <filenamepattern>
+           <src>**/*Test.java</src>
+           <bin>**/*Test.class</bin>
+         </filenamepattern> -->
+  </test>
+  
+  <!--
+    Write JAR dependencies here.
+  -->
+  <dependencies>
+    <dependency>
+     <name>JavaParser</name>
+      <classname>com.github.javaparser.JavaParser</classname>
+      <files>
+	      <jar>https://repo1.maven.org/maven2/com/github/javaparser/javaparser-core/3.27.0/javaparser-core-3.27.0.jar</jar>
+	      <jar>https://repo1.maven.org/maven2/com/github/javaparser/javaparser-symbol-solver-core/3.27.0/javaparser-symbol-solver-core-3.27.0.jar</jar>
+      </files>
+     <bundle>true</bundle>
+   </dependency>
+   <dependency>
+     <name>JGit</name>
+      <classname>org.eclipse.jgit.gitrepo.RepoProject</classname>
+      <files>
+	      <jar>https://repo1.maven.org/maven2/org/eclipse/jgit/org.eclipse.jgit/7.3.0.202506031305-r/org.eclipse.jgit-7.3.0.202506031305-r.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
+    <dependency>
+     <name>SLF4J</name>
+      <classname>org.slf4j.Logger</classname>
+      <files>
+	      <jar>https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
+    <dependency>
+     <name>lif-fs</name>
+     <classname>ca.uqac.lif.fs.FileSystem</classname>
+      <files>
+	      <jar>https://github.com/liflab/lif-fs/releases/download/v0.2.2/lif-fs-core-0.2.2.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
+ 
+  </dependencies>
+</build>
