@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
@@ -21,21 +23,14 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeS
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
 import ca.uqac.lif.codefinder.assertion.AnyAssertionFinder;
-import ca.uqac.lif.codefinder.assertion.AnyAssertionFinder.AnyAssertionToken;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.EqualAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.FoundToken;
 import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder;
-import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder.CompoundAssertionToken;
-import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder.ConditionalAssertionToken;
-import ca.uqac.lif.codefinder.assertion.EqualAssertionFinder.EqualAssertionToken;
 import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder;
-import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder.EqualNonPrimitiveToken;
 import ca.uqac.lif.codefinder.assertion.EqualStringFinder;
-import ca.uqac.lif.codefinder.assertion.EqualStringFinder.EqualStringToken;
-import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder.IteratedAssertionToken;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
@@ -48,7 +43,6 @@ import ca.uqac.lif.util.CliParser.ArgumentMap;
 
 public class Main
 {
-
 	public static void main(String[] args) throws FileSystemException, IOException
 	{
 		/* Setup command line options */
@@ -79,8 +73,6 @@ public class Main
 						new JavaSymbolSolver(typeSolver));
 		JavaParser parser = new JavaParser(parserConfiguration);
 		
-		
-		
 		/* Setup the file provider */
 		List<String> files = map.getOthers(); // The files to read from
 		FileSystemProvider[] providers = new FileSystemProvider[files.size()];
@@ -89,79 +81,84 @@ public class Main
 			providers[i] = new FileSystemProvider(new HardDisk(files.get(i)));
 		}
 		UnionProvider fsp = new UnionProvider(providers);
+		Map<String,List<FoundToken>> categorized = new ConcurrentHashMap<>();
 		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
-		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(found)));
+		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized)));
+		
+		// Instantiate assertion finders
+		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
+		finders.add(new AnyAssertionFinder(null));
+		finders.add(new CompoundAssertionFinder(null));
+		finders.add(new ConditionalAssertionFinder(null));
+		finders.add(new EqualAssertionFinder(null));
+		finders.add(new IteratedAssertionFinder(null));
+		finders.add(new EqualNonPrimitiveFinder(null));
+		finders.add(new EqualStringFinder(null));
 
 		// Read file(s)
 		
-		processBatch(parser, fsp, found);
+		processBatch(parser, fsp, finders, found);
 		System.out.println(fsp.filesProvided() + " file(s) analyzed");
 		System.out.println(found.size() + " assertion(s) found");
 		System.out.println();
-		displayResults(System.out, found);
+		categorize(categorized, found);
+		//displayResults(System.out, categorized);
 		HardDisk hd = new HardDisk("/").open();
-		createReport(new PrintStream(hd.writeTo(output_file)), found);
+		createReport(new PrintStream(hd.writeTo(output_file)), categorized);
 		hd.close();
 	}
 
-	protected static void processBatch(JavaParser p, FileProvider provider, Set<FoundToken> found) throws IOException
+	protected static void processBatch(JavaParser p, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found) throws IOException
 	{
 		while (provider.hasNext())
 		{
 			FileSource fs = provider.next();
 			InputStream stream = fs.getStream();
-			processFile(p, fs.getFilename(), stream, found);
+			processFile(p, fs.getFilename(), stream, finders, found);
 			stream.close();
 		}
 	}
-
-	protected static void createReport(PrintStream out, Set<FoundToken> found)
-	{ 
-		List<FoundToken> compound = new ArrayList<FoundToken>();
-		List<FoundToken> conditional = new ArrayList<FoundToken>();
-		List<FoundToken> equal = new ArrayList<FoundToken>();
-		List<FoundToken> iterated = new ArrayList<FoundToken>();
-		List<FoundToken> equal_np = new ArrayList<FoundToken>();
-		List<FoundToken> equal_string = new ArrayList<FoundToken>();
+	
+	protected static void categorize(Map<String,List<FoundToken>> map, Set<FoundToken> found)
+	{
 		for (FoundToken t : found)
 		{
-			if (t instanceof CompoundAssertionToken)
-				compound.add(t);
-			if (t instanceof ConditionalAssertionToken)
-				conditional.add(t);
-			if (t instanceof EqualAssertionToken)
-				equal.add(t);
-			if (t instanceof IteratedAssertionToken)
-				iterated.add(t);
-			if (t instanceof EqualNonPrimitiveToken)
-				equal_np.add(t);
-			if (t instanceof EqualStringToken)
-				equal_string.add(t);
+			addToMap(map, t);
 		}
+	}
+	
+	protected static void addToMap(Map<String, List<FoundToken>> map, FoundToken t)
+	{
+		List<FoundToken> list = null;
+		if (map.containsKey(t.getAssertionName()))
+		{
+			list = map.get(t.getAssertionName());
+		}
+		else
+		{
+			list = new ArrayList<FoundToken>();
+			map.put(t.getAssertionName(), list);
+		}
+		list.add(t);
+	}
+
+	protected static void createReport(PrintStream out, Map<String,List<FoundToken>> found)
+	{ 
 		out.println("<!DOCTYPE html>");
 		out.println("<html>");
 		out.println("<body>");
 		out.println("<h2>Summary</h2>");
-		out.println("<p>Total assertions found: " + found.size() + "</p>");
 		out.println("<ul>");
-		out.println("<li><a href=\"#compound\">Compound assertions</a> (" + compound.size() + ")</li>");
-		out.println("<li><a href=\"#conditional\">Conditional assertions</a> (" + conditional.size() + ")</li>");
-		out.println("<li><a href=\"#equal\">Equal assertions</a> (" + equal.size() + ")</li>");
-		out.println("<li><a href=\"#iterated\">Iterated assertions</a> (" + iterated.size() + ")</li>");
-		out.println("<li><a href=\"#equal_np\">Equal non primitive assertions</a> (" + equal_np.size() + ")</li>");
+		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
+		{
+			out.println("<li>" + e.getKey() + " (" + e.getValue().size() + ")</li>");
+		}
 		out.println("</ul>");
-		out.println("<h2><a name=\"compound\"></a>Compound assertions</h2>");
-		reportTokens(out, compound);
-		out.println("<h2><a name=\"conditional\"></a>Conditional assertions</h2>");
-		reportTokens(out, conditional);
-		out.println("<h2><a name=\"equal\"></a>Equal assertions</h2>");
-		reportTokens(out, equal);
-		out.println("<h2><a name=\"iterated\"></a>Iterated assertions</h2>");
-		reportTokens(out, iterated);
-		out.println("<h2><a name=\"equal_np\"></a>Equal non primitive assertions</h2>");
-		reportTokens(out, equal_np);
-		out.println("<h2><a name=\"equal_string\"></a>Equal string assertions</h2>");
-		reportTokens(out, equal_string);
+		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
+		{
+			out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
+			reportTokens(out, e.getValue());
+		}
 		out.println("</body>");
 		out.println("</html>");
 	}
@@ -184,51 +181,14 @@ public class Main
 		out.println("</dl>");
 	}
 
-	protected static void displayResults(PrintStream out, Set<FoundToken> found)
+	protected static void displayResults(PrintStream out, Map<String,List<FoundToken>> found)
 	{
-		List<FoundToken> any = new ArrayList<FoundToken>();
-		List<FoundToken> compound = new ArrayList<FoundToken>();
-		List<FoundToken> conditional = new ArrayList<FoundToken>();
-		List<FoundToken> equal = new ArrayList<FoundToken>();
-		List<FoundToken> iterated = new ArrayList<FoundToken>();
-		List<FoundToken> equal_np = new ArrayList<FoundToken>();
-		List<FoundToken> equal_str = new ArrayList<FoundToken>();
-		for (FoundToken t : found)
+		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{
-			if (t instanceof AnyAssertionToken)
-				any.add(t);
-			if (t instanceof CompoundAssertionToken)
-				compound.add(t);
-			if (t instanceof ConditionalAssertionToken)
-				conditional.add(t);
-			if (t instanceof EqualAssertionToken)
-				equal.add(t);
-			if (t instanceof IteratedAssertionToken)
-				iterated.add(t);
-			if (t instanceof EqualNonPrimitiveToken)
-				equal_np.add(t);
-			if (t instanceof EqualStringToken)
-				equal_str.add(t);
+			out.println(e.getKey() + " : " + e.getValue().size());
+			displayTokens(out, e.getValue());
+			out.println();
 		}
-		out.println("All assertions : " + any.size());
-		out.println("Compound assertions");
-		displayTokens(out, compound);
-		out.println();
-		out.println("Conditional assertions");
-		displayTokens(out, conditional);
-		out.println();
-		out.println("Equal assertions");
-		displayTokens(out, equal);
-		out.println();
-		out.println("Iterated assertions");
-		displayTokens(out, iterated);
-		out.println();
-		out.println("Equal non primitive assertions");
-		displayTokens(out, equal_np);
-		out.println();
-		out.println("Equal string assertions");
-		displayTokens(out, equal_str);
-		out.println();
 	}
 
 	protected static void displayTokens(PrintStream out, List<FoundToken> found)
@@ -241,7 +201,7 @@ public class Main
 		}
 	}
 
-	protected static void processFile(JavaParser p, String file, InputStream is, Set<FoundToken> found)
+	protected static void processFile(JavaParser p, String file, InputStream is, Set<AssertionFinder> finders, Set<FoundToken> found)
 	{
 		try
 		{
@@ -254,33 +214,10 @@ public class Main
 			}
 			for (MethodDeclaration m : methods)
 			{
+				for (AssertionFinder f : finders)
 				{
-					AssertionFinder finder = new AnyAssertionFinder(file);
-					finder.visit(m, found);
-				}
-				{
-					AssertionFinder finder = new ConditionalAssertionFinder(file);
-					finder.visit(m, found);
-				}
-				{
-					AssertionFinder finder = new CompoundAssertionFinder(file);
-					finder.visit(m, found);
-				}
-				{
-					AssertionFinder finder = new IteratedAssertionFinder(file);
-					finder.visit(m, found);
-				}
-				{
-					AssertionFinder finder = new EqualAssertionFinder(file);
-					finder.visit(m, found);
-				}
-				{
-					AssertionFinder finder = new EqualNonPrimitiveFinder(file);
-					finder.visit(m, found);
-				}
-				{
-					AssertionFinder finder = new EqualStringFinder(file);
-					finder.visit(m, found);
+					AssertionFinder new_f = f.newFinder(file);
+					new_f.visit(m, found);
 				}
 			}
 		}
@@ -327,9 +264,9 @@ public class Main
 	
 	protected static class EndRunnable implements Runnable
 	{
-		private final Set<FoundToken> m_found;
+		private final Map<String,List<FoundToken>> m_found;
 		
-		public EndRunnable(Set<FoundToken> found)
+		public EndRunnable(Map<String,List<FoundToken>> found)
 		{
 			super();
 			m_found = found;

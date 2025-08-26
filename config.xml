@@ -102,6 +102,15 @@
       </files>
      <bundle>true</bundle>
     </dependency>
+     <dependency>
+     <name>jHighlight</name>
+     <classname>org.codelibs.jhighlight.JHighlight</classname>
+      <files>
+	      <jar>https://repo1.maven.org/maven2/org/codelibs/jhighlight/1.1.0/jhighlight-1.1.0.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
+ 
  
   </dependencies>
 </build>

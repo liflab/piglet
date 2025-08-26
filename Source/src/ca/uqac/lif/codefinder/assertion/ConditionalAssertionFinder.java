@@ -14,7 +14,13 @@ public class ConditionalAssertionFinder extends AssertionFinder
 {	
 	public ConditionalAssertionFinder(String filename)
 	{
-		super(filename);
+		super("Conditional assertions", filename);
+	}
+
+	@Override
+	public AssertionFinder newFinder(String filename)
+	{
+		return new ConditionalAssertionFinder(filename);
 	}
 
 	@Override
@@ -39,12 +45,19 @@ public class ConditionalAssertionFinder extends AssertionFinder
 		}
 	}
 
-	public static class ConditionalAssertionToken extends FoundToken
+	public class ConditionalAssertionToken extends FoundToken
 	{
 		public ConditionalAssertionToken(String filename, int start_line, int end_line, String snippet)
 		{
 			super(filename, start_line, end_line, snippet);
-		}		
+		}
+
+		@Override
+		public String getAssertionName()
+		{
+			return ConditionalAssertionFinder.this.getName();
+		}
+
 	}
 
 }

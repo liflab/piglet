@@ -9,7 +9,13 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 {
 	public EqualNonPrimitiveFinder(String filename)
 	{
-		super(filename);
+		super("Equality between non-primitive values", filename);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename)
+	{
+		return new EqualNonPrimitiveFinder(filename);
 	}
 	
 	@Override
@@ -62,11 +68,17 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		return false;
 	}
 	
-	public static class EqualNonPrimitiveToken extends FoundToken
+	public class EqualNonPrimitiveToken extends FoundToken
 	{
 		public EqualNonPrimitiveToken(String filename, int line, String snippet)
 		{
 			super(filename, line, line, snippet);
+		}
+		
+		@Override
+		public String getAssertionName()
+		{
+			return EqualNonPrimitiveFinder.this.getName();
 		}
 	}
 

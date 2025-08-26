@@ -4,7 +4,7 @@ package ca.uqac.lif.codefinder.assertion;
  * Represents a token found in a source file, such as an assertion or code fragment.
  * Stores the filename, start and end line numbers, and an optional code snippet.
  */
-public class FoundToken implements Comparable<FoundToken>
+public abstract class FoundToken implements Comparable<FoundToken>
 {
 	/** The name of the file where the token was found. */
 	protected final String m_filename;
@@ -81,6 +81,12 @@ public class FoundToken implements Comparable<FoundToken>
 	{
 		return "L" + (m_startLine == m_endLine ? m_startLine : m_startLine + "-" + m_endLine);
 	}
+	
+	/**
+	 * Returns the name of the assertion or token type.
+	 * @return The assertion name
+	 */
+	public abstract String getAssertionName();
 
 	/**
 	 * Compares this token to another by filename and start line.

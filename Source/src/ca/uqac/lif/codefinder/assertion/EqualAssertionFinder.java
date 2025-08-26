@@ -15,7 +15,13 @@ public class EqualAssertionFinder extends AssertionFinder
 {	
 	public EqualAssertionFinder(String filename)
 	{
-		super(filename);
+		super("Object.equals", filename);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename)
+	{
+		return new EqualAssertionFinder(filename);
 	}
 
 	@Override
@@ -50,12 +56,18 @@ public class EqualAssertionFinder extends AssertionFinder
 		return false;
 	}
 	
-	public static class EqualAssertionToken extends FoundToken
+	public class EqualAssertionToken extends FoundToken
 	{
 		public EqualAssertionToken(String filename, int line, String snippet)
 		{
 			super(filename, line, line, snippet);
 		}		
+		
+		@Override
+		public String getAssertionName()
+		{
+			return EqualAssertionFinder.this.getName();
+		}
 	}
 
 	protected static boolean isComplex(BinaryExpr be)

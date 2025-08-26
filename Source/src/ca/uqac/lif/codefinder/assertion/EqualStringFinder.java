@@ -9,7 +9,13 @@ public class EqualStringFinder extends AssertionFinder
 {
 	public EqualStringFinder(String filename)
 	{
-		super(filename);
+		super("Equality between strings", filename);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename)
+	{
+		return new EqualStringFinder(filename);
 	}
 	
 	@Override
@@ -22,6 +28,11 @@ public class EqualStringFinder extends AssertionFinder
 		}
 	}
 	
+	/**
+	 * Determines whether the given method call expression compares two strings.
+	 * @param n The method call expression to examine
+	 * @return true if the method call compares two strings, false otherwise
+	 */
 	protected static boolean comparesStrings(MethodCallExpr n)
 	{
 		if (n.getArguments().size() < 2)
@@ -46,11 +57,17 @@ public class EqualStringFinder extends AssertionFinder
 		return false;
 	}
 	
-	public static class EqualStringToken extends FoundToken
+	public class EqualStringToken extends FoundToken
 	{
 		public EqualStringToken(String filename, int line, String snippet)
 		{
 			super(filename, line, line, snippet);
+		}
+		
+		@Override
+		public String getAssertionName()
+		{
+			return EqualStringFinder.this.getName();
 		}
 	}
 

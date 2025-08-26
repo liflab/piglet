@@ -14,7 +14,13 @@ public class CompoundAssertionFinder extends AssertionFinder
 {	
 	public CompoundAssertionFinder(String filename)
 	{
-		super(filename);
+		super("Compound assertions", filename);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename)
+	{
+		return new CompoundAssertionFinder(filename);
 	}
 
 	@Override
@@ -77,11 +83,17 @@ public class CompoundAssertionFinder extends AssertionFinder
 
 	}
 	
-	public static class CompoundAssertionToken extends FoundToken
+	public class CompoundAssertionToken extends FoundToken
 	{
 		public CompoundAssertionToken(String filename, int line, String snippet)
 		{
 			super(filename, line, line, snippet);
 		}		
+		
+		@Override
+		public String getAssertionName()
+		{
+			return CompoundAssertionFinder.this.getName();
+		}
 	}
 }

@@ -15,7 +15,13 @@ public class IteratedAssertionFinder extends AssertionFinder
 {	
 	public IteratedAssertionFinder(String filename)
 	{
-		super(filename);
+		super("Iterated assertions", filename);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename)
+	{
+		return new IteratedAssertionFinder(filename);
 	}
 	
 	@Override
@@ -39,12 +45,18 @@ public class IteratedAssertionFinder extends AssertionFinder
 		findAssertions(n, n, set);
 	}
 	
-	public static class IteratedAssertionToken extends FoundToken
+	public class IteratedAssertionToken extends FoundToken
 	{
 		public IteratedAssertionToken(String filename, int start_line, int end_line, String snippet)
 		{
 			super(filename, start_line, end_line, snippet);
-		}		
+		}	
+		
+		@Override
+		public String getAssertionName()
+		{
+			return IteratedAssertionFinder.this.getName();
+		}
 	}
 	
 	protected void findAssertions(Node source, Node n, Set<FoundToken> set)
