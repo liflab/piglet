@@ -37,6 +37,7 @@ import ca.uqac.lif.codefinder.assertion.FoundToken;
 import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder;
 import ca.uqac.lif.codefinder.assertion.EqualStringFinder;
+import ca.uqac.lif.codefinder.assertion.EqualityWithMessageFinder;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
@@ -119,6 +120,7 @@ public class Main
 		finders.add(new IteratedAssertionFinder(null));
 		finders.add(new EqualNonPrimitiveFinder(null));
 		finders.add(new EqualStringFinder(null));
+		finders.add(new EqualityWithMessageFinder(null));
 
 		// Read file(s)
 		StatusCallback status = new StatusCallback(stdout, total);
@@ -219,34 +221,37 @@ public class Main
 		out.println("</ul>");
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{
-			out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
-			reportTokens(out, e.getValue());
+			if (e.getKey().compareTo(AnyAssertionFinder.NAME) != 0)
+			{
+				out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
+				reportTokens(out, e.getValue());
+			}
 		}
 		out.println("</body>");
 		out.println("</html>");
 	}
-	
+
 	protected static void printHighlightCss(PrintStream out)
 	{
 		out.println("<style type=\"text/css\">\n" + "code {\n"
-        + "color: rgb(0,0,0); font-family: monospace; font-size: 12px; white-space: nowrap;\n"
-        + "}\n" + ".java_plain {\n" + "color: rgb(0,0,0);\n"
-        + "}\n" + ".java_keyword {\n"
-        + "color: rgb(0,0,0); font-weight: bold;\n" + "}\n"
-        + ".java_javadoc_tag {\n"
-        + "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic; font-weight: bold;\n"
-        + "}\n" + "h1 {\n"
-        + "font-family: sans-serif; font-size: 16pt; font-weight: bold; color: rgb(0,0,0); background: rgb(210,210,210); border: solid 1px black; padding: 5px; text-align: center;\n"
-        + "}\n" + ".java_type {\n" + "color: rgb(0,44,221);\n"
-        + "}\n" + ".java_literal {\n" + "color: rgb(188,0,0);\n"
-        + "}\n" + ".java_javadoc_comment {\n"
-        + "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic;\n"
-        + "}\n" + ".java_operator {\n"
-        + "color: rgb(0,124,31);\n" + "}\n"
-        + ".java_separator {\n" + "color: rgb(0,33,255);\n"
-        + "}\n" + ".java_comment {\n"
-        + "color: rgb(147,147,147); background-color: rgb(247,247,247);\n"
-        + "}\n" + "    </style>\n");
+				+ "color: rgb(0,0,0); font-family: monospace; font-size: 12px; white-space: nowrap;\n"
+				+ "}\n" + ".java_plain {\n" + "color: rgb(0,0,0);\n"
+				+ "}\n" + ".java_keyword {\n"
+				+ "color: rgb(0,0,0); font-weight: bold;\n" + "}\n"
+				+ ".java_javadoc_tag {\n"
+				+ "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic; font-weight: bold;\n"
+				+ "}\n" + "h1 {\n"
+				+ "font-family: sans-serif; font-size: 16pt; font-weight: bold; color: rgb(0,0,0); background: rgb(210,210,210); border: solid 1px black; padding: 5px; text-align: center;\n"
+				+ "}\n" + ".java_type {\n" + "color: rgb(0,44,221);\n"
+				+ "}\n" + ".java_literal {\n" + "color: rgb(188,0,0);\n"
+				+ "}\n" + ".java_javadoc_comment {\n"
+				+ "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic;\n"
+				+ "}\n" + ".java_operator {\n"
+				+ "color: rgb(0,124,31);\n" + "}\n"
+				+ ".java_separator {\n" + "color: rgb(0,33,255);\n"
+				+ "}\n" + ".java_comment {\n"
+				+ "color: rgb(147,147,147); background-color: rgb(247,247,247);\n"
+				+ "}\n" + "    </style>\n");
 	}
 
 	protected static void reportTokens(PrintStream out, List<FoundToken> found) throws IOException
@@ -264,7 +269,6 @@ public class Main
 			out.println("</dt>");
 			String code = t.getSnippet();
 			Renderer rend = XhtmlRendererFactory.getRenderer(JAVA);
-			
 			String html = rend.highlight("", code, "utf-8", true);;
 			out.println("<dd><pre>" + html + "</pre></dd>");
 		}

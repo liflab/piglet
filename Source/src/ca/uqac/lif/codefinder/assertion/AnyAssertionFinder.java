@@ -9,9 +9,11 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
  */
 public class AnyAssertionFinder extends AssertionFinder
 {	
+	public static final String NAME = "All assertions";
+	
 	public AnyAssertionFinder(String filename)
 	{
-		super("All assertions", filename);
+		super(NAME, filename);
 	}
 	
 	@Override
