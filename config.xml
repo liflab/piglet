@@ -118,6 +118,14 @@
       </files>
      <bundle>true</bundle>
     </dependency>
+     <dependency>
+     <name>Apache Commons IO</name>
+     <classname>org.apache.commons.io.IO</classname>
+      <files>
+	      <jar>https://repo1.maven.org/maven2/commons-io/commons-io/2.20.0/commons-io-2.20.0.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
  
  
   </dependencies>
