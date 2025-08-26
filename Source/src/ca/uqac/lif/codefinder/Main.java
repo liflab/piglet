@@ -65,6 +65,11 @@ public class Main
 		ArgumentMap map = cli.parse(args);
 		String output_file = "/tmp/report.html";
 		String source_path = null;
+		if (map.containsKey("no-color"))
+		{
+			stdout.disableColors();
+			stderr.disableColors();
+		}
 		if (map.containsKey("quiet"))
 		{
 			quiet = true;
@@ -163,6 +168,7 @@ public class Main
 		cli.addArgument(new Argument().withShortName("t").withLongName("threads").withArgument("n").withDescription("Use up to n threads"));
 		cli.addArgument(new Argument().withShortName("q").withLongName("quiet").withDescription("Do not show error messages"));
 		cli.addArgument(new Argument().withShortName("m").withLongName("summary").withDescription("Only show a summary at the CLI"));
+		cli.addArgument(new Argument().withShortName("c").withLongName("no-color").withDescription("Disable colored output"));
 		return cli;
 	}
 
