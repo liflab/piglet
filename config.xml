@@ -110,6 +110,14 @@
       </files>
      <bundle>true</bundle>
     </dependency>
+    <dependency>
+     <name>Google Collect</name>
+     <classname>com.google.common.collect.ImmutableList</classname>
+      <files>
+	      <jar>https://dist.wso2.org/maven2/com/google/common/google-collect/1.0-rc1/google-collect-1.0-rc1.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
  
  
   </dependencies>

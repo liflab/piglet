@@ -12,9 +12,6 @@ public class UnionProvider implements FileProvider
 	/** The index of the current provider being used. */
 	protected int m_currentIndex;
 
-	/** The total number of files provided so far. */
-	protected int m_filesProvided;
-
 	/**
 	 * Constructs a UnionProvider from the given file providers.
 	 * @param providers The file providers to combine
@@ -24,7 +21,6 @@ public class UnionProvider implements FileProvider
 		super();
 		m_providers = providers;
 		m_currentIndex = 0;
-		m_filesProvided = 0;
 	}
 
 	/**
@@ -55,7 +51,6 @@ public class UnionProvider implements FileProvider
 		{
 			if (m_providers[m_currentIndex].hasNext())
 			{
-				m_filesProvided++;
 				return m_providers[m_currentIndex].next();
 			}
 		}
@@ -69,6 +64,11 @@ public class UnionProvider implements FileProvider
 	@Override
 	public int filesProvided()
 	{
-		return m_filesProvided;
+		int files = 0;
+		for (FileProvider p : m_providers)
+		{
+			files += p.filesProvided();
+		}
+		return files;
 	}
 }

@@ -8,20 +8,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
+import ca.uqac.lif.codefinder.AnsiPrinter.Color;
 import ca.uqac.lif.codefinder.assertion.AnyAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
@@ -36,6 +37,7 @@ import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.fs.FileSystemException;
+import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.util.CliParser;
 import ca.uqac.lif.util.CliParser.Argument;
@@ -45,22 +47,39 @@ public class Main
 {
 	public static void main(String[] args) throws FileSystemException, IOException
 	{
+		AnsiPrinter stderr = new AnsiPrinter(System.err);
+		AnsiPrinter stdout = new AnsiPrinter(System.out);
+
+		int num_threads = 2;
+		boolean quiet = false;
+		boolean summary = false;
+
 		/* Setup command line options */
-		CliParser cli = new CliParser();
-		cli.addArgument(new Argument().withShortName("o").withLongName("output").withDescription("Output file (default: report.html)").withArgument("file"));
-		cli.addArgument(new Argument().withShortName("s").withLongName("source").withDescription("Additional source in path").withArgument("path"));
+		CliParser cli = setupCli();
 		ArgumentMap map = cli.parse(args);
 		String output_file = "/tmp/report.html";
 		String source_path = null;
-		if (map.containsKey("o"))
+		if (map.containsKey("quiet"))
 		{
-			output_file = map.getOptionValue("o");
+			quiet = true;
+		}
+		if (map.containsKey("summary"))
+		{
+			summary = true;
+		}
+		if (map.containsKey("output"))
+		{
+			output_file = map.getOptionValue("output");
 		}
 		if (map.containsKey("s"))
 		{
-			source_path = map.getOptionValue("s");
+			source_path = map.getOptionValue("source");
 		}
-		
+		if (map.hasOption("threads"))
+		{
+			num_threads = Integer.parseInt(map.getOptionValue("threads").trim());
+		}
+
 		/* Setup parser (boilerplate code) */
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
 		typeSolver.add(new ReflectionTypeSolver());
@@ -71,20 +90,21 @@ public class Main
 		ParserConfiguration parserConfiguration =
 				new ParserConfiguration().setSymbolResolver(
 						new JavaSymbolSolver(typeSolver));
-		JavaParser parser = new JavaParser(parserConfiguration);
-		
+		//JavaParser parser = new JavaParser(parserConfiguration);
+
 		/* Setup the file provider */
-		List<String> files = map.getOthers(); // The files to read from
-		FileSystemProvider[] providers = new FileSystemProvider[files.size()];
-		for (int i = 0; i < files.size(); i++)
+		List<String> folders = map.getOthers(); // The files to read from
+		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
+		for (int i = 0; i < folders.size(); i++)
 		{
-			providers[i] = new FileSystemProvider(new HardDisk(files.get(i)));
+			providers[i] = new FileSystemProvider(new HardDisk(folders.get(i)));
 		}
 		UnionProvider fsp = new UnionProvider(providers);
+		int total = fsp.filesProvided();
 		Map<String,List<FoundToken>> categorized = new ConcurrentHashMap<>();
 		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
-		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized)));
-		
+		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(stdout, categorized, summary)));
+
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
 		finders.add(new AnyAssertionFinder(null));
@@ -96,29 +116,64 @@ public class Main
 		finders.add(new EqualStringFinder(null));
 
 		// Read file(s)
-		
-		processBatch(parser, fsp, finders, found);
-		System.out.println(fsp.filesProvided() + " file(s) analyzed");
-		System.out.println(found.size() + " assertion(s) found");
-		System.out.println();
+		StatusCallback status = new StatusCallback(stdout, total);
+		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
+		processBatch(executor, parserConfiguration, fsp, finders, found, quiet, status);
+		executor.shutdown();
+		try
+		{
+			if (!executor.awaitTermination(120, TimeUnit.SECONDS))
+			{
+				executor.shutdownNow();
+				if (!executor.awaitTermination(120, TimeUnit.SECONDS))
+				{
+					stderr.println("Cannot terminate process");
+				}
+			}
+		}
+		catch (InterruptedException e)
+		{
+			// (Re-)Cancel if current thread also interrupted
+			executor.shutdownNow();
+			// Preserve interrupt status
+			Thread.currentThread().interrupt();
+		}
+		stdout.print("\r\033[2K");
+		stdout.println(fsp.filesProvided() + " file(s) analyzed");
+		stdout.println(found.size() + " assertion(s) found");
+		stdout.println();
 		categorize(categorized, found);
-		//displayResults(System.out, categorized);
 		HardDisk hd = new HardDisk("/").open();
 		createReport(new PrintStream(hd.writeTo(output_file)), categorized);
 		hd.close();
 	}
 
-	protected static void processBatch(JavaParser p, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found) throws IOException
+	protected static CliParser setupCli()
+	{
+		CliParser cli = new CliParser();
+		cli.addArgument(new Argument().withShortName("o").withLongName("output").withDescription("Output file (default: report.html)").withArgument("file"));
+		cli.addArgument(new Argument().withShortName("s").withLongName("source").withDescription("Additional source in path").withArgument("path"));
+		cli.addArgument(new Argument().withShortName("t").withLongName("threads").withArgument("n").withDescription("Use up to n threads"));
+		cli.addArgument(new Argument().withShortName("q").withLongName("quiet").withDescription("Do not show error messages"));
+		cli.addArgument(new Argument().withShortName("m").withLongName("summary").withDescription("Only show a summary at the CLI"));
+		return cli;
+	}
+
+	protected static void processBatch(Executor e, ParserConfiguration conf, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status) throws IOException, FileSystemException
 	{
 		while (provider.hasNext())
 		{
 			FileSource fs = provider.next();
 			InputStream stream = fs.getStream();
-			processFile(p, fs.getFilename(), stream, finders, found);
+			String code = new String(FileUtils.toBytes(stream));
+			stream.close();
+			e.execute(new AssertionFinderRunnable(new JavaParser(conf), fs.getFilename(), code, finders, found, quiet, status));
 			stream.close();
 		}
 	}
-	
+
+
+
 	protected static void categorize(Map<String,List<FoundToken>> map, Set<FoundToken> found)
 	{
 		for (FoundToken t : found)
@@ -126,7 +181,7 @@ public class Main
 			addToMap(map, t);
 		}
 	}
-	
+
 	protected static void addToMap(Map<String, List<FoundToken>> map, FoundToken t)
 	{
 		List<FoundToken> list = null;
@@ -181,17 +236,7 @@ public class Main
 		out.println("</dl>");
 	}
 
-	protected static void displayResults(PrintStream out, Map<String,List<FoundToken>> found)
-	{
-		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
-		{
-			out.println(e.getKey() + " : " + e.getValue().size());
-			displayTokens(out, e.getValue());
-			out.println();
-		}
-	}
-
-	protected static void displayTokens(PrintStream out, List<FoundToken> found)
+	protected static void displayTokens(AnsiPrinter out, List<FoundToken> found)
 	{
 		Collections.sort(found);
 		for (FoundToken t : found)
@@ -201,58 +246,7 @@ public class Main
 		}
 	}
 
-	protected static void processFile(JavaParser p, String file, InputStream is, Set<AssertionFinder> finders, Set<FoundToken> found)
-	{
-		try
-		{
-			CompilationUnit u = p.parse(is).getResult().get();
-			List<MethodDeclaration> methods = getTestCases(u);
-			if (methods.isEmpty())
-			{
-				// No test cases in this file
-				System.err.println("WARNING: No test cases found in " + file);
-			}
-			for (MethodDeclaration m : methods)
-			{
-				for (AssertionFinder f : finders)
-				{
-					AssertionFinder new_f = f.newFinder(file);
-					new_f.visit(m, found);
-				}
-			}
-		}
-		catch (NoSuchElementException e)
-		{
-			// Ignore this file
-			System.err.println("Could not parse " + file);
-		}
-	}
 
-	protected static List<MethodDeclaration> getTestCases(CompilationUnit u)
-	{
-		List<MethodDeclaration> list = new ArrayList<MethodDeclaration>();
-		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
-		for (MethodDeclaration m : methods)
-		{
-			if (isTest(m))
-			{
-				list.add(m);
-			}
-		}
-		return list;
-	}
-
-	protected static boolean isTest(MethodDeclaration m)
-	{
-		for (AnnotationExpr a : m.getAnnotations())
-		{
-			if (a.getName().asString().compareTo("Test") == 0)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
 
 	protected static String escape(String s)
 	{
@@ -261,22 +255,45 @@ public class Main
 		s = s.replace(">", "&gt;");
 		return s;
 	}
-	
+
 	protected static class EndRunnable implements Runnable
 	{
 		private final Map<String,List<FoundToken>> m_found;
-		
-		public EndRunnable(Map<String,List<FoundToken>> found)
+
+		private final AnsiPrinter m_stdout;
+
+		private final boolean m_summary;
+
+		public EndRunnable(AnsiPrinter stdout, Map<String,List<FoundToken>> found, boolean summary)
 		{
 			super();
 			m_found = found;
+			m_stdout = stdout;
+			m_summary = summary;
 		}
-		
+
 		@Override
 		public void run()
 		{
-			displayResults(System.out, m_found);
+			displayResults();
+		}
+
+		protected void displayResults()
+		{
+			for (Map.Entry<String, List<FoundToken>> e : m_found.entrySet())
+			{
+				m_stdout.print(AnsiPrinter.padToLength(e.getKey(), 36));
+				m_stdout.setForegroundColor(Color.DARK_GRAY);
+				m_stdout.print(": ");
+				m_stdout.setForegroundColor(Color.YELLOW);
+				m_stdout.println(e.getValue().size());
+				m_stdout.resetColors();
+				if (!m_summary)
+				{
+					displayTokens(m_stdout, e.getValue());
+					m_stdout.println();
+				}
+			}
 		}
 	}
-
 }

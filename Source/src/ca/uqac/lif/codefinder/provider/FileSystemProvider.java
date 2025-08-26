@@ -1,5 +1,6 @@
 package ca.uqac.lif.codefinder.provider;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -21,9 +22,6 @@ public class FileSystemProvider implements FileProvider
 	/** Iterator over the file names. */
 	protected Iterator<String> m_iterator;
 	
-	/** The number of files provided so far. */
-	protected int m_provided;
-	
 	/**
 	 * Constructs a FileSystemProvider for the given file system.
 	 * @param fs The file system to provide files from
@@ -32,10 +30,13 @@ public class FileSystemProvider implements FileProvider
 	public FileSystemProvider(FileSystem fs) throws FileSystemException
 	{
 		super();
-		m_provided = 0;
 		m_fs = fs;
-		m_filenames = null;
-		m_iterator = null;
+		m_filenames = new ArrayList<String>();
+		m_fs.open();
+		JavaFileFinder jff = new JavaFileFinder(m_fs);
+		jff.crawl();
+		m_filenames = jff.getFiles();
+		m_iterator = m_filenames.iterator();
 	}
 	
 	/**
@@ -45,24 +46,6 @@ public class FileSystemProvider implements FileProvider
 	@Override
 	public boolean hasNext()
 	{
-		if (m_iterator == null)
-		{
-			try
-			{
-				prepare();
-				boolean b = m_iterator.hasNext();
-				if (!b)
-				{
-					m_fs.close();
-				}
-				return b;
-			}
-			catch (FileSystemException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 		return m_iterator.hasNext();
 	}
 
@@ -75,12 +58,7 @@ public class FileSystemProvider implements FileProvider
 	{
 		try
 		{
-			if (m_iterator == null)
-			{
-				prepare();
-			}
 			String filename = m_iterator.next();
-			m_provided++;
 			return new FileSource(filename, m_fs.readFrom(filename));
 		}
 		catch (FileSystemException e)
@@ -90,19 +68,6 @@ public class FileSystemProvider implements FileProvider
 		}
 		return null;
 	}
-	
-	/**
-	 * Prepares the provider by opening the file system and finding Java files.
-	 * @throws FileSystemException If an error occurs while accessing the file system
-	 */
-	protected void prepare() throws FileSystemException
-	{
-		m_fs.open();
-		JavaFileFinder jff = new JavaFileFinder(m_fs);
-		jff.crawl();
-		m_filenames = jff.getFiles();
-		m_iterator = m_filenames.iterator();
-	}
 
 	/**
 	 * Returns the number of files provided so far.
@@ -111,7 +76,7 @@ public class FileSystemProvider implements FileProvider
 	@Override
 	public int filesProvided()
 	{
-		return m_provided;
+		return m_filenames.size();
 	}
 
 }
