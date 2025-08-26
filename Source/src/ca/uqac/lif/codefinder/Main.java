@@ -1,5 +1,7 @@
 package ca.uqac.lif.codefinder;
 
+import static org.codelibs.jhighlight.renderer.XhtmlRendererFactory.JAVA;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -14,6 +16,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.codelibs.jhighlight.renderer.Renderer;
+import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
@@ -197,10 +202,13 @@ public class Main
 		list.add(t);
 	}
 
-	protected static void createReport(PrintStream out, Map<String,List<FoundToken>> found)
+	protected static void createReport(PrintStream out, Map<String,List<FoundToken>> found) throws IOException
 	{ 
 		out.println("<!DOCTYPE html>");
 		out.println("<html>");
+		out.println("<head>");
+		printHighlightCss(out);
+		out.println("</head>");
 		out.println("<body>");
 		out.println("<h2>Summary</h2>");
 		out.println("<ul>");
@@ -217,8 +225,31 @@ public class Main
 		out.println("</body>");
 		out.println("</html>");
 	}
+	
+	protected static void printHighlightCss(PrintStream out)
+	{
+		out.println("<style type=\"text/css\">\n" + "code {\n"
+        + "color: rgb(0,0,0); font-family: monospace; font-size: 12px; white-space: nowrap;\n"
+        + "}\n" + ".java_plain {\n" + "color: rgb(0,0,0);\n"
+        + "}\n" + ".java_keyword {\n"
+        + "color: rgb(0,0,0); font-weight: bold;\n" + "}\n"
+        + ".java_javadoc_tag {\n"
+        + "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic; font-weight: bold;\n"
+        + "}\n" + "h1 {\n"
+        + "font-family: sans-serif; font-size: 16pt; font-weight: bold; color: rgb(0,0,0); background: rgb(210,210,210); border: solid 1px black; padding: 5px; text-align: center;\n"
+        + "}\n" + ".java_type {\n" + "color: rgb(0,44,221);\n"
+        + "}\n" + ".java_literal {\n" + "color: rgb(188,0,0);\n"
+        + "}\n" + ".java_javadoc_comment {\n"
+        + "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic;\n"
+        + "}\n" + ".java_operator {\n"
+        + "color: rgb(0,124,31);\n" + "}\n"
+        + ".java_separator {\n" + "color: rgb(0,33,255);\n"
+        + "}\n" + ".java_comment {\n"
+        + "color: rgb(147,147,147); background-color: rgb(247,247,247);\n"
+        + "}\n" + "    </style>\n");
+	}
 
-	protected static void reportTokens(PrintStream out, List<FoundToken> found)
+	protected static void reportTokens(PrintStream out, List<FoundToken> found) throws IOException
 	{
 		out.println("<dl>");
 		for (FoundToken t : found)
@@ -231,7 +262,11 @@ public class Main
 			out.print("</a> ");
 			out.print(t.getLocation());
 			out.println("</dt>");
-			out.println("<dd><pre>" + escape(t.getSnippet()) + "</pre></dd>");
+			String code = t.getSnippet();
+			Renderer rend = XhtmlRendererFactory.getRenderer(JAVA);
+			
+			String html = rend.highlight("", code, "utf-8", true);;
+			out.println("<dd><pre>" + html + "</pre></dd>");
 		}
 		out.println("</dl>");
 	}
