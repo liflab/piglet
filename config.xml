@@ -111,10 +111,10 @@
      <bundle>true</bundle>
     </dependency>
     <dependency>
-     <name>Google Collect</name>
+     <name>Google Guava</name>
      <classname>com.google.common.collect.ImmutableList</classname>
       <files>
-	      <jar>https://dist.wso2.org/maven2/com/google/common/google-collect/1.0-rc1/google-collect-1.0-rc1.jar</jar>
+	      <jar>https://repo1.maven.org/maven2/com/google/guava/guava/33.4.8-jre/guava-33.4.8-jre.jar</jar>
       </files>
      <bundle>true</bundle>
     </dependency>

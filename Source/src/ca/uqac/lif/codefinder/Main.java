@@ -42,6 +42,7 @@ import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
+import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
@@ -63,7 +64,7 @@ public class Main
 		/* Setup command line options */
 		CliParser cli = setupCli();
 		ArgumentMap map = cli.parse(args);
-		String output_file = "/tmp/report.html";
+		String output_file = "report.html";
 		String source_path = null;
 		if (map.containsKey("no-color"))
 		{
@@ -90,10 +91,31 @@ public class Main
 		{
 			num_threads = Integer.parseInt(map.getOptionValue("threads").trim());
 		}
+		
+		/* The path in which the executable is executed */
+		FilePath home_path = new FilePath(".");
 
+		/* Setup the file provider */
+		List<String> folders = map.getOthers(); // The files to read from
+		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
+		for (int i = 0; i < folders.size(); i++)
+		{
+			FilePath fold_path = home_path.chdir(new FilePath(folders.get(i)));
+			providers[i] = new FileSystemProvider(new HardDisk(fold_path.toString()));
+		}
+		UnionProvider fsp = new UnionProvider(providers);
+		int total = fsp.filesProvided();
+		Map<String,List<FoundToken>> categorized = new ConcurrentHashMap<>();
+		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
+		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(stdout, categorized, summary)));
+		
 		/* Setup parser (boilerplate code) */
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
 		typeSolver.add(new ReflectionTypeSolver());
+		/*for (String path : folders)
+		{
+			typeSolver.add(new JavaParserTypeSolver(path));
+		}*/
 		if (source_path != null)
 		{
 			typeSolver.add(new JavaParserTypeSolver(source_path));
@@ -101,20 +123,6 @@ public class Main
 		ParserConfiguration parserConfiguration =
 				new ParserConfiguration().setSymbolResolver(
 						new JavaSymbolSolver(typeSolver));
-		//JavaParser parser = new JavaParser(parserConfiguration);
-
-		/* Setup the file provider */
-		List<String> folders = map.getOthers(); // The files to read from
-		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
-		for (int i = 0; i < folders.size(); i++)
-		{
-			providers[i] = new FileSystemProvider(new HardDisk(folders.get(i)));
-		}
-		UnionProvider fsp = new UnionProvider(providers);
-		int total = fsp.filesProvided();
-		Map<String,List<FoundToken>> categorized = new ConcurrentHashMap<>();
-		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
-		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(stdout, categorized, summary)));
 
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
@@ -154,9 +162,15 @@ public class Main
 		stdout.println(fsp.filesProvided() + " file(s) analyzed");
 		stdout.println(found.size() + " assertion(s) found");
 		stdout.println();
+		
+		/* Categorize results and produce report */
 		categorize(categorized, found);
-		HardDisk hd = new HardDisk("/").open();
-		createReport(new PrintStream(hd.writeTo(output_file)), categorized);
+		FilePath output_path = home_path.chdir(getPathOfFile(output_file));
+		//System.out.println(getPathOfFile(new FilePath(output_file)));
+		System.out.println(output_path);
+		System.out.println(getFilename(output_file));
+		HardDisk hd = new HardDisk(FileUtils.trimSlash(output_path.toString())).open();
+		createReport(new PrintStream(hd.writeTo(getFilename(output_file))), categorized);
 		hd.close();
 	}
 
@@ -184,8 +198,6 @@ public class Main
 			stream.close();
 		}
 	}
-
-
 
 	protected static void categorize(Map<String,List<FoundToken>> map, Set<FoundToken> found)
 	{
@@ -222,7 +234,7 @@ public class Main
 		out.println("<ul>");
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{
-			out.println("<li>" + e.getKey() + " (" + e.getValue().size() + ")</li>");
+			out.println("<li><a href=\"#" + e.getKey() + "\">" + e.getKey() + "</a> (" + e.getValue().size() + ")</li>");
 		}
 		out.println("</ul>");
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
@@ -290,8 +302,48 @@ public class Main
 			out.println(t);
 		}
 	}
-
-
+	
+	protected static FilePath getPathOfFile(String path)
+	{
+		int last_slash = path.lastIndexOf('/');
+		if (last_slash == -1)
+		{
+			last_slash = path.lastIndexOf('\\');
+		}
+		FilePath path_f = null;
+		if (last_slash != -1)
+		{
+			path_f = new FilePath(path.substring(0, last_slash));
+		}
+		else
+		{
+			path_f = new FilePath(".");
+		}
+		if (path_f.toString().isEmpty())
+		{
+			path_f = new FilePath(".");
+		}
+		return path_f;
+	}
+	
+	protected static String getFilename(String path)
+	{
+		int last_slash = path.lastIndexOf('/');
+		if (last_slash == -1)
+		{
+			last_slash = path.lastIndexOf('\\');
+		}
+		String name = null;
+		if (last_slash != -1)
+		{
+			name = path.substring(last_slash + 1);
+		}
+		else
+		{
+			name = path;
+		}
+		return name;
+	}
 
 	protected static String escape(String s)
 	{
