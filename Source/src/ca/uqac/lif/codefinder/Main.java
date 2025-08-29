@@ -17,8 +17,6 @@
  */
 package ca.uqac.lif.codefinder;
 
-import static org.codelibs.jhighlight.renderer.XhtmlRendererFactory.JAVA;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -33,9 +31,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import org.codelibs.jhighlight.renderer.Renderer;
-import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
@@ -58,6 +53,7 @@ import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
+import ca.uqac.lif.codefinder.report.HtmlReporter;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
@@ -75,6 +71,15 @@ import ca.uqac.lif.util.CliParser.ArgumentMap;
  */
 public class Main
 {
+	/** Return code indicating successful execution */
+	public static final int RET_OK = 0;
+	
+	/** Return code indicating a file system error */
+	public static final int RET_FS = 1;
+	
+	/** Return code indicating an I/O error */
+	public static final int RET_IO = 2;
+	
 	/**
 	 * Main entry point of the application
 	 * @param args Command line arguments
@@ -82,6 +87,17 @@ public class Main
 	 * @throws IOException When an I/O error occurs
 	 */
 	public static void main(String[] args) throws FileSystemException, IOException
+	{
+		System.exit(doMain(args));
+	}
+	
+	/**
+	 * Main entry point of the application
+	 * @param args Command line arguments
+	 * @throws FileSystemException When a file system error occurs
+	 * @throws IOException When an I/O error occurs
+	 */
+	public static int doMain(String[] args)
 	{
 		AnsiPrinter stderr = new AnsiPrinter(System.err);
 		AnsiPrinter stdout = new AnsiPrinter(System.out);
@@ -130,6 +146,11 @@ public class Main
 			stdout.disableColors();
 			stderr.disableColors();
 		}
+		if (map.containsKey("help") || map.getOthers().size() == 0)
+		{
+			showUsage(stdout, cli);
+			return RET_OK;
+		}
 		
 		/* The path in which the executable is executed */
 		FilePath home_path = new FilePath(System.getProperty("user.dir"));
@@ -140,7 +161,14 @@ public class Main
 		for (int i = 0; i < folders.size(); i++)
 		{
 			FilePath fold_path = home_path.chdir(new FilePath(folders.get(i)));
-			providers[i] = new FileSystemProvider(new HardDisk(fold_path.toString()));
+			try
+			{
+				providers[i] = new FileSystemProvider(new HardDisk(fold_path.toString()));
+			}
+			catch (FileSystemException e)
+			{
+				return RET_FS;
+			}
 		}
 		UnionProvider fsp = new UnionProvider(providers);
 		int total = fsp.filesProvided();
@@ -173,7 +201,18 @@ public class Main
 		// Read file(s)
 		StatusCallback status = new StatusCallback(stdout, total);
 		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
-		processBatch(executor, parserConfiguration, fsp, finders, found, quiet, status, limit);
+		try
+		{
+			processBatch(executor, parserConfiguration, fsp, finders, found, quiet, status, limit);
+		}
+		catch (IOException e)
+		{
+			return RET_IO;
+		}
+		catch (FileSystemException e)
+		{
+			return RET_FS;
+		}
 		executor.shutdown();
 		try
 		{
@@ -202,11 +241,29 @@ public class Main
 		categorize(categorized, found);
 		FilePath output_path = home_path.chdir(getPathOfFile(output_file));
 		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
-		HardDisk hd = new HardDisk(output_path.toString()).open();
-		createReport(reverse_path, new PrintStream(hd.writeTo(getFilename(output_file))), categorized);
-		hd.close();
+		HardDisk hd;
+		try
+		{
+			hd = new HardDisk(output_path.toString()).open();
+			HtmlReporter reporter = new HtmlReporter(new PrintStream(hd.writeTo(getFilename(output_file))));
+			reporter.report(reverse_path, categorized);
+			hd.close();
+		}
+		catch (IOException e)
+		{
+			return RET_IO;
+		}
+		catch (FileSystemException e)
+		{
+			return RET_FS;
+		}
+		return RET_OK;
 	}
 
+	/**
+	 * Sets up the command line interface parser with the appropriate options.
+	 * @return The command line parser
+	 */
 	protected static CliParser setupCli()
 	{
 		CliParser cli = new CliParser();
@@ -217,7 +274,18 @@ public class Main
 		cli.addArgument(new Argument().withShortName("m").withLongName("summary").withDescription("Only show a summary at the CLI"));
 		cli.addArgument(new Argument().withShortName("c").withLongName("no-color").withDescription("Disable colored output"));
 		cli.addArgument(new Argument().withShortName("l").withLongName("limit").withArgument("n").withDescription("Stop after n files (for testing purposes)"));
+		cli.addArgument(new Argument().withShortName("?").withLongName("help").withDescription("Display this help message"));
 		return cli;
+	}
+	
+	/**
+	 * Displays usage information for the command line interface.
+	 * @param out The output stream to which the usage information is sent
+	 * @param cli The command line parser
+	 */
+	protected static void showUsage(AnsiPrinter out, CliParser cli)
+	{
+		cli.printHelp("", out);
 	}
 
 	protected static void processBatch(Executor e, ParserConfiguration conf, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status, int limit) throws IOException, FileSystemException

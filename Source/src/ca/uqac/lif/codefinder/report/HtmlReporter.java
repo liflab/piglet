@@ -1,3 +1,20 @@
+/*
+    Analysis of assertions in Java programs
+    Copyright (C) 2025 Sylvain Hallé, Sarika Machhindra Kadam
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package ca.uqac.lif.codefinder.report;
 
 import static org.codelibs.jhighlight.renderer.XhtmlRendererFactory.JAVA;
@@ -26,7 +43,43 @@ public class HtmlReporter implements Reporter
 		m_out = out;
 	}
 	
-	public void report(FilePath root, List<FoundToken> found)
+	@Override
+	public void report(FilePath root, Map<String,List<FoundToken>> found) throws IOException
+	{ 
+		m_out.println("<!DOCTYPE html>");
+		m_out.println("<html>");
+		m_out.println("<head>");
+		m_out.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">");
+		m_out.println("<title>CodeFinder Report</title>");
+		printHighlightCss(m_out);
+		m_out.println("</head>");
+		m_out.println("<body>");
+		m_out.println("<h2>Summary</h2>");
+		m_out.println("<ul>");
+		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
+		{
+			m_out.println("<li><a href=\"#" + e.getKey() + "\">" + e.getKey() + "</a> (" + e.getValue().size() + ")</li>");
+		}
+		m_out.println("</ul>");
+		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
+		{
+			if (e.getKey().compareTo(AnyAssertionFinder.NAME) != 0)
+			{
+				m_out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
+				reportTokens(root, e.getValue());
+			}
+		}
+		m_out.println("</body>");
+		m_out.println("</html>");
+	}
+	
+	/**
+	 * Reports a list of found tokens to the output stream
+	 * @param root The root directory of the search
+	 * @param out The output stream to which the report is sent
+	 * @param found The list of found tokens
+	 */
+	protected void reportTokens(FilePath root, List<FoundToken> found)
 	{
 		m_out.println("<dl>");
 		for (FoundToken t : found)
@@ -56,34 +109,11 @@ public class HtmlReporter implements Reporter
 		}
 		m_out.println("</dl>");
 	}
-	
-	protected static void createReport(FilePath root, PrintStream out, Map<String,List<FoundToken>> found) throws IOException
-	{ 
-		out.println("<!DOCTYPE html>");
-		out.println("<html>");
-		out.println("<head>");
-		printHighlightCss(out);
-		out.println("</head>");
-		out.println("<body>");
-		out.println("<h2>Summary</h2>");
-		out.println("<ul>");
-		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
-		{
-			out.println("<li><a href=\"#" + e.getKey() + "\">" + e.getKey() + "</a> (" + e.getValue().size() + ")</li>");
-		}
-		out.println("</ul>");
-		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
-		{
-			if (e.getKey().compareTo(AnyAssertionFinder.NAME) != 0)
-			{
-				out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
-				reportTokens(root, out, e.getValue());
-			}
-		}
-		out.println("</body>");
-		out.println("</html>");
-	}
 
+	/**
+	 * Prints CSS rules for syntax highlighting of Java code
+	 * @param out The output stream to which the CSS rules are sent
+	 */
 	protected static void printHighlightCss(PrintStream out)
 	{
 		out.println("<style type=\"text/css\">\n" + "code {\n"
