@@ -34,10 +34,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
 import ca.uqac.lif.codefinder.assertion.AnyAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
@@ -53,10 +49,10 @@ import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
+import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.StatusCallback;
-import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
 import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -80,8 +76,35 @@ public class Main
 	/** Return code indicating an I/O error */
 	public static final int RET_IO = 2;
 	
+	/** Whether to operate in quiet mode (no error messages) */
+	protected static boolean s_quiet = false;
+	
+	/** Number of threads to use */
+	protected static int s_threads = 2;
+	
+	/** Whether to only show a summary at the command line */
+	protected static boolean s_summary = false;
+	
+	/** Limit to the number of files to process (for testing purposes) */
+	protected static int s_limit = -1;
+	
+	/** Standard output */
+	protected static final AnsiPrinter s_stdout = new AnsiPrinter(System.out);
+	
+	/** Standard error */
+	protected static final AnsiPrinter s_stderr = new AnsiPrinter(System.err);
+	
+	/** Additional source path */
+	protected static String s_sourcePath = null;
+	
+	/** Name of the output file */
+	protected static String s_outputFile = "report.html";
+	
 	/**
-	 * Main entry point of the application
+	 * Main entry point of the application. This method simply calls
+	 * {@link #doMain(String[])} and exits with the return code of that method.
+	 * This is done so that {@link #doMain(String[])} could be called
+	 * through unit tests without exiting the JVM.
 	 * @param args Command line arguments
 	 * @throws FileSystemException When a file system error occurs
 	 * @throws IOException When an I/O error occurs
@@ -99,57 +122,13 @@ public class Main
 	 */
 	public static int doMain(String[] args)
 	{
-		AnsiPrinter stderr = new AnsiPrinter(System.err);
-		AnsiPrinter stdout = new AnsiPrinter(System.out);
-
-		int num_threads = 2;
-		boolean quiet = false;
-		boolean summary = false;
-		int limit = -1;
-
 		/* Setup command line options */
 		CliParser cli = setupCli();
 		ArgumentMap map = cli.parse(args);
-		String output_file = "report.html";
-		String source_path = null;
-		if (map.containsKey("no-color"))
+		int ret = processCommandLine(cli, map);
+		if (ret != -1)
 		{
-			stdout.disableColors();
-			stderr.disableColors();
-		}
-		if (map.containsKey("quiet"))
-		{
-			quiet = true;
-		}
-		if (map.containsKey("summary"))
-		{
-			summary = true;
-		}
-		if (map.containsKey("output"))
-		{
-			output_file = map.getOptionValue("output");
-		}
-		if (map.containsKey("s"))
-		{
-			source_path = map.getOptionValue("source");
-		}
-		if (map.hasOption("threads"))
-		{
-			num_threads = Integer.parseInt(map.getOptionValue("threads").trim());
-		}
-		if (map.hasOption("limit"))
-		{
-			limit = Integer.parseInt(map.getOptionValue("limit").trim());
-		}
-		if (map.containsKey("no-color"))
-		{
-			stdout.disableColors();
-			stderr.disableColors();
-		}
-		if (map.containsKey("help") || map.getOthers().size() == 0)
-		{
-			showUsage(stdout, cli);
-			return RET_OK;
+			return ret;
 		}
 		
 		/* The path in which the executable is executed */
@@ -174,18 +153,10 @@ public class Main
 		int total = fsp.filesProvided();
 		Map<String,List<FoundToken>> categorized = new ConcurrentHashMap<>();
 		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
-		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(stdout, categorized, summary)));
+		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, s_summary)));
 		
 		/* Setup parser (boilerplate code) */
-		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
-		typeSolver.add(new ReflectionTypeSolver());
-		if (source_path != null)
-		{
-			typeSolver.add(new JavaParserTypeSolver(source_path));
-		}
-		ParserConfiguration parserConfiguration =
-				new ParserConfiguration().setSymbolResolver(
-						new JavaSymbolSolver(typeSolver));
+		ParserConfiguration parserConfiguration = JavaParserFactory.getConfiguration(new String[] {s_sourcePath});
 
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
@@ -199,11 +170,11 @@ public class Main
 		finders.add(new EqualityWithMessageFinder(null));
 
 		// Read file(s)
-		StatusCallback status = new StatusCallback(stdout, total);
-		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
+		StatusCallback status = new StatusCallback(s_stdout, total);
+		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(s_threads);
 		try
 		{
-			processBatch(executor, parserConfiguration, fsp, finders, found, quiet, status, limit);
+			processBatch(executor, parserConfiguration, fsp, finders, found, s_quiet, status, s_limit);
 		}
 		catch (IOException e)
 		{
@@ -221,7 +192,7 @@ public class Main
 				executor.shutdownNow();
 				if (!executor.awaitTermination(120, TimeUnit.SECONDS))
 				{
-					stderr.println("Cannot terminate process");
+					s_stderr.println("Cannot terminate process");
 				}
 			}
 		}
@@ -232,20 +203,20 @@ public class Main
 			// Preserve interrupt status
 			Thread.currentThread().interrupt();
 		}
-		stdout.print("\r\033[2K");
-		stdout.println(fsp.filesProvided() + " file(s) analyzed");
-		stdout.println(found.size() + " assertion(s) found");
-		stdout.println();
+		s_stdout.print("\r\033[2K");
+		s_stdout.println(fsp.filesProvided() + " file(s) analyzed");
+		s_stdout.println(found.size() + " assertion(s) found");
+		s_stdout.println();
 		
 		/* Categorize results and produce report */
 		categorize(categorized, found);
-		FilePath output_path = home_path.chdir(getPathOfFile(output_file));
+		FilePath output_path = home_path.chdir(getPathOfFile(s_outputFile));
 		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
 		HardDisk hd;
 		try
 		{
 			hd = new HardDisk(output_path.toString()).open();
-			HtmlReporter reporter = new HtmlReporter(new PrintStream(hd.writeTo(getFilename(output_file))));
+			HtmlReporter reporter = new HtmlReporter(new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
 			reporter.report(reverse_path, categorized);
 			hd.close();
 		}
@@ -258,6 +229,51 @@ public class Main
 			return RET_FS;
 		}
 		return RET_OK;
+	}
+	
+	/**
+	 * Processes the command line arguments and sets the appropriate static
+	 * variables.
+	 * @param map The map of command line arguments
+	 * @return A return code if the program should exit, or -1 to continue
+	 */
+	protected static int processCommandLine(CliParser cli, ArgumentMap map)
+	{
+		if (map.containsKey("no-color"))
+		{
+			s_stdout.disableColors();
+			s_stderr.disableColors();
+		}
+		if (map.containsKey("quiet"))
+		{
+			s_quiet = true;
+		}
+		if (map.containsKey("summary"))
+		{
+			s_summary = true;
+		}
+		if (map.containsKey("output"))
+		{
+			s_outputFile = map.getOptionValue("output");
+		}
+		if (map.containsKey("s"))
+		{
+			s_sourcePath = map.getOptionValue("source");
+		}
+		if (map.hasOption("threads"))
+		{
+			s_threads = Integer.parseInt(map.getOptionValue("threads").trim());
+		}
+		if (map.hasOption("limit"))
+		{
+			s_limit = Integer.parseInt(map.getOptionValue("limit").trim());
+		}
+		if (map.containsKey("help") || map.getOthers().size() == 0)
+		{
+			showUsage(cli);
+			return RET_OK;
+		}
+		return -1;
 	}
 
 	/**
@@ -283,9 +299,9 @@ public class Main
 	 * @param out The output stream to which the usage information is sent
 	 * @param cli The command line parser
 	 */
-	protected static void showUsage(AnsiPrinter out, CliParser cli)
+	protected static void showUsage(CliParser cli)
 	{
-		cli.printHelp("", out);
+		cli.printHelp("", s_stdout);
 	}
 
 	protected static void processBatch(Executor e, ParserConfiguration conf, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status, int limit) throws IOException, FileSystemException
@@ -324,20 +340,6 @@ public class Main
 			map.put(t.getAssertionName(), list);
 		}
 		list.add(t);
-	}
-
-	
-
-	
-
-	protected static void displayTokens(AnsiPrinter out, List<FoundToken> found)
-	{
-		Collections.sort(found);
-		for (FoundToken t : found)
-		{
-			out.print("- ");
-			out.println(t);
-		}
 	}
 	
 	public static FilePath getPathOfFile(String path)
@@ -394,15 +396,12 @@ public class Main
 	{
 		private final Map<String,List<FoundToken>> m_found;
 
-		private final AnsiPrinter m_stdout;
-
 		private final boolean m_summary;
 
-		public EndRunnable(AnsiPrinter stdout, Map<String,List<FoundToken>> found, boolean summary)
+		public EndRunnable(Map<String,List<FoundToken>> found, boolean summary)
 		{
 			super();
 			m_found = found;
-			m_stdout = stdout;
 			m_summary = summary;
 		}
 
@@ -414,19 +413,14 @@ public class Main
 
 		protected void displayResults()
 		{
-			for (Map.Entry<String, List<FoundToken>> e : m_found.entrySet())
+			CliReporter cli_reporter = new CliReporter(s_stdout, m_summary);
+			try
 			{
-				m_stdout.print(AnsiPrinter.padToLength(e.getKey(), 36));
-				m_stdout.setForegroundColor(Color.DARK_GRAY);
-				m_stdout.print(": ");
-				m_stdout.setForegroundColor(Color.YELLOW);
-				m_stdout.println(e.getValue().size());
-				m_stdout.resetColors();
-				if (!m_summary)
-				{
-					displayTokens(m_stdout, e.getValue());
-					m_stdout.println();
-				}
+				cli_reporter.report(null, m_found);
+			}
+			catch (IOException e)
+			{
+				// Ignore
 			}
 		}
 	}
