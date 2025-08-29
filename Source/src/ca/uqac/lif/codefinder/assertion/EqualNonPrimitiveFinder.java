@@ -20,22 +20,29 @@ package ca.uqac.lif.codefinder.assertion;
 import java.util.Set;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.types.ResolvedType;
+
+import ca.uqac.lif.codefinder.util.Types;
 
 /**
  * Finds assertions that compare non-primitive values using equality.
  */
 public class EqualNonPrimitiveFinder extends AssertionFinder
 {
-	public EqualNonPrimitiveFinder(String filename)
+	protected static TypeSolver m_typeSolver = null;
+	
+	public EqualNonPrimitiveFinder(String filename, TypeSolver ts)
 	{
 		super("Equality between non-primitive values", filename);
+		m_typeSolver = ts;
+		m_typeSolver = ts;
 	}
 	
 	@Override
 	public AssertionFinder newFinder(String filename)
 	{
-		return new EqualNonPrimitiveFinder(filename);
+		return new EqualNonPrimitiveFinder(filename, m_typeSolver);
 	}
 	
 	@Override
@@ -62,8 +69,8 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		}
 		try
 		{
-			ResolvedType type1 = n.getArgument(0).calculateResolvedType();
-			ResolvedType type2 = n.getArgument(1).calculateResolvedType();
+			ResolvedType type1 = Types.safeTypeOf(n.getArgument(0), m_typeSolver).orElse(null);
+			ResolvedType type2 = Types.safeTypeOf(n.getArgument(1), m_typeSolver).orElse(null);
 			if (!isPrimitive(type1) && !isPrimitive(type2))
 			{
 				return true;
@@ -71,9 +78,8 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		}
 		catch (Exception e)
 		{
-			// Unable to resolve type
-			// Ignore for the moment
-			return false;
+			// Unable to resolve type: this is definitely not primitive
+			return true;
 		}
 		return false;
 	}
@@ -87,10 +93,10 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	 */
 	protected static boolean isPrimitive(ResolvedType t)
 	{
-		/*if (t.isPrimitive())
+		if (t == null)
 		{
-			return true;
-		}*/
+			return false;
+		}
 		String type_name = t.describe();
 		if (/* type_name.equals("java.lang.String") || */ type_name.equals("java.lang.Integer") || type_name.equals("java.lang.Long")
 				|| type_name.equals("java.lang.Float") || type_name.equals("java.lang.Double") || type_name.equals("java.lang.Byte")

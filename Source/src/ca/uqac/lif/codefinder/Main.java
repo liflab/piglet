@@ -34,6 +34,10 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
 import ca.uqac.lif.codefinder.assertion.AnyAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
@@ -69,37 +73,37 @@ public class Main
 {
 	/** Return code indicating successful execution */
 	public static final int RET_OK = 0;
-	
+
 	/** Return code indicating a file system error */
 	public static final int RET_FS = 1;
-	
+
 	/** Return code indicating an I/O error */
 	public static final int RET_IO = 2;
-	
+
 	/** Whether to operate in quiet mode (no error messages) */
 	protected static boolean s_quiet = false;
-	
+
 	/** Number of threads to use */
 	protected static int s_threads = 2;
-	
+
 	/** Whether to only show a summary at the command line */
 	protected static boolean s_summary = false;
-	
+
 	/** Limit to the number of files to process (for testing purposes) */
 	protected static int s_limit = -1;
-	
+
 	/** Standard output */
 	protected static final AnsiPrinter s_stdout = new AnsiPrinter(System.out);
-	
+
 	/** Standard error */
 	protected static final AnsiPrinter s_stderr = new AnsiPrinter(System.err);
-	
+
 	/** Additional source path */
 	protected static String s_sourcePath = null;
-	
+
 	/** Name of the output file */
 	protected static String s_outputFile = "report.html";
-	
+
 	/**
 	 * Main entry point of the application. This method simply calls
 	 * {@link #doMain(String[])} and exits with the return code of that method.
@@ -113,7 +117,7 @@ public class Main
 	{
 		System.exit(doMain(args));
 	}
-	
+
 	/**
 	 * Main entry point of the application
 	 * @param args Command line arguments
@@ -130,7 +134,7 @@ public class Main
 		{
 			return ret;
 		}
-		
+
 		/* The path in which the executable is executed */
 		FilePath home_path = new FilePath(System.getProperty("user.dir"));
 
@@ -154,9 +158,22 @@ public class Main
 		Map<String,List<FoundToken>> categorized = new ConcurrentHashMap<>();
 		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
 		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, s_summary)));
-		
+
 		/* Setup parser (boilerplate code) */
-		ParserConfiguration parserConfiguration = JavaParserFactory.getConfiguration(new String[] {s_sourcePath});
+		//ParserConfiguration parserConfiguration = JavaParserFactory.getConfiguration(new String[] {s_sourcePath});
+		ParserConfiguration parserConfiguration =
+				new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
+		typeSolver.add(new ReflectionTypeSolver());
+		for (String s_sourcePath : new String[] {s_sourcePath})
+		{
+			if (s_sourcePath != null)
+			{
+				typeSolver.add(new JavaParserTypeSolver(s_sourcePath, parserConfiguration));
+			}
+		}
+		typeSolver.add(new ClassLoaderTypeSolver(Thread.currentThread().getContextClassLoader()));
+		
 
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
@@ -165,7 +182,7 @@ public class Main
 		finders.add(new ConditionalAssertionFinder(null));
 		finders.add(new EqualAssertionFinder(null));
 		finders.add(new IteratedAssertionFinder(null));
-		finders.add(new EqualNonPrimitiveFinder(null));
+		finders.add(new EqualNonPrimitiveFinder(null, typeSolver));
 		finders.add(new EqualStringFinder(null));
 		finders.add(new EqualityWithMessageFinder(null));
 
@@ -207,7 +224,7 @@ public class Main
 		s_stdout.println(fsp.filesProvided() + " file(s) analyzed");
 		s_stdout.println(found.size() + " assertion(s) found");
 		s_stdout.println();
-		
+
 		/* Categorize results and produce report */
 		categorize(categorized, found);
 		FilePath output_path = home_path.chdir(getPathOfFile(s_outputFile));
@@ -230,7 +247,7 @@ public class Main
 		}
 		return RET_OK;
 	}
-	
+
 	/**
 	 * Processes the command line arguments and sets the appropriate static
 	 * variables.
@@ -256,7 +273,7 @@ public class Main
 		{
 			s_outputFile = map.getOptionValue("output");
 		}
-		if (map.containsKey("s"))
+		if (map.containsKey("source"))
 		{
 			s_sourcePath = map.getOptionValue("source");
 		}
@@ -293,7 +310,7 @@ public class Main
 		cli.addArgument(new Argument().withShortName("?").withLongName("help").withDescription("Display this help message"));
 		return cli;
 	}
-	
+
 	/**
 	 * Displays usage information for the command line interface.
 	 * @param out The output stream to which the usage information is sent
@@ -341,7 +358,7 @@ public class Main
 		}
 		list.add(t);
 	}
-	
+
 	public static FilePath getPathOfFile(String path)
 	{
 		int last_slash = path.lastIndexOf('/');
@@ -364,7 +381,7 @@ public class Main
 		}
 		return path_f;
 	}
-	
+
 	public static String getFilename(String path)
 	{
 		int last_slash = path.lastIndexOf('/');

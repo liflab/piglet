@@ -19,6 +19,7 @@ package ca.uqac.lif.codefinder;
 
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
@@ -40,9 +41,13 @@ public class JavaParserFactory
 	{
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
 		typeSolver.add(new ReflectionTypeSolver());
+		typeSolver.add(new ClassLoaderTypeSolver(Thread.currentThread().getContextClassLoader())); 
 		for (String s_sourcePath : source_paths)
 		{
-			typeSolver.add(new JavaParserTypeSolver(s_sourcePath));
+			if (s_sourcePath != null)
+			{
+				typeSolver.add(new JavaParserTypeSolver(s_sourcePath));
+			}
 		}
 		ParserConfiguration parserConfiguration =
 				new ParserConfiguration().setSymbolResolver(
