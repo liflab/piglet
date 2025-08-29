@@ -20,7 +20,10 @@ package ca.uqac.lif.codefinder.assertion;
 import java.util.Set;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.types.ResolvedType;
+
+import ca.uqac.lif.codefinder.util.Types;
 
 
 /**
@@ -28,15 +31,18 @@ import com.github.javaparser.resolution.types.ResolvedType;
  */
 public class EqualityWithMessageFinder extends AssertionFinder
 {	
-	public EqualityWithMessageFinder(String filename)
+	protected final TypeSolver m_typeSolver;
+	
+	public EqualityWithMessageFinder(String filename, TypeSolver ts)
 	{
 		super("With text message", filename);
+		m_typeSolver = ts;
 	}
 
 	@Override
 	public AssertionFinder newFinder(String filename)
 	{
-		return new EqualityWithMessageFinder(filename);
+		return new EqualityWithMessageFinder(filename, m_typeSolver);
 	}
 
 	@Override
@@ -49,7 +55,7 @@ public class EqualityWithMessageFinder extends AssertionFinder
 		}
 	}
 
-	protected static boolean hasMessage(MethodCallExpr n)
+	protected boolean hasMessage(MethodCallExpr n)
 	{
 		if (n.getArguments().size() != 3)
 		{
@@ -57,7 +63,7 @@ public class EqualityWithMessageFinder extends AssertionFinder
 		}
 		try
 		{
-			ResolvedType type1 = n.getArgument(0).calculateResolvedType();
+			ResolvedType type1 = Types.strictTypeOfOrNullIfSkipped(n.getArgument(0), m_typeSolver);
 			return type1.describe().compareTo("java.lang.String") == 0;
 		}
 		catch (Exception e)

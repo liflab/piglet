@@ -184,7 +184,7 @@ public class Main
 		finders.add(new IteratedAssertionFinder(null));
 		finders.add(new EqualNonPrimitiveFinder(null, typeSolver));
 		finders.add(new EqualStringFinder(null));
-		finders.add(new EqualityWithMessageFinder(null));
+		finders.add(new EqualityWithMessageFinder(null, typeSolver));
 
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, total);

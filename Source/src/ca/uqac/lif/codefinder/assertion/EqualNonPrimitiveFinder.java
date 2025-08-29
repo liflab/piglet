@@ -67,26 +67,32 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		{
 			return false;
 		}
+		boolean primitive1 = false;
+		boolean primitive2 = false;
 		try
 		{
-			ResolvedType type1 = Types.safeTypeOf(n.getArgument(0), m_typeSolver).orElse(null);
-			ResolvedType type2 = Types.safeTypeOf(n.getArgument(1), m_typeSolver).orElse(null);
-			if (!isPrimitive(type1) && !isPrimitive(type2))
-			{
-				return true;
-			}
+			ResolvedType type1 = Types.strictTypeOfOrNullIfSkipped(n.getArgument(0), m_typeSolver);
+			primitive1 = isPrimitive(type1);
 		}
 		catch (Exception e)
 		{
 			// Unable to resolve type: this is definitely not primitive
-			return true;
 		}
-		return false;
+		try
+		{
+			ResolvedType type2 = Types.strictTypeOfOrNullIfSkipped(n.getArgument(1), m_typeSolver);
+			primitive2 = isPrimitive(type2);
+		}
+		catch (Exception e)
+		{
+			// Unable to resolve type: this is definitely not primitive
+		}
+		return !primitive1 && !primitive2;
 	}
 	
 	/**
 	 * Determines if a type is primitive or a boxed primitive (e.g. Integer,
-	 * Double, etc.). String is not considered primitive here.
+	 * Double, etc.).
 	 * @param t The type to examine
 	 * @return true if the type is primitive or a boxed primitive, false
 	 * otherwise
@@ -98,7 +104,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 			return false;
 		}
 		String type_name = t.describe();
-		if (/* type_name.equals("java.lang.String") || */ type_name.equals("java.lang.Integer") || type_name.equals("java.lang.Long")
+		if (type_name.equals("java.lang.String") ||  type_name.equals("java.lang.Integer") || type_name.equals("java.lang.Long")
 				|| type_name.equals("java.lang.Float") || type_name.equals("java.lang.Double") || type_name.equals("java.lang.Byte")
 				|| type_name.equals("java.lang.Short") || type_name.equals("java.lang.Character") || type_name.equals("java.lang.Boolean"))
 		{
