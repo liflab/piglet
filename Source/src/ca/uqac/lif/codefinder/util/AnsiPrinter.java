@@ -1,6 +1,6 @@
 /*
-    Cornipickle, validation of layout bugs in web applications
-    Copyright (C) 2015 Sylvain Hallé
+    Analysis of assertions in Java programs
+    Copyright (C) 2025 Sylvain Hallé, Sarika Machhindra Kadam
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder;
+package ca.uqac.lif.codefinder.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

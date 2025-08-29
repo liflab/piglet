@@ -1,19 +1,19 @@
 /*
-  LabPal, a versatile environment for running experiments on a computer
-  Copyright (C) 2015-2017 Sylvain Hallé
+    Analysis of assertions in Java programs
+    Copyright (C) 2025 Sylvain Hallé, Sarika Machhindra Kadam
 
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program. If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package ca.uqac.lif.codefinder.util;
 
@@ -25,15 +25,24 @@ import java.util.Vector;
 
 /**
  * Facilitates the execution of an external command and the collection of
- * its output
+ * its output.
  */
 public class CommandRunner extends Thread
 {
+	/** The command to run */
 	protected String[] m_command;
+	
+	/** The string to send to stdin of the command */
 	protected String m_stdin;
+	
+	/** Whether to stop the command */
 	protected volatile boolean m_stop = false;
+	
+	/** The gobblers for stdout and stderr */
 	protected StreamGobbler m_stdoutGobbler;
 	protected StreamGobbler m_stderrGobbler;
+	
+	/** The return code of the command */
 	protected int m_errorCode = 0;
 	
 	/**

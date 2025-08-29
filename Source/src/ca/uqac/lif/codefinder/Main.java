@@ -1,3 +1,20 @@
+/*
+    Analysis of assertions in Java programs
+    Copyright (C) 2025 Sylvain Hallé, Sarika Machhindra Kadam
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package ca.uqac.lif.codefinder;
 
 import static org.codelibs.jhighlight.renderer.XhtmlRendererFactory.JAVA;
@@ -27,7 +44,6 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
-import ca.uqac.lif.codefinder.AnsiPrinter.Color;
 import ca.uqac.lif.codefinder.assertion.AnyAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
@@ -42,6 +58,9 @@ import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
+import ca.uqac.lif.codefinder.util.AnsiPrinter;
+import ca.uqac.lif.codefinder.util.StatusCallback;
+import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
 import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -50,8 +69,18 @@ import ca.uqac.lif.util.CliParser;
 import ca.uqac.lif.util.CliParser.Argument;
 import ca.uqac.lif.util.CliParser.ArgumentMap;
 
+/**
+ * Main class of the CodeFinder application. Parses command line arguments,
+ * sets up the environment, and launches the analysis.
+ */
 public class Main
 {
+	/**
+	 * Main entry point of the application
+	 * @param args Command line arguments
+	 * @throws FileSystemException When a file system error occurs
+	 * @throws IOException When an I/O error occurs
+	 */
 	public static void main(String[] args) throws FileSystemException, IOException
 	{
 		AnsiPrinter stderr = new AnsiPrinter(System.err);
@@ -60,6 +89,7 @@ public class Main
 		int num_threads = 2;
 		boolean quiet = false;
 		boolean summary = false;
+		int limit = -1;
 
 		/* Setup command line options */
 		CliParser cli = setupCli();
@@ -91,9 +121,18 @@ public class Main
 		{
 			num_threads = Integer.parseInt(map.getOptionValue("threads").trim());
 		}
+		if (map.hasOption("limit"))
+		{
+			limit = Integer.parseInt(map.getOptionValue("limit").trim());
+		}
+		if (map.containsKey("no-color"))
+		{
+			stdout.disableColors();
+			stderr.disableColors();
+		}
 		
 		/* The path in which the executable is executed */
-		FilePath home_path = new FilePath(".");
+		FilePath home_path = new FilePath(System.getProperty("user.dir"));
 
 		/* Setup the file provider */
 		List<String> folders = map.getOthers(); // The files to read from
@@ -112,10 +151,6 @@ public class Main
 		/* Setup parser (boilerplate code) */
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
 		typeSolver.add(new ReflectionTypeSolver());
-		/*for (String path : folders)
-		{
-			typeSolver.add(new JavaParserTypeSolver(path));
-		}*/
 		if (source_path != null)
 		{
 			typeSolver.add(new JavaParserTypeSolver(source_path));
@@ -138,7 +173,7 @@ public class Main
 		// Read file(s)
 		StatusCallback status = new StatusCallback(stdout, total);
 		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
-		processBatch(executor, parserConfiguration, fsp, finders, found, quiet, status);
+		processBatch(executor, parserConfiguration, fsp, finders, found, quiet, status, limit);
 		executor.shutdown();
 		try
 		{
@@ -166,11 +201,9 @@ public class Main
 		/* Categorize results and produce report */
 		categorize(categorized, found);
 		FilePath output_path = home_path.chdir(getPathOfFile(output_file));
-		//System.out.println(getPathOfFile(new FilePath(output_file)));
-		System.out.println(output_path);
-		System.out.println(getFilename(output_file));
-		HardDisk hd = new HardDisk(FileUtils.trimSlash(output_path.toString())).open();
-		createReport(new PrintStream(hd.writeTo(getFilename(output_file))), categorized);
+		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
+		HardDisk hd = new HardDisk(output_path.toString()).open();
+		createReport(reverse_path, new PrintStream(hd.writeTo(getFilename(output_file))), categorized);
 		hd.close();
 	}
 
@@ -183,13 +216,16 @@ public class Main
 		cli.addArgument(new Argument().withShortName("q").withLongName("quiet").withDescription("Do not show error messages"));
 		cli.addArgument(new Argument().withShortName("m").withLongName("summary").withDescription("Only show a summary at the CLI"));
 		cli.addArgument(new Argument().withShortName("c").withLongName("no-color").withDescription("Disable colored output"));
+		cli.addArgument(new Argument().withShortName("l").withLongName("limit").withArgument("n").withDescription("Stop after n files (for testing purposes)"));
 		return cli;
 	}
 
-	protected static void processBatch(Executor e, ParserConfiguration conf, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status) throws IOException, FileSystemException
+	protected static void processBatch(Executor e, ParserConfiguration conf, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status, int limit) throws IOException, FileSystemException
 	{
-		while (provider.hasNext())
+		int count = 0;
+		while (provider.hasNext() && (limit == -1 || count < limit))
 		{
+			count++;
 			FileSource fs = provider.next();
 			InputStream stream = fs.getStream();
 			String code = new String(FileUtils.toBytes(stream));
@@ -222,7 +258,7 @@ public class Main
 		list.add(t);
 	}
 
-	protected static void createReport(PrintStream out, Map<String,List<FoundToken>> found) throws IOException
+	protected static void createReport(FilePath root, PrintStream out, Map<String,List<FoundToken>> found) throws IOException
 	{ 
 		out.println("<!DOCTYPE html>");
 		out.println("<html>");
@@ -242,7 +278,7 @@ public class Main
 			if (e.getKey().compareTo(AnyAssertionFinder.NAME) != 0)
 			{
 				out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
-				reportTokens(out, e.getValue());
+				reportTokens(root, out, e.getValue());
 			}
 		}
 		out.println("</body>");
@@ -272,14 +308,15 @@ public class Main
 				+ "}\n" + "    </style>\n");
 	}
 
-	protected static void reportTokens(PrintStream out, List<FoundToken> found) throws IOException
+	protected static void reportTokens(FilePath root, PrintStream out, List<FoundToken> found) throws IOException
 	{
 		out.println("<dl>");
 		for (FoundToken t : found)
 		{
 			String clear_fn = t.getFilename().substring(1);
+			FilePath folder = root.chdir(getPathOfFile(clear_fn));
 			out.print("<dt><a href=\"");
-			out.print(clear_fn);
+			out.print(folder + FilePath.SLASH + getFilename(clear_fn));
 			out.print("\">");
 			out.print(clear_fn);
 			out.print("</a> ");
