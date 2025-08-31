@@ -104,11 +104,11 @@ public class AssertionFinderRunnable implements Runnable
 		{
 			CompilationUnit u = p.parse(code).getResult().get();
 			List<MethodDeclaration> methods = getTestCases(u);
-			if (methods.isEmpty() && !quiet)
+			/*if (methods.isEmpty() && !quiet)
 			{
 				// No test cases in this file
 				System.err.println("WARNING: No test cases found in " + file);
-			}
+			}*/
 			for (MethodDeclaration m : methods)
 			{
 				for (AssertionFinder f : finders)

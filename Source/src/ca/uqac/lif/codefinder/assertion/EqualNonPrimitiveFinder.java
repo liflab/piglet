@@ -32,17 +32,19 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 {
 	protected static TypeSolver m_typeSolver = null;
 	
-	public EqualNonPrimitiveFinder(String filename, TypeSolver ts)
+	protected final Set<String> m_unresolved;
+	
+	public EqualNonPrimitiveFinder(String filename, TypeSolver ts, Set<String> unresolved)
 	{
 		super("Equality between non-primitive values", filename);
 		m_typeSolver = ts;
-		m_typeSolver = ts;
+		m_unresolved = unresolved;
 	}
 	
 	@Override
 	public AssertionFinder newFinder(String filename)
 	{
-		return new EqualNonPrimitiveFinder(filename, m_typeSolver);
+		return new EqualNonPrimitiveFinder(filename, m_typeSolver, m_unresolved);
 	}
 	
 	@Override
@@ -61,7 +63,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	 * @param n The method call expression to examine
 	 * @return true if at least one argument is non-primitive, false otherwise
 	 */
-	protected static boolean hasNonPrimitive(MethodCallExpr n)
+	protected boolean hasNonPrimitive(MethodCallExpr n)
 	{
 		if (n.getArguments().size() < 2)
 		{
@@ -71,21 +73,21 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		boolean primitive2 = false;
 		try
 		{
-			ResolvedType type1 = Types.strictTypeOfOrNullIfSkipped(n.getArgument(0), m_typeSolver);
+			ResolvedType type1 = Types.typeOf(n.getArgument(0), m_typeSolver);
 			primitive1 = isPrimitive(type1);
 		}
 		catch (Exception e)
 		{
-			// Unable to resolve type: this is definitely not primitive
+			m_unresolved.add(n.getArgument(1).toString());
 		}
 		try
 		{
-			ResolvedType type2 = Types.strictTypeOfOrNullIfSkipped(n.getArgument(1), m_typeSolver);
+			ResolvedType type2 = Types.typeOf(n.getArgument(1), m_typeSolver);
 			primitive2 = isPrimitive(type2);
 		}
 		catch (Exception e)
 		{
-			// Unable to resolve type: this is definitely not primitive
+			m_unresolved.add(n.getArgument(1).toString());
 		}
 		return !primitive1 && !primitive2;
 	}
@@ -103,8 +105,12 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		{
 			return false;
 		}
+		if (t.isPrimitive())
+		{
+			return true;
+		}
 		String type_name = t.describe();
-		if (type_name.equals("java.lang.String") ||  type_name.equals("java.lang.Integer") || type_name.equals("java.lang.Long")
+		if (type_name.equals("java.lang.String") || type_name.equals("java.lang.Integer") || type_name.equals("java.lang.Long")
 				|| type_name.equals("java.lang.Float") || type_name.equals("java.lang.Double") || type_name.equals("java.lang.Byte")
 				|| type_name.equals("java.lang.Short") || type_name.equals("java.lang.Character") || type_name.equals("java.lang.Boolean"))
 		{

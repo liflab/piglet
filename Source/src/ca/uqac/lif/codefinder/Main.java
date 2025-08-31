@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -56,6 +57,7 @@ import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
+import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
@@ -71,6 +73,9 @@ import ca.uqac.lif.util.CliParser.ArgumentMap;
  */
 public class Main
 {
+	/** Return code indicating "no return" **/
+	public static final int RET_NOTHING = -1;
+	
 	/** Return code indicating successful execution */
 	public static final int RET_OK = 0;
 
@@ -80,8 +85,35 @@ public class Main
 	/** Return code indicating an I/O error */
 	public static final int RET_IO = 2;
 
+	/** Standard output */
+	protected static final AnsiPrinter s_stdout = new AnsiPrinter(System.out);
+
+	/** Standard error */
+	protected static final AnsiPrinter s_stderr = new AnsiPrinter(System.err);
+	
+	/** The path in which the executable is executed **/
+	protected static final FilePath s_homePath = new FilePath(System.getProperty("user.dir"));
+	
+	/** Set of unresolved symbols **/
+	protected static final Set<String> s_setUnresolved = Collections.synchronizedSet(new HashSet<String>());
+	
+	/** The parsed command line arguments **/
+	protected static ArgumentMap s_map;
+
+	/** Additional source paths */
+	protected static Set<String> s_sourcePaths = new HashSet<>();
+	
+	/** Additional jar files */
+	protected static Set<String> s_jarPaths = new HashSet<>();
+
+	/** Name of the output file */
+	protected static String s_outputFile = "report.html";
+	
 	/** Whether to operate in quiet mode (no error messages) */
 	protected static boolean s_quiet = false;
+	
+	/** Whether to show unresolved symbols **/
+	protected static boolean s_unresolved = false;
 
 	/** Number of threads to use */
 	protected static int s_threads = 2;
@@ -91,18 +123,6 @@ public class Main
 
 	/** Limit to the number of files to process (for testing purposes) */
 	protected static int s_limit = -1;
-
-	/** Standard output */
-	protected static final AnsiPrinter s_stdout = new AnsiPrinter(System.out);
-
-	/** Standard error */
-	protected static final AnsiPrinter s_stderr = new AnsiPrinter(System.err);
-
-	/** Additional source path */
-	protected static String s_sourcePath = null;
-
-	/** Name of the output file */
-	protected static String s_outputFile = "report.html";
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -128,22 +148,19 @@ public class Main
 	{
 		/* Setup command line options */
 		CliParser cli = setupCli();
-		ArgumentMap map = cli.parse(args);
-		int ret = processCommandLine(cli, map);
-		if (ret != -1)
+		s_map = cli.parse(args);
+		int ret = processCommandLine(cli);
+		if (ret != RET_NOTHING)
 		{
 			return ret;
-		}
-
-		/* The path in which the executable is executed */
-		FilePath home_path = new FilePath(System.getProperty("user.dir"));
+		} 
 
 		/* Setup the file provider */
-		List<String> folders = map.getOthers(); // The files to read from
+		List<String> folders = s_map.getOthers(); // The files to read from
 		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
 		for (int i = 0; i < folders.size(); i++)
 		{
-			FilePath fold_path = home_path.chdir(new FilePath(folders.get(i)));
+			FilePath fold_path = s_homePath.chdir(new FilePath(folders.get(i)));
 			try
 			{
 				providers[i] = new FileSystemProvider(new HardDisk(fold_path.toString()));
@@ -160,20 +177,50 @@ public class Main
 		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, s_summary)));
 
 		/* Setup parser (boilerplate code) */
+    
 		//ParserConfiguration parserConfiguration = JavaParserFactory.getConfiguration(new String[] {s_sourcePath});
-		ParserConfiguration parserConfiguration =
-				new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
-		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
+		//ParserConfiguration parserConfiguration =
+		//		new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+		CombinedTypeSolver typeSolver = null;
+		try
+		{
+			typeSolver = Solvers.buildSolver(s_sourcePaths, s_jarPaths);
+		}
+		catch (IOException e)
+		{
+			s_stderr.println("Could not set up type solver");
+			return RET_IO;
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ParserConfiguration parserConfiguration = Solvers.parserConfig(typeSolver);
 		typeSolver.add(new ReflectionTypeSolver());
-		for (String s_sourcePath : new String[] {s_sourcePath})
+		for (String s_sourcePath : s_sourcePaths)
 		{
 			if (s_sourcePath != null)
 			{
 				typeSolver.add(new JavaParserTypeSolver(s_sourcePath, parserConfiguration));
 			}
 		}
+		for (String s_jarPath : s_jarPaths)
+		{
+			if (s_jarPath != null)
+			{
+				try
+				{
+					typeSolver.add(new com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver(s_jarPath));
+				}
+				catch (IOException e)
+				{
+					s_stderr.println("Could not read jar file: " + s_jarPath);
+					return RET_IO;
+				}
+			}
+		}
 		typeSolver.add(new ClassLoaderTypeSolver(Thread.currentThread().getContextClassLoader()));
-		
 
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
@@ -182,7 +229,7 @@ public class Main
 		finders.add(new ConditionalAssertionFinder(null));
 		finders.add(new EqualAssertionFinder(null));
 		finders.add(new IteratedAssertionFinder(null));
-		finders.add(new EqualNonPrimitiveFinder(null, typeSolver));
+		finders.add(new EqualNonPrimitiveFinder(null, typeSolver, s_setUnresolved));
 		finders.add(new EqualStringFinder(null));
 		finders.add(new EqualityWithMessageFinder(null, typeSolver));
 
@@ -227,14 +274,14 @@ public class Main
 
 		/* Categorize results and produce report */
 		categorize(categorized, found);
-		FilePath output_path = home_path.chdir(getPathOfFile(s_outputFile));
+		FilePath output_path = s_homePath.chdir(getPathOfFile(s_outputFile));
 		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
 		HardDisk hd;
 		try
 		{
 			hd = new HardDisk(output_path.toString()).open();
 			HtmlReporter reporter = new HtmlReporter(new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
-			reporter.report(reverse_path, categorized);
+			reporter.report(reverse_path, categorized, s_setUnresolved);
 			hd.close();
 		}
 		catch (IOException e)
@@ -251,11 +298,16 @@ public class Main
 	/**
 	 * Processes the command line arguments and sets the appropriate static
 	 * variables.
-	 * @param map The map of command line arguments
+	 * @param cli The command line parser
 	 * @return A return code if the program should exit, or -1 to continue
 	 */
-	protected static int processCommandLine(CliParser cli, ArgumentMap map)
+	protected static int processCommandLine(CliParser cli)
 	{
+		ArgumentMap map = s_map;
+		if (map.containsKey("profile"))
+		{
+			return readProfile(map.getOptionValue("profile"));
+		}
 		if (map.containsKey("no-color"))
 		{
 			s_stdout.disableColors();
@@ -264,6 +316,10 @@ public class Main
 		if (map.containsKey("quiet"))
 		{
 			s_quiet = true;
+		}
+		if (map.containsKey("unresolved"))
+		{
+			s_unresolved = true;
 		}
 		if (map.containsKey("summary"))
 		{
@@ -275,7 +331,19 @@ public class Main
 		}
 		if (map.containsKey("source"))
 		{
-			s_sourcePath = map.getOptionValue("source");
+			String[] paths = map.getOptionValue("source").split(":");
+			for (String p : paths)
+			{
+				s_sourcePaths.add(p);
+			}
+		}
+		if (map.containsKey("jar"))
+		{
+			String[] paths = map.getOptionValue("jar").split(":");
+			for (String p : paths)
+			{
+				s_jarPaths.add(p);
+			}
 		}
 		if (map.hasOption("threads"))
 		{
@@ -290,7 +358,41 @@ public class Main
 			showUsage(cli);
 			return RET_OK;
 		}
-		return -1;
+		if (map.containsKey("help") || map.getOthers().size() == 0)
+		{
+			showUsage(cli);
+			return RET_OK;
+		}
+		return RET_NOTHING;
+	}
+	
+	protected static int readProfile(String filename)
+	{
+		FilePath output_path = s_homePath.chdir(getPathOfFile(filename));
+		FilePath reverse_path = output_path.chdir(getPathOfFile(filename));
+		try
+		{
+			HardDisk hd = new HardDisk(reverse_path.toString()).open();
+			StringBuilder contents = new StringBuilder();
+			Scanner scanner = new Scanner(hd.readFrom(getFilename(filename)));
+			while (scanner.hasNextLine())
+			{
+				String line = scanner.nextLine().trim();
+				if (line.isEmpty() || line.startsWith("#"))
+					continue;
+				contents.append(line).append(" ");
+			}
+			scanner.close();
+			hd.close();
+			String[] args = contents.toString().split(" ");
+			CliParser parser = setupCli();
+			s_map = parser.parse(args);
+			return processCommandLine(parser);
+		}
+		catch (FileSystemException e)
+		{
+			return RET_FS;
+		}
 	}
 
 	/**
@@ -302,12 +404,15 @@ public class Main
 		CliParser cli = new CliParser();
 		cli.addArgument(new Argument().withShortName("o").withLongName("output").withDescription("Output file (default: report.html)").withArgument("file"));
 		cli.addArgument(new Argument().withShortName("s").withLongName("source").withDescription("Additional source in path").withArgument("path"));
+		cli.addArgument(new Argument().withShortName("j").withLongName("jar").withDescription("Additional jar file(s) in path").withArgument("path"));
 		cli.addArgument(new Argument().withShortName("t").withLongName("threads").withArgument("n").withDescription("Use up to n threads"));
 		cli.addArgument(new Argument().withShortName("q").withLongName("quiet").withDescription("Do not show error messages"));
 		cli.addArgument(new Argument().withShortName("m").withLongName("summary").withDescription("Only show a summary at the CLI"));
 		cli.addArgument(new Argument().withShortName("c").withLongName("no-color").withDescription("Disable colored output"));
 		cli.addArgument(new Argument().withShortName("l").withLongName("limit").withArgument("n").withDescription("Stop after n files (for testing purposes)"));
-		cli.addArgument(new Argument().withShortName("?").withLongName("help").withDescription("Display this help message"));
+		cli.addArgument(new Argument().withShortName("h").withLongName("help").withDescription("Display this help message"));
+		cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file").withDescription("Get options from file"));
+		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved").withDescription("Show unresolved symbols"));
 		return cli;
 	}
 
@@ -433,7 +538,7 @@ public class Main
 			CliReporter cli_reporter = new CliReporter(s_stdout, m_summary);
 			try
 			{
-				cli_reporter.report(null, m_found);
+				cli_reporter.report(null, m_found, s_setUnresolved);
 			}
 			catch (IOException e)
 			{

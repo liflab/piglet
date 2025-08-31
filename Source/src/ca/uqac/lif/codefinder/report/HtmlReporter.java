@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.codelibs.jhighlight.renderer.Renderer;
 import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
@@ -44,7 +45,7 @@ public class HtmlReporter implements Reporter
 	}
 	
 	@Override
-	public void report(FilePath root, Map<String,List<FoundToken>> found) throws IOException
+	public void report(FilePath root, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
 	{ 
 		m_out.println("<!DOCTYPE html>");
 		m_out.println("<html>");
@@ -60,6 +61,7 @@ public class HtmlReporter implements Reporter
 		{
 			m_out.println("<li><a href=\"#" + e.getKey() + "\">" + e.getKey() + "</a> (" + e.getValue().size() + ")</li>");
 		}
+		m_out.println("<li><a href=\"#unresolved\">Unresolved symbols</a> (" + (unresolved == null ? "0" : unresolved.size()) + ")</li>");
 		m_out.println("</ul>");
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{
@@ -68,6 +70,16 @@ public class HtmlReporter implements Reporter
 				m_out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
 				reportTokens(root, e.getValue());
 			}
+		}
+		if (unresolved != null)
+		{
+			m_out.println("<h2><a name=\"unresolved\"></a>Unresolved symbols</h2>");
+			m_out.println("<ul>");
+			for (String u : unresolved)
+			{
+				m_out.println("<li><code>" + u + "</code></li>");
+			}
+			m_out.println("</ul>");
 		}
 		m_out.println("</body>");
 		m_out.println("</html>");
@@ -99,7 +111,7 @@ public class HtmlReporter implements Reporter
 			try
 			{
 				html = rend.highlight("", code, "utf-8", true);
-				m_out.println("<dd><pre>" + html + "</pre></dd>");
+				m_out.println("<dd><code>" + html + "</code></dd>");
 			}
 			catch (IOException e)
 			{

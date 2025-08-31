@@ -125,6 +125,14 @@
 	      <jar>https://repo1.maven.org/maven2/commons-io/commons-io/2.20.0/commons-io-2.20.0.jar</jar>
       </files>
      <bundle>true</bundle>
+     </dependency>
+     <dependency>
+     <name>Javassist</name>
+     <classname>javassist.NotFoundException</classname>
+      <files>
+	      <jar>https://repo1.maven.org/maven2/org/javassist/javassist/3.27.0-GA/javassist-3.27.0-GA.jar</jar>
+      </files>
+     <bundle>true</bundle>
     </dependency>
  
  

@@ -17,8 +17,11 @@
  */
 package ca.uqac.lif.codefinder.util;
 
+import java.util.Optional;
+
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.resolution.TypeSolver;
@@ -26,81 +29,37 @@ import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 
-import java.util.Optional;
-
 public final class Types
 {
 	private Types()
 	{
+		// Do nothing
+		super();
 	}
 
-	/**
-	 * Return a type, or Optional.empty() if this expression is a known, benign
-	 * "skip" (e.g., type-name scope).
-	 */
-	public static Optional<ResolvedType> typeOfOrSkip(Expression e, TypeSolver ts)
+	/** Resolve the type of an expression or throw. */
+	public static ResolvedType typeOf(Expression e, TypeSolver ts)
 	{
-		if (shouldSkipTyping(e))
-		{
-			return Optional.empty();
-		}
-		try
-		{
-			return Optional.of(JavaParserFacade.get(ts).getType(e));
-		}
-		catch (RuntimeException ex)
-		{
-			throw fail("Could not resolve type", e, ex);
-		}
+		return JavaParserFacade.get(ts).getType(e);
 	}
 
-	/** Throwing variant that still skips benign cases (returns null if skipped). */
-	public static ResolvedType strictTypeOfOrNullIfSkipped(Expression e, TypeSolver ts)
+	/** Resolve the declared type of a field/variable/parameter node. */
+	public static ResolvedType declaredTypeOf(NodeWithType<?, ?> nwt, TypeSolver ts)
 	{
-		if (shouldSkipTyping(e))
-		{
-			return null; // explicit nullable for callers that prefer non-Optional
-		}
-		try
-		{
-			return JavaParserFacade.get(ts).getType(e);
-		}
-		catch (RuntimeException ex)
-		{
-			throw fail("Could not resolve type", e, ex);
-		}
+		Type t = (Type) nwt.getType();
+		return JavaParserFacade.get(ts).convertToUsage(t);
 	}
 
-	/**
-	 * Resolve declared type (fields/locals/params) or throw; this one never skips.
-	 */
-	public static ResolvedType strictDeclaredTypeOf(Node n, TypeSolver ts)
+	/** Resolve the return type of a method call. */
+	public static ResolvedType returnTypeOf(MethodCallExpr mce, TypeSolver ts)
 	{
-		try
-		{
-			if (n instanceof NodeWithType)
-			{
-				NodeWithType<?, ?> nwt = (NodeWithType<?, ?>) n;
-				Type t = (Type) nwt.getType();
-				return JavaParserFacade.get(ts).convertToUsage(t);
-			}
-			throw new IllegalStateException("Node has no declared type: " + n.getClass().getSimpleName());
-		}
-		catch (RuntimeException ex)
-		{
-			throw new IllegalStateException(diag("Could not resolve declared type", n, ex.getMessage()),
-					ex);
-		}
+		ResolvedMethodDeclaration decl = JavaParserFacade.get(ts).solve(mce)
+				.getCorrespondingDeclaration();
+		return decl.getReturnType();
 	}
 
-	/**
-	 * Method call return type; throws on failure, but skips if the call's *scope*
-	 * is a benign type-name.
-	 */
 	public static Optional<ResolvedType> returnTypeOrSkip(MethodCallExpr mce, TypeSolver ts)
 	{
-		// If scope itself is a type name, we still want the call's return type; no need
-		// to skip.
 		try
 		{
 			ResolvedMethodDeclaration decl = JavaParserFacade.get(ts).solve(mce)
@@ -109,8 +68,6 @@ public final class Types
 		}
 		catch (RuntimeException ex)
 		{
-			// If the resolution failed because the scope is clearly not a value, skip;
-			// otherwise throw
 			if (mce.getScope().isPresent() && isLikelyTypeName(mce.getScope().get()))
 			{
 				return Optional.empty();
@@ -120,71 +77,53 @@ public final class Types
 		}
 	}
 
-	/* ===================== internals ===================== */
+	/* ---------- internals ---------- */
 
+	@SuppressWarnings("unused")
 	private static boolean shouldSkipTyping(Expression e)
 	{
-		// 1) Scope of a method call: Set.of(...), Map.entry(...)
 		if (e.getParentNode().isPresent() && e.getParentNode().get() instanceof MethodCallExpr)
 		{
 			MethodCallExpr m = (MethodCallExpr) e.getParentNode().get();
 			if (m.getScope().isPresent() && m.getScope().get() == e && isLikelyTypeName(e))
-			{
 				return true;
-			}
 		}
-		// 2) Scope of an object creation: pkg.Outer.Inner(...)
-		if (e.getParentNode().isPresent() && e.getParentNode().get() instanceof ObjectCreationExpr)
+		if (e.getParentNode().isPresent())
 		{
-			ObjectCreationExpr oce = (ObjectCreationExpr) e.getParentNode().get();
-			if (oce.getScope().isPresent() && oce.getScope().get() == e)
+			Node p = e.getParentNode().get();
+			if (p instanceof com.github.javaparser.ast.expr.ObjectCreationExpr)
 			{
-				return true;
+				var oce = (com.github.javaparser.ast.expr.ObjectCreationExpr) p;
+				if (oce.getScope().isPresent() && oce.getScope().get() == e)
+					return true;
 			}
-		}
-		// 3) Class literal: Foo.class — the NameExpr/FieldAccessExpr is a type
-		// qualifier
-		if (e.getParentNode().isPresent() && e.getParentNode().get() instanceof ClassExpr)
-		{
-			return true;
-		}
-		// 4) Method reference qualifier: List::of, MyType::factory
-		if (e.getParentNode().isPresent() && e.getParentNode().get() instanceof MethodReferenceExpr)
-		{
-			MethodReferenceExpr mre = (MethodReferenceExpr) e.getParentNode().get();
-			if (mre.getScope() == e && isLikelyTypeName(e))
+			if (p instanceof com.github.javaparser.ast.expr.ClassExpr)
+				return true;
+			if (p instanceof com.github.javaparser.ast.expr.MethodReferenceExpr)
 			{
-				return true;
+				var mre = (com.github.javaparser.ast.expr.MethodReferenceExpr) p;
+				if (mre.getScope() == e && isLikelyTypeName(e))
+					return true;
 			}
-		}
-		// 5) Annotation names (treated as NameExpr in some traversals)
-		if (e.getParentNode().isPresent() && e.getParentNode().get() instanceof AnnotationExpr)
-		{
-			return true;
+			if (p instanceof com.github.javaparser.ast.expr.AnnotationExpr)
+				return true;
 		}
 		return false;
 	}
 
 	private static boolean isLikelyTypeName(Expression e)
 	{
-		// Heuristic: a bare NameExpr or FieldAccessExpr starting with uppercase token
-		if (e instanceof NameExpr)
+		if (e instanceof com.github.javaparser.ast.expr.NameExpr)
 		{
-			String s = ((NameExpr) e).getNameAsString();
+			String s = ((com.github.javaparser.ast.expr.NameExpr) e).getNameAsString();
 			return !s.isEmpty() && Character.isUpperCase(s.charAt(0));
 		}
-		if (e instanceof FieldAccessExpr)
+		if (e instanceof com.github.javaparser.ast.expr.FieldAccessExpr)
 		{
-			// e.g., java.util.Set (qualifier chain ends with capitalized identifier)
-			String s = ((FieldAccessExpr) e).getNameAsString();
+			String s = ((com.github.javaparser.ast.expr.FieldAccessExpr) e).getNameAsString();
 			return !s.isEmpty() && Character.isUpperCase(s.charAt(0));
 		}
 		return false;
-	}
-
-	private static IllegalStateException fail(String prefix, Node n, RuntimeException ex)
-	{
-		return new IllegalStateException(diag(prefix, n, ex.getMessage()), ex);
 	}
 
 	private static String diag(String prefix, Node n, String detail)

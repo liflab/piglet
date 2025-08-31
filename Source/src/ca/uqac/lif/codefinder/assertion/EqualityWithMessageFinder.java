@@ -63,7 +63,7 @@ public class EqualityWithMessageFinder extends AssertionFinder
 		}
 		try
 		{
-			ResolvedType type1 = Types.strictTypeOfOrNullIfSkipped(n.getArgument(0), m_typeSolver);
+			ResolvedType type1 = Types.typeOf(n.getArgument(0), m_typeSolver);
 			return type1.describe().compareTo("java.lang.String") == 0;
 		}
 		catch (Exception e)

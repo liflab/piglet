@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ca.uqac.lif.codefinder.assertion.FoundToken;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
@@ -43,7 +44,7 @@ public class CliReporter implements Reporter
 	}
 	
 	@Override
-	public void report(FilePath root, Map<String,List<FoundToken>> found) throws IOException
+	public void report(FilePath root, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
 	{
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{
@@ -58,6 +59,15 @@ public class CliReporter implements Reporter
 				displayTokens(m_out, e.getValue());
 				m_out.println();
 			}
+		}
+		if (unresolved != null)
+		{
+			m_out.print(AnsiPrinter.padToLength("Unresolved symbols", 36));
+			m_out.setForegroundColor(Color.DARK_GRAY);
+			m_out.print(": ");
+			m_out.setForegroundColor(Color.RED);
+			m_out.println(unresolved.size());
+			m_out.resetColors();
 		}
 	}
 	
