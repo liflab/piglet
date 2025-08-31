@@ -70,4 +70,5 @@ report.xml
 
 # Others
 out/
-report.html
+*.html
+*.profile

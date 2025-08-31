@@ -117,6 +117,9 @@ public class Main
 
 	/** Number of threads to use */
 	protected static int s_threads = 2;
+	
+	/** The name of the root package to look for in the source tree **/
+	public static String s_root = null;
 
 	/** Whether to only show a summary at the command line */
 	protected static boolean s_summary = false;
@@ -184,7 +187,7 @@ public class Main
 		CombinedTypeSolver typeSolver = null;
 		try
 		{
-			typeSolver = Solvers.buildSolver(s_sourcePaths, s_jarPaths);
+			typeSolver = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
 		}
 		catch (IOException e)
 		{
@@ -353,6 +356,10 @@ public class Main
 		{
 			s_limit = Integer.parseInt(map.getOptionValue("limit").trim());
 		}
+		if (map.hasOption("root"))
+		{
+			s_root = map.getOptionValue("root");
+		}
 		if (map.containsKey("help") || map.getOthers().size() == 0)
 		{
 			showUsage(cli);
@@ -413,6 +420,7 @@ public class Main
 		cli.addArgument(new Argument().withShortName("h").withLongName("help").withDescription("Display this help message"));
 		cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file").withDescription("Get options from file"));
 		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved").withDescription("Show unresolved symbols"));
+		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p").withDescription("Search in source tree for package p"));
 		return cli;
 	}
 

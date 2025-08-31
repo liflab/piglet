@@ -22,10 +22,15 @@ import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.*;
 
+import ca.uqac.lif.fs.FileSystem;
+import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -46,7 +51,7 @@ public final class Solvers
 	 *          set of jar files (absolute or relative)
 	 */
 	@SuppressWarnings("deprecation")
-	public static CombinedTypeSolver buildSolver(Set<String> sourceRoots, Set<String> jarPaths)
+	public static CombinedTypeSolver buildSolver(Set<String> sourceRoots, String root_package, Set<String> jarPaths)
 			throws Exception
 	{
 		CombinedTypeSolver ts = new CombinedTypeSolver();
@@ -60,7 +65,21 @@ public final class Solvers
 			Path p = Paths.get(src).toAbsolutePath().normalize();
 			if (!Files.isDirectory(p))
 				throw new IllegalArgumentException("Not a directory: " + p);
-			ts.add(new JavaParserTypeSolver(p.toFile()));
+			if (root_package == null)
+			{
+				ts.add(new JavaParserTypeSolver(p.toFile()));
+			}
+			else
+			{
+				Set<String> set = new HashSet<String>();
+				HardDisk hd = new HardDisk(p.toString()).open();
+				traverseSourceRoots(root_package, hd, set);
+				hd.close();
+				for (String folder : set)
+				{
+					ts.add(new JavaParserTypeSolver(p.toString() + folder));
+				}
+			}
 		}
 
 		// add jars
@@ -91,5 +110,53 @@ public final class Solvers
 	{
 		return new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
 				.setSymbolResolver(new JavaSymbolSolver(ts));
+	}
+	
+	protected static void traverseSourceRoots(String root, FileSystem fs, Set<String> found_roots) throws FileSystemException
+	{
+		for (String f : fs.ls())
+		{
+			if (fs.isDirectory(f))
+			{
+				if (!containsSourceFiles(fs, f))
+				{
+					continue;
+				}
+				if (f.compareTo(root) == 0)
+				{
+					found_roots.add(fs.pwd());
+					continue;
+				}
+				else
+				{
+					fs.pushd(f);
+					traverseSourceRoots(root, fs, found_roots);
+					fs.popd();
+				}
+			}
+		}
+	}
+	
+	protected static boolean containsSourceFiles(FileSystem fs, String f) throws FileSystemException
+	{
+		fs.pushd(f);
+		for (String file : fs.ls())
+		{
+			if (file.endsWith(".java"))
+			{
+				fs.popd();
+				return true;
+			}
+			if (fs.isDirectory(file))
+			{
+				if (containsSourceFiles(fs, file))
+				{
+					fs.popd();
+					return true;
+				}
+			}
+		}
+		fs.popd();
+		return false;
 	}
 }

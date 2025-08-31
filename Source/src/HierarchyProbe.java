@@ -27,7 +27,7 @@ public class HierarchyProbe {
         		"/home/sylvain/Workspaces/beepbeep/u-log-generator/Source/Core/lib/petitpoucet-core-2.3.jar"
         		); // add jars if needed
 
-        CombinedTypeSolver ts = Solvers.buildSolver(sourceRoots, jarPaths);
+        CombinedTypeSolver ts = Solvers.buildSolver(sourceRoots, null, jarPaths);
         ParserConfiguration pc = Solvers.parserConfig(ts);
         JavaParser jp = new JavaParser(pc);
         JavaParserFacade facade = JavaParserFacade.get(ts);
