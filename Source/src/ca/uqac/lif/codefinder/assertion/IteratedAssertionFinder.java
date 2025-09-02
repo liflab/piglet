@@ -17,8 +17,6 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import java.util.Set;
-
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.DoStmt;
@@ -42,51 +40,45 @@ public class IteratedAssertionFinder extends AssertionFinder
 	}
 	
 	@Override
-	public void visit(ForStmt n, Set<FoundToken> set)
+	public void visit(ForStmt n, Void v)
 	{
-		super.visit(n, set);
-		findAssertions(n, n, set);
+		super.visit(n, v);
+		findAssertions(n, n, v);
 	}
 	
 	@Override
-	public void visit(DoStmt n, Set<FoundToken> set)
+	public void visit(DoStmt n, Void v)
 	{
-		super.visit(n, set);
-		findAssertions(n, n, set);
+		super.visit(n, v);
+		findAssertions(n, n, v);
 	}
 	
 	@Override
-	public void visit(WhileStmt n, Set<FoundToken> set)
+	public void visit(WhileStmt n, Void v)
 	{
-		super.visit(n, set);
-		findAssertions(n, n, set);
+		super.visit(n, v);
+		findAssertions(n, n, v);
 	}
 	
 	public class IteratedAssertionToken extends FoundToken
 	{
 		public IteratedAssertionToken(String filename, int start_line, int end_line, String snippet)
 		{
-			super(filename, start_line, end_line, snippet);
+			super(IteratedAssertionFinder.this.getName(), filename, start_line, end_line, snippet);
 		}	
-		
-		@Override
-		public String getAssertionName()
-		{
-			return IteratedAssertionFinder.this.getName();
-		}
 	}
 	
-	protected void findAssertions(Node source, Node n, Set<FoundToken> set)
+	protected void findAssertions(Node source, Node n, Void v)
 	{
 		if (n instanceof MethodCallExpr && isNonFluentAssertion((MethodCallExpr) n))
 		{
 			int start = source.getBegin().get().line;
 			int end = n.getBegin().get().line;
-			set.add(new IteratedAssertionToken(m_filename, start, end, AssertionFinder.trimLines(source.toString(), end - start + 1)));
+			m_found.add(new IteratedAssertionToken(m_filename, start, end, AssertionFinder.trimLines(source.toString(), end - start + 1)));
 		}
 		for (Node child : n.getChildNodes())
 		{
-			findAssertions(source, child, set);
+			findAssertions(source, child, v);
 		}
 	}
 }

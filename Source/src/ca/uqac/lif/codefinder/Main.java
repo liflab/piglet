@@ -42,13 +42,13 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
-import ca.uqac.lif.codefinder.assertion.AssertionCounter;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.EqualAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.FoundToken;
 import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder;
+import ca.uqac.lif.codefinder.assertion.NonFluentAssertionsCounter;
 import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder;
 import ca.uqac.lif.codefinder.assertion.EqualStringFinder;
 import ca.uqac.lif.codefinder.assertion.EqualityWithMessageFinder;
@@ -236,7 +236,7 @@ public class Main
 
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
-		finders.add(new AssertionCounter(null));
+		finders.add(new NonFluentAssertionsCounter(null));
 		finders.add(new CompoundAssertionFinder(null));
 		finders.add(new ConditionalAssertionFinder(null));
 		finders.add(new EqualAssertionFinder(null));

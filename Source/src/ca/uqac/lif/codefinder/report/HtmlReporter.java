@@ -29,7 +29,6 @@ import org.codelibs.jhighlight.renderer.Renderer;
 import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
 
 import ca.uqac.lif.codefinder.Main;
-import ca.uqac.lif.codefinder.assertion.AssertionCounter;
 import ca.uqac.lif.codefinder.assertion.FoundToken;
 import ca.uqac.lif.fs.FilePath;
 
@@ -65,9 +64,14 @@ public class HtmlReporter implements Reporter
 		m_out.println("</ul>");
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{
-			if (e.getKey().compareTo(AssertionCounter.NAME) != 0)
+			if (!e.getKey().contains("count"))
 			{
 				m_out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
+				reportTokens(root, e.getValue());
+			}
+			else
+			{
+				m_out.println("<h2>" + e.getKey() + " (" + "foo" + ")</h2>");
 				reportTokens(root, e.getValue());
 			}
 		}

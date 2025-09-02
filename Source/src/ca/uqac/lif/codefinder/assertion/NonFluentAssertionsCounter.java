@@ -1,7 +1,5 @@
 package ca.uqac.lif.codefinder.assertion;
 
-import java.util.Set;
-
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 public class NonFluentAssertionsCounter extends AssertionCounter
@@ -12,12 +10,18 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 	}
 	
 	@Override
-	public void visit(MethodCallExpr n, Set<FoundToken> set)
+	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, set);
+		super.visit(n, v);
 		if (isNonFluentAssertion(n))
 		{
-			set.add(new FoundToken(m_name, m_filename, n.getBegin().get().line, n.getEnd().get().line, n.toString()));
+			addToken(n);
 		}
+	}
+
+	@Override
+	public NonFluentAssertionsCounter newFinder(String filename)
+	{
+		return new NonFluentAssertionsCounter(filename);
 	}
 }

@@ -17,8 +17,6 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import java.util.Set;
-
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
@@ -39,12 +37,12 @@ public class EqualStringFinder extends AssertionFinder
 	}
 	
 	@Override
-	public void visit(MethodCallExpr n, Set<FoundToken> set)
+	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, set);
+		super.visit(n, v);
 		if (isAssertionEquals(n) && comparesStrings(n))
 		{
-			set.add(new EqualStringToken(m_filename, n.getBegin().get().line, n.toString()));
+			addToken(n);
 		}
 	}
 	
@@ -75,20 +73,6 @@ public class EqualStringFinder extends AssertionFinder
 			return false;
 		}
 		return false;
-	}
-	
-	public class EqualStringToken extends FoundToken
-	{
-		public EqualStringToken(String filename, int line, String snippet)
-		{
-			super(filename, line, line, snippet);
-		}
-		
-		@Override
-		public String getAssertionName()
-		{
-			return EqualStringFinder.this.getName();
-		}
 	}
 
 }

@@ -49,9 +49,9 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(MethodCallExpr n, Set<FoundToken> set)
+	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, set);
+		super.visit(n, v);
 		try
 		{
 			if (isAssertionEquals(n) && hasNonPrimitive(n))
@@ -59,29 +59,29 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 				ResolvedType type1 = Types.typeOf(n.getArgument(0), m_typeSolver);
 				if (TypeChecks.isSubtypeOf(type1, "java.util.Map"))
 				{
-					set.add(new EqualMapToken(m_filename, n.getBegin().get().line, n.toString()));
+					m_found.add(new EqualMapToken(m_filename, n.getBegin().get().line, n.toString()));
 				}
 				else if (TypeChecks.isSubtypeOf(type1, "java.util.List"))
 				{
-					set.add(new EqualListToken(m_filename, n.getBegin().get().line, n.toString()));
+					m_found.add(new EqualListToken(m_filename, n.getBegin().get().line, n.toString()));
 				}
 				else if (TypeChecks.isSubtypeOf(type1, "java.util.Set"))
 				{
-					set.add(new EqualSetToken(m_filename, n.getBegin().get().line, n.toString()));
+					m_found.add(new EqualSetToken(m_filename, n.getBegin().get().line, n.toString()));
 				}
 				else if (type1.getClass().isArray())
 				{
-					set.add(new EqualArrayToken(m_filename, n.getBegin().get().line, n.toString()));
+					m_found.add(new EqualArrayToken(m_filename, n.getBegin().get().line, n.toString()));
 				}
 				else
 				{
-					set.add(new EqualOtherNonPrimitiveToken(m_filename, n.getBegin().get().line, n.toString()));
+					m_found.add(new EqualOtherNonPrimitiveToken(m_filename, n.getBegin().get().line, n.toString()));
 				}
 			}
 		}
 		catch (UnresolvedException e)
 		{
-			set.add(new EqualUnresolvedToken(m_filename, n.getBegin().get().line, n.toString()));
+			m_found.add(new EqualUnresolvedToken(m_filename, n.getBegin().get().line, n.toString()));
 		}
 	}
 
@@ -167,13 +167,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	{
 		public EqualOtherNonPrimitiveToken(String filename, int line, String snippet)
 		{
-			super(filename, line, line, snippet);
-		}
-
-		@Override
-		public String getAssertionName()
-		{
-			return "Equality between other objects";
+			super("Equality between other objects", filename, line, line, snippet);
 		}
 	}
 
@@ -184,13 +178,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	{
 		public EqualMapToken(String filename, int line, String snippet)
 		{
-			super(filename, line, line, snippet);
-		}
-
-		@Override
-		public String getAssertionName()
-		{
-			return "Equality between maps";
+			super("Equality between maps", filename, line, line, snippet);
 		}
 	}
 
@@ -201,13 +189,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	{
 		public EqualSetToken(String filename, int line, String snippet)
 		{
-			super(filename, line, line, snippet);
-		}
-
-		@Override
-		public String getAssertionName()
-		{
-			return "Equality between maps";
+			super("Equality between maps", filename, line, line, snippet);
 		}
 	}
 
@@ -218,13 +200,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	{
 		public EqualListToken(String filename, int line, String snippet)
 		{
-			super(filename, line, line, snippet);
-		}
-
-		@Override
-		public String getAssertionName()
-		{
-			return "Equality between lists";
+			super("Equality between lists", filename, line, line, snippet);
 		}
 	}
 
@@ -235,13 +211,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	{
 		public EqualArrayToken(String filename, int line, String snippet)
 		{
-			super(filename, line, line, snippet);
-		}
-
-		@Override
-		public String getAssertionName()
-		{
-			return "Equality between arrays";
+			super("Equality between arrays", filename, line, line, snippet);
 		}
 	}
 
@@ -252,13 +222,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	{
 		public EqualUnresolvedToken(String filename, int line, String snippet)
 		{
-			super(filename, line, line, snippet);
-		}
-
-		@Override
-		public String getAssertionName()
-		{
-			return "Equality between unresolved symbols";
+			super("Equality between unresolved symbols", filename, line, line, snippet);
 		}
 	}
 

@@ -15,7 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class HierarchyProbe {
-    public static void main(String[] args) throws Exception {
+    @SuppressWarnings("unused")
+		public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             System.err.println("Usage: java HierarchyProbe <sourceRoot>");
             System.exit(1);

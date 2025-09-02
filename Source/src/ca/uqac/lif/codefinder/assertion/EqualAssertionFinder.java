@@ -18,7 +18,6 @@
 package ca.uqac.lif.codefinder.assertion;
 
 import java.util.List;
-import java.util.Set;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.BinaryExpr;
@@ -42,12 +41,12 @@ public class EqualAssertionFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(MethodCallExpr n, Set<FoundToken> set)
+	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, set);
+		super.visit(n, v);
 		if (isAssertionEquals(n) && containsEquals(n))
 		{
-			set.add(new EqualAssertionToken(m_filename, n.getBegin().get().line, n.toString()));
+			addToken(n);
 		}
 	}
 
@@ -73,20 +72,6 @@ public class EqualAssertionFinder extends AssertionFinder
 		return false;
 	}
 	
-	public class EqualAssertionToken extends FoundToken
-	{
-		public EqualAssertionToken(String filename, int line, String snippet)
-		{
-			super(filename, line, line, snippet);
-		}		
-		
-		@Override
-		public String getAssertionName()
-		{
-			return EqualAssertionFinder.this.getName();
-		}
-	}
-
 	protected static boolean isComplex(BinaryExpr be)
 	{
 		com.github.javaparser.ast.expr.BinaryExpr.Operator op = be.getOperator();
@@ -117,4 +102,5 @@ public class EqualAssertionFinder extends AssertionFinder
 		}
 
 	}
+	
 }
