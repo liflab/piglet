@@ -21,7 +21,7 @@ package ca.uqac.lif.codefinder.assertion;
  * Represents a token found in a source file, such as an assertion or code fragment.
  * Stores the filename, start and end line numbers, and an optional code snippet.
  */
-public abstract class FoundToken implements Comparable<FoundToken>
+public class FoundToken implements Comparable<FoundToken>
 {
 	/** The name of the file where the token was found. */
 	protected final String m_filename;
@@ -36,15 +36,21 @@ public abstract class FoundToken implements Comparable<FoundToken>
 	protected String m_snippet;
 	
 	/**
+	 * The name of the assertion or token type.
+	 */
+	protected final String m_name;
+	
+	/**
 	 * Constructs a FoundToken with a code snippet.
 	 * @param filename The name of the file
 	 * @param start_line The starting line number
 	 * @param end_line The ending line number
 	 * @param snippet The code snippet
 	 */
-	public FoundToken(String filename, int start_line, int end_line, String snippet)
+	public FoundToken(String name, String filename, int start_line, int end_line, String snippet)
 	{
 		super();
+		m_name = name;
 		m_filename = filename;
 		m_startLine = start_line;
 		m_endLine = end_line;
@@ -57,9 +63,9 @@ public abstract class FoundToken implements Comparable<FoundToken>
 	 * @param start_line The starting line number
 	 * @param end_line The ending line number
 	 */
-	public FoundToken(String filename, int start_line, int end_line)
+	public FoundToken(String name, String filename, int start_line, int end_line)
 	{
-		this(filename, start_line, end_line, "");
+		this(name, filename, start_line, end_line, "");
 	}
 	
 	/**
@@ -103,7 +109,10 @@ public abstract class FoundToken implements Comparable<FoundToken>
 	 * Returns the name of the assertion or token type.
 	 * @return The assertion name
 	 */
-	public abstract String getAssertionName();
+	public String getAssertionName()
+	{
+		return m_name;
+	}
 
 	/**
 	 * Compares this token to another by filename and start line.

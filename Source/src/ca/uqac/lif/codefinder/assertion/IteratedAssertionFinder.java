@@ -78,7 +78,7 @@ public class IteratedAssertionFinder extends AssertionFinder
 	
 	protected void findAssertions(Node source, Node n, Set<FoundToken> set)
 	{
-		if (n instanceof MethodCallExpr && isAssertion((MethodCallExpr) n))
+		if (n instanceof MethodCallExpr && isNonFluentAssertion((MethodCallExpr) n))
 		{
 			int start = source.getBegin().get().line;
 			int end = n.getBegin().get().line;

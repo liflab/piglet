@@ -17,8 +17,6 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import java.util.Set;
-
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.IfStmt;
@@ -41,40 +39,24 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(IfStmt n, Set<FoundToken> set)
+	public void visit(IfStmt n, Void v)
 	{
-		super.visit(n, set);
-		findAssertions(n, n, set);
+		super.visit(n, v);
+		findAssertions(n, n);
 
 	}
 
-	protected void findAssertions(Node source, Node n, Set<FoundToken> set)
+	protected void findAssertions(Node source, Node n)
 	{
-		if (n instanceof MethodCallExpr && isAssertion((MethodCallExpr) n))
+		if (n instanceof MethodCallExpr && isNonFluentAssertion((MethodCallExpr) n))
 		{
 			int start = source.getBegin().get().line;
 			int end = n.getBegin().get().line;
-			set.add(new ConditionalAssertionToken(m_filename, start, end, AssertionFinder.trimLines(source.toString(), end - start + 1)));
+			addToken(start, end, AssertionFinder.trimLines(source.toString(), end - start + 1));
 		}
 		for (Node child : n.getChildNodes())
 		{
-			findAssertions(source, child, set);
+			findAssertions(source, child);
 		}
 	}
-
-	public class ConditionalAssertionToken extends FoundToken
-	{
-		public ConditionalAssertionToken(String filename, int start_line, int end_line, String snippet)
-		{
-			super(filename, start_line, end_line, snippet);
-		}
-
-		@Override
-		public String getAssertionName()
-		{
-			return ConditionalAssertionFinder.this.getName();
-		}
-
-	}
-
 }

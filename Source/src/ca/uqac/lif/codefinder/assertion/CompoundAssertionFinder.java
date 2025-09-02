@@ -18,7 +18,6 @@
 package ca.uqac.lif.codefinder.assertion;
 
 import java.util.List;
-import java.util.Set;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.BinaryExpr;
@@ -41,12 +40,12 @@ public class CompoundAssertionFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(MethodCallExpr n, Set<FoundToken> set)
+	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, set);
+		super.visit(n, v);
 		if (isAssertionNotEquals(n) && containsCompound(n))
 		{
-			set.add(new CompoundAssertionToken(m_filename, n.getBegin().get().line, n.toString()));
+			addToken(n);
 		}
 	}
 
@@ -77,15 +76,15 @@ public class CompoundAssertionFinder extends AssertionFinder
 		case AND:
 		case BINARY_AND:
 		case BINARY_OR:
-		case DIVIDE:
-		case LEFT_SHIFT:
-		case MINUS:
-		case MULTIPLY:
+		//case DIVIDE:
+		//case LEFT_SHIFT:
+		//case MINUS:
+		//case MULTIPLY:
 		case OR:
-		case PLUS:
-		case REMAINDER:
-		case SIGNED_RIGHT_SHIFT:
-		case UNSIGNED_RIGHT_SHIFT:
+		//case PLUS:
+		//case REMAINDER:
+		//case SIGNED_RIGHT_SHIFT:
+		//case UNSIGNED_RIGHT_SHIFT:
 		case XOR:
 			return true;
 		case EQUALS:
@@ -98,19 +97,5 @@ public class CompoundAssertionFinder extends AssertionFinder
 			return false;
 		}
 
-	}
-	
-	public class CompoundAssertionToken extends FoundToken
-	{
-		public CompoundAssertionToken(String filename, int line, String snippet)
-		{
-			super(filename, line, line, snippet);
-		}		
-		
-		@Override
-		public String getAssertionName()
-		{
-			return CompoundAssertionFinder.this.getName();
-		}
 	}
 }

@@ -18,6 +18,7 @@
 package ca.uqac.lif.codefinder;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -67,22 +68,22 @@ public class AssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AssertionFinderRunnable(JavaParser p, String file, String code, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status)
+	public AssertionFinderRunnable(JavaParser p, String file, String code, Set<AssertionFinder> finders, boolean quiet, StatusCallback status)
 	{
 		super();
 		m_parser = p;
 		m_file = file;
 		m_is = code;
 		m_finders = finders;
-		m_found = found;
 		m_quiet = quiet;
 		m_callback = status;
+		m_found = new HashSet<FoundToken>();
 	}
 	
 	@Override
 	public void run()
 	{
-		processFile(m_parser, m_file, m_is, m_finders, m_found, m_quiet);
+		processFile(m_parser, m_file, m_is, m_finders, m_quiet);
 		if (m_callback != null)
 		{
 			m_callback.done();
@@ -98,7 +99,7 @@ public class AssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	public static void processFile(JavaParser p, String file, String code, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet)
+	protected void processFile(JavaParser p, String file, String code, Set<AssertionFinder> finders, boolean quiet)
 	{
 		try
 		{
@@ -114,7 +115,7 @@ public class AssertionFinderRunnable implements Runnable
 				for (AssertionFinder f : finders)
 				{
 					AssertionFinder new_f = f.newFinder(file);
-					new_f.visit(m, found);
+					new_f.visit(m, m_found);
 				}
 			}
 		}
@@ -126,6 +127,11 @@ public class AssertionFinderRunnable implements Runnable
 				System.err.println("Could not parse " + file);
 			}
 		}
+	}
+	
+	public Set<FoundToken> getFound()
+	{
+		return m_found;
 	}
 	
 	/**

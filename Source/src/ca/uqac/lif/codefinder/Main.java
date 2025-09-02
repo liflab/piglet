@@ -22,14 +22,16 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +42,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
-import ca.uqac.lif.codefinder.assertion.AnyAssertionFinder;
+import ca.uqac.lif.codefinder.assertion.AssertionCounter;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder;
@@ -68,14 +70,14 @@ import ca.uqac.lif.util.CliParser.Argument;
 import ca.uqac.lif.util.CliParser.ArgumentMap;
 
 /**
- * Main class of the CodeFinder application. Parses command line arguments,
- * sets up the environment, and launches the analysis.
+ * Main class of the CodeFinder application. Parses command line arguments, sets
+ * up the environment, and launches the analysis.
  */
 public class Main
 {
 	/** Return code indicating "no return" **/
 	public static final int RET_NOTHING = -1;
-	
+
 	/** Return code indicating successful execution */
 	public static final int RET_OK = 0;
 
@@ -90,34 +92,35 @@ public class Main
 
 	/** Standard error */
 	protected static final AnsiPrinter s_stderr = new AnsiPrinter(System.err);
-	
+
 	/** The path in which the executable is executed **/
 	protected static final FilePath s_homePath = new FilePath(System.getProperty("user.dir"));
-	
+
 	/** Set of unresolved symbols **/
-	protected static final Set<String> s_setUnresolved = Collections.synchronizedSet(new HashSet<String>());
-	
+	protected static final Set<String> s_setUnresolved = Collections
+			.synchronizedSet(new HashSet<String>());
+
 	/** The parsed command line arguments **/
 	protected static ArgumentMap s_map;
 
 	/** Additional source paths */
 	protected static Set<String> s_sourcePaths = new HashSet<>();
-	
+
 	/** Additional jar files */
 	protected static Set<String> s_jarPaths = new HashSet<>();
 
 	/** Name of the output file */
 	protected static String s_outputFile = "report.html";
-	
+
 	/** Whether to operate in quiet mode (no error messages) */
 	protected static boolean s_quiet = false;
-	
+
 	/** Whether to show unresolved symbols **/
 	protected static boolean s_unresolved = false;
 
 	/** Number of threads to use */
 	protected static int s_threads = 2;
-	
+
 	/** The name of the root package to look for in the source tree **/
 	public static String s_root = null;
 
@@ -129,12 +132,16 @@ public class Main
 
 	/**
 	 * Main entry point of the application. This method simply calls
-	 * {@link #doMain(String[])} and exits with the return code of that method.
-	 * This is done so that {@link #doMain(String[])} could be called
-	 * through unit tests without exiting the JVM.
-	 * @param args Command line arguments
-	 * @throws FileSystemException When a file system error occurs
-	 * @throws IOException When an I/O error occurs
+	 * {@link #doMain(String[])} and exits with the return code of that method. This
+	 * is done so that {@link #doMain(String[])} could be called through unit tests
+	 * without exiting the JVM.
+	 * 
+	 * @param args
+	 *          Command line arguments
+	 * @throws FileSystemException
+	 *           When a file system error occurs
+	 * @throws IOException
+	 *           When an I/O error occurs
 	 */
 	public static void main(String[] args) throws FileSystemException, IOException
 	{
@@ -143,9 +150,13 @@ public class Main
 
 	/**
 	 * Main entry point of the application
-	 * @param args Command line arguments
-	 * @throws FileSystemException When a file system error occurs
-	 * @throws IOException When an I/O error occurs
+	 * 
+	 * @param args
+	 *          Command line arguments
+	 * @throws FileSystemException
+	 *           When a file system error occurs
+	 * @throws IOException
+	 *           When an I/O error occurs
 	 */
 	public static int doMain(String[] args)
 	{
@@ -156,7 +167,7 @@ public class Main
 		if (ret != RET_NOTHING)
 		{
 			return ret;
-		} 
+		}
 
 		/* Setup the file provider */
 		List<String> folders = s_map.getOthers(); // The files to read from
@@ -175,15 +186,11 @@ public class Main
 		}
 		UnionProvider fsp = new UnionProvider(providers);
 		int total = fsp.filesProvided();
-		Map<String,List<FoundToken>> categorized = new ConcurrentHashMap<>();
-		Set<FoundToken> found = Collections.synchronizedSet(new HashSet<>());
+		Map<String, List<FoundToken>> categorized = new HashMap<>();
+		Set<FoundToken> found = new HashSet<>();
 		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, s_summary)));
 
 		/* Setup parser (boilerplate code) */
-    
-		//ParserConfiguration parserConfiguration = JavaParserFactory.getConfiguration(new String[] {s_sourcePath});
-		//ParserConfiguration parserConfiguration =
-		//		new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
 		CombinedTypeSolver typeSolver = null;
 		try
 		{
@@ -214,7 +221,9 @@ public class Main
 			{
 				try
 				{
-					typeSolver.add(new com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver(s_jarPath));
+					typeSolver
+							.add(new com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver(
+									s_jarPath));
 				}
 				catch (IOException e)
 				{
@@ -227,7 +236,7 @@ public class Main
 
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
-		finders.add(new AnyAssertionFinder(null));
+		finders.add(new AssertionCounter(null));
 		finders.add(new CompoundAssertionFinder(null));
 		finders.add(new ConditionalAssertionFinder(null));
 		finders.add(new EqualAssertionFinder(null));
@@ -239,6 +248,9 @@ public class Main
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, total);
 		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(s_threads);
+		s_stdout.println("Using " + s_threads + " thread" + (s_threads > 1 ? "s" : ""));
+		long start_time = System.currentTimeMillis();
+		long end_time = -1;
 		try
 		{
 			processBatch(executor, parserConfiguration, fsp, finders, found, s_quiet, status, s_limit);
@@ -270,9 +282,12 @@ public class Main
 			// Preserve interrupt status
 			Thread.currentThread().interrupt();
 		}
+		end_time = System.currentTimeMillis();
+		long duration = end_time - start_time;
 		s_stdout.print("\r\033[2K");
 		s_stdout.println(fsp.filesProvided() + " file(s) analyzed");
 		s_stdout.println(found.size() + " assertion(s) found");
+		s_stdout.println("Analysis time: " + (duration / 1000) + " s");
 		s_stdout.println();
 
 		/* Categorize results and produce report */
@@ -283,7 +298,8 @@ public class Main
 		try
 		{
 			hd = new HardDisk(output_path.toString()).open();
-			HtmlReporter reporter = new HtmlReporter(new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
+			HtmlReporter reporter = new HtmlReporter(
+					new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
 			reporter.report(reverse_path, categorized, s_setUnresolved);
 			hd.close();
 		}
@@ -301,15 +317,22 @@ public class Main
 	/**
 	 * Processes the command line arguments and sets the appropriate static
 	 * variables.
-	 * @param cli The command line parser
+	 * 
+	 * @param cli
+	 *          The command line parser
 	 * @return A return code if the program should exit, or -1 to continue
 	 */
 	protected static int processCommandLine(CliParser cli)
 	{
 		ArgumentMap map = s_map;
+		int ret = -1;
 		if (map.containsKey("profile"))
 		{
-			return readProfile(map.getOptionValue("profile"));
+			ret = readProfile(map.getOptionValue("profile"));
+			if (ret != RET_NOTHING)
+			{
+				return ret;
+			}
 		}
 		if (map.containsKey("no-color"))
 		{
@@ -355,24 +378,20 @@ public class Main
 		if (map.hasOption("limit"))
 		{
 			s_limit = Integer.parseInt(map.getOptionValue("limit").trim());
+			s_stdout.println("Analysis limited to first " + s_limit + " files");
 		}
 		if (map.hasOption("root"))
 		{
 			s_root = map.getOptionValue("root");
 		}
-		if (map.containsKey("help") || map.getOthers().size() == 0)
-		{
-			showUsage(cli);
-			return RET_OK;
-		}
-		if (map.containsKey("help") || map.getOthers().size() == 0)
+		if (map.containsKey("help"))
 		{
 			showUsage(cli);
 			return RET_OK;
 		}
 		return RET_NOTHING;
 	}
-	
+
 	protected static int readProfile(String filename)
 	{
 		FilePath output_path = s_homePath.chdir(getPathOfFile(filename));
@@ -404,39 +423,59 @@ public class Main
 
 	/**
 	 * Sets up the command line interface parser with the appropriate options.
+	 * 
 	 * @return The command line parser
 	 */
 	protected static CliParser setupCli()
 	{
 		CliParser cli = new CliParser();
-		cli.addArgument(new Argument().withShortName("o").withLongName("output").withDescription("Output file (default: report.html)").withArgument("file"));
-		cli.addArgument(new Argument().withShortName("s").withLongName("source").withDescription("Additional source in path").withArgument("path"));
-		cli.addArgument(new Argument().withShortName("j").withLongName("jar").withDescription("Additional jar file(s) in path").withArgument("path"));
-		cli.addArgument(new Argument().withShortName("t").withLongName("threads").withArgument("n").withDescription("Use up to n threads"));
-		cli.addArgument(new Argument().withShortName("q").withLongName("quiet").withDescription("Do not show error messages"));
-		cli.addArgument(new Argument().withShortName("m").withLongName("summary").withDescription("Only show a summary at the CLI"));
-		cli.addArgument(new Argument().withShortName("c").withLongName("no-color").withDescription("Disable colored output"));
-		cli.addArgument(new Argument().withShortName("l").withLongName("limit").withArgument("n").withDescription("Stop after n files (for testing purposes)"));
-		cli.addArgument(new Argument().withShortName("h").withLongName("help").withDescription("Display this help message"));
-		cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file").withDescription("Get options from file"));
-		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved").withDescription("Show unresolved symbols"));
-		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p").withDescription("Search in source tree for package p"));
+		cli.addArgument(new Argument().withShortName("o").withLongName("output")
+				.withDescription("Output file (default: report.html)").withArgument("file"));
+		cli.addArgument(new Argument().withShortName("s").withLongName("source")
+				.withDescription("Additional source in path").withArgument("path"));
+		cli.addArgument(new Argument().withShortName("j").withLongName("jar")
+				.withDescription("Additional jar file(s) in path").withArgument("path"));
+		cli.addArgument(new Argument().withShortName("t").withLongName("threads").withArgument("n")
+				.withDescription("Use up to n threads"));
+		cli.addArgument(new Argument().withShortName("q").withLongName("quiet")
+				.withDescription("Do not show error messages"));
+		cli.addArgument(new Argument().withShortName("m").withLongName("summary")
+				.withDescription("Only show a summary at the CLI"));
+		cli.addArgument(new Argument().withShortName("c").withLongName("no-color")
+				.withDescription("Disable colored output"));
+		cli.addArgument(new Argument().withShortName("l").withLongName("limit").withArgument("n")
+				.withDescription("Stop after n files (for testing purposes)"));
+		cli.addArgument(new Argument().withShortName("h").withLongName("help")
+				.withDescription("Display this help message"));
+		cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file")
+				.withDescription("Get options from file"));
+		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved")
+				.withDescription("Show unresolved symbols"));
+		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p")
+				.withDescription("Search in source tree for package p"));
 		return cli;
 	}
 
 	/**
 	 * Displays usage information for the command line interface.
-	 * @param out The output stream to which the usage information is sent
-	 * @param cli The command line parser
+	 * 
+	 * @param out
+	 *          The output stream to which the usage information is sent
+	 * @param cli
+	 *          The command line parser
 	 */
 	protected static void showUsage(CliParser cli)
 	{
 		cli.printHelp("", s_stdout);
 	}
 
-	protected static void processBatch(Executor e, ParserConfiguration conf, FileProvider provider, Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status, int limit) throws IOException, FileSystemException
+	protected static void processBatch(ExecutorService e, ParserConfiguration conf, FileProvider provider,
+			Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
+			int limit) throws IOException, FileSystemException
 	{
 		int count = 0;
+		Set<AssertionFinderRunnable> tasks = new HashSet<>();
+		List<Future<?>> futures = new ArrayList<>();
 		while (provider.hasNext() && (limit == -1 || count < limit))
 		{
 			count++;
@@ -444,12 +483,47 @@ public class Main
 			InputStream stream = fs.getStream();
 			String code = new String(FileUtils.toBytes(stream));
 			stream.close();
-			e.execute(new AssertionFinderRunnable(new JavaParser(conf), fs.getFilename(), code, finders, found, quiet, status));
-			stream.close();
+			// e.execute(new AssertionFinderRunnable(new JavaParser(conf), fs.getFilename(),
+			// code, finders, found, quiet, status));
+			AssertionFinderRunnable r = new AssertionFinderRunnable(new JavaParser(conf),
+					fs.getFilename(), code, finders, quiet, status);
+			tasks.add(r);
+			futures.add(e.submit(r));
+		}
+		waitForEnd(futures);
+		e.shutdown(); // All tasks are finished, shutdown the executor
+		for (AssertionFinderRunnable r : tasks)
+		{
+			found.addAll(r.getFound());
 		}
 	}
 
-	protected static void categorize(Map<String,List<FoundToken>> map, Set<FoundToken> found)
+	public static void waitForEnd(List<Future<?>> futures)
+	{
+		for (Future<?> f : futures)
+		{
+			try
+			{
+				f.get(); // blocks until this task completes; rethrows exceptions from the task
+			}
+			catch (InterruptedException ie)
+			{
+				Thread.currentThread().interrupt();
+				// If interrupted, you can choose to cancel outstanding tasks:
+				for (Future<?> other : futures)
+					other.cancel(true);
+				throw new RuntimeException("Interrupted while waiting for tasks", ie);
+			}
+			catch (ExecutionException ee)
+			{
+				// The task threw; unwrap and either log or fail fast
+				throw new RuntimeException("Task failed", ee.getCause());
+			}
+		}
+		
+	}
+	
+	protected static void categorize(Map<String, List<FoundToken>> map, Set<FoundToken> found)
 	{
 		for (FoundToken t : found)
 		{
@@ -524,11 +598,11 @@ public class Main
 
 	protected static class EndRunnable implements Runnable
 	{
-		private final Map<String,List<FoundToken>> m_found;
+		private final Map<String, List<FoundToken>> m_found;
 
 		private final boolean m_summary;
 
-		public EndRunnable(Map<String,List<FoundToken>> found, boolean summary)
+		public EndRunnable(Map<String, List<FoundToken>> found, boolean summary)
 		{
 			super();
 			m_found = found;

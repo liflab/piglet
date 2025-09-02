@@ -18,20 +18,17 @@
 package ca.uqac.lif.codefinder.assertion;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 /**
  * An abstract base class for finders that look for assertions in Java code.
  */
-public abstract class AssertionFinder extends VoidVisitorAdapter<Set<FoundToken>>
+public abstract class AssertionFinder extends TokenFinder
 {
-	/** The name of the file to analyze */
-	protected final String m_filename;
-	
-	/** The name of this finder */
-	protected final String m_name;
+	/** The set of found tokens */
+	protected final Set<FoundToken> m_found;
 	
 	/**
 	 * Creates a new assertion finder.
@@ -40,18 +37,24 @@ public abstract class AssertionFinder extends VoidVisitorAdapter<Set<FoundToken>
 	 */
 	public AssertionFinder(String name, String filename)
 	{
-		super();
-		m_filename = filename;
-		m_name = name;
+		super(name, filename);
+		m_found = new TreeSet<FoundToken>();
 	}
 	
 	/**
-	 * Gets the name of this finder.
-	 * @return The name of this finder
+	 * Gets the set of found tokens.
+	 * @return The set of found tokens
 	 */
-	public String getName()
+	@Override
+	public Set<FoundToken> getFoundTokens()
 	{
-		return m_name;
+		return m_found;
+	}
+	
+	@Override
+	public int getFoundCount()
+	{
+		return m_found.size();
 	}
 	
 	/**
@@ -59,21 +62,50 @@ public abstract class AssertionFinder extends VoidVisitorAdapter<Set<FoundToken>
 	 * @param filename The name of the new file
 	 * @return A new instance of the same type of finder
 	 */
+	@Override
 	public abstract AssertionFinder newFinder(String filename);
+
+	/**
+	 * Adds a found token to the set of found tokens.
+	 * @param n The method call expression corresponding to the found token
+	 */
+	protected void addToken(MethodCallExpr n)
+	{
+		m_found.add(new FoundToken(m_name, m_filename, n.getBegin().get().line, n.getEnd().get().line, n.toString()));
+	}
+	
+	protected void addToken(int start, int end, String snippet)
+	{
+		m_found.add(new FoundToken(m_name, m_filename, start, end, snippet));
+	}
 	
 	/**
-	 * Determines if a method call expression is an assertion.
+	 * Determines if a method call expression is an assertion, written
+	 * in a non-fluent style (i.e. not using assertThat).
 	 * @param m The method call expression to examine
 	 * @return <tt>true</tt> if the method call is an assertion, <tt>false</tt>
 	 * otherwise
 	 */
-	protected static boolean isAssertion(MethodCallExpr m)
+	protected static boolean isNonFluentAssertion(MethodCallExpr m)
 	{
 		String name = m.getName().asString();
 		return name.compareTo("assert")
 				* name.compareTo("assertEquals")
 				* name.compareTo("assertTrue")
 				* name.compareTo("assertFalse") == 0;
+	}
+	
+	/**
+	 * Determines if a method call expression is a fluent assertion,
+	 * i.e. using assertThat.
+	 * @param m The method call expression to examine
+	 * @return <tt>true</tt> if the method call is a fluent assertion, <tt>false</tt>
+	 * otherwise
+	 */
+	protected static boolean isFluentAssertion(MethodCallExpr m)
+	{
+		String name = m.getName().asString();
+		return name.compareTo("assertThat") == 0;
 	}
 	
 	/**
@@ -104,20 +136,14 @@ public abstract class AssertionFinder extends VoidVisitorAdapter<Set<FoundToken>
 	}
 	
 	/**
-	 * Trims a string to a certain number of lines. This method
-	 * is used to limit the size of code snippets in the output.
-	 * @param s The string to trim
-	 * @param num_lines The maximum number of lines to keep
-	 * @return The trimmed string
+	 * Determines if a method call expression is an assertThat call.
+	 * @param m The method call expression to examine
+	 * @return <tt>true</tt> if the method call is an assertThat call, <tt>false</tt>
+	 * otherwise
 	 */
-	protected static String trimLines(String s, int num_lines)
+	protected static boolean isAssertThat(MethodCallExpr m)
 	{
-		StringBuilder out = new StringBuilder();
-		String[] lines = s.split("\\n");
-		for (int i = 0; i < Math.min(lines.length, num_lines); i++)
-		{
-			out.append(lines[i]).append("\n");
-		}
-		return out.toString();
+		String name = m.getName().asString();
+		return name.compareTo("assertThat") == 0;
 	}
 }
