@@ -22,12 +22,12 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -186,7 +186,7 @@ public class Main
 		}
 		UnionProvider fsp = new UnionProvider(providers);
 		int total = fsp.filesProvided();
-		Map<String, List<FoundToken>> categorized = new HashMap<>();
+		Map<String, List<FoundToken>> categorized = new TreeMap<>();
 		Set<FoundToken> found = new HashSet<>();
 		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, s_summary)));
 
@@ -248,7 +248,7 @@ public class Main
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, total);
 		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(s_threads);
-		s_stdout.println("Using " + s_threads + " thread" + (s_threads > 1 ? "s" : ""));
+		//s_stdout.println("Using " + s_threads + " thread" + (s_threads > 1 ? "s" : ""));
 		long start_time = System.currentTimeMillis();
 		long end_time = -1;
 		try
@@ -494,6 +494,11 @@ public class Main
 		e.shutdown(); // All tasks are finished, shutdown the executor
 		for (AssertionFinderRunnable r : tasks)
 		{
+			/*if (r.getFound().isEmpty())
+			{
+				System.out.println("File " + r.m_file + ": " + r.getFound().size()
+						+ " assertion" + (r.getFound().size() > 1 ? "s" : "") + " found");
+			}*/
 			found.addAll(r.getFound());
 		}
 	}

@@ -20,7 +20,8 @@ package ca.uqac.lif.codefinder.assertion;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 /**
- * Counts assertions, but does not store them.
+ * Counts fluent assertions (i.e., using assertThat)
+ * but does not store them.
  */
 public abstract class AssertionCounter extends AssertionFinder
 {	
@@ -37,7 +38,7 @@ public abstract class AssertionCounter extends AssertionFinder
 	public void visit(MethodCallExpr n, Void v)
 	{
 		super.visit(n, v);
-		if (isNonFluentAssertion(n))
+		if (isFluentAssertion(n))
 		{
 			m_count++;
 		}
@@ -47,5 +48,18 @@ public abstract class AssertionCounter extends AssertionFinder
 	public int getFoundCount()
 	{
 		return m_count;
+	}
+	
+	/**
+	 * Determines if a method call expression is a fluent assertion,
+	 * i.e. using assertThat.
+	 * @param m The method call expression to examine
+	 * @return <tt>true</tt> if the method call is a fluent assertion, <tt>false</tt>
+	 * otherwise
+	 */
+	protected static boolean isFluentAssertion(MethodCallExpr m)
+	{
+		String name = m.getName().asString();
+		return name.compareTo("assertThat") == 0;
 	}
 }

@@ -23,10 +23,14 @@ import com.github.javaparser.ast.stmt.IfStmt;
 
 
 /**
- * Finds assertions nested inside an if block.
+ * Finds assertions nested inside an <tt>if</tt> block.
  */
 public class ConditionalAssertionFinder extends AssertionFinder
 {	
+	/**
+	 * Creates a new conditional assertion finder.
+	 * @param filename The name of the file to analyze
+	 */
 	public ConditionalAssertionFinder(String filename)
 	{
 		super("Conditional assertions", filename);
@@ -46,9 +50,14 @@ public class ConditionalAssertionFinder extends AssertionFinder
 
 	}
 
+	/**
+	 * Recursively finds assertions in a node.
+	 * @param source The source node to extract line numbers from
+	 * @param n The node to examine
+	 */
 	protected void findAssertions(Node source, Node n)
 	{
-		if (n instanceof MethodCallExpr && isNonFluentAssertion((MethodCallExpr) n))
+		if (n instanceof MethodCallExpr /*&& isNonFluentAssertion((MethodCallExpr) n)*/)
 		{
 			int start = source.getBegin().get().line;
 			int end = n.getBegin().get().line;

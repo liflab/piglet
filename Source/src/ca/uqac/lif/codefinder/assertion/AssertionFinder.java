@@ -74,38 +74,15 @@ public abstract class AssertionFinder extends TokenFinder
 		m_found.add(new FoundToken(m_name, m_filename, n.getBegin().get().line, n.getEnd().get().line, n.toString()));
 	}
 	
+	/**
+	 * Adds a found token to the set of found tokens.
+	 * @param start The starting line number of the found token
+	 * @param end The ending line number of the found token
+	 * @param snippet A snippet of code corresponding to the found token
+	 */
 	protected void addToken(int start, int end, String snippet)
 	{
 		m_found.add(new FoundToken(m_name, m_filename, start, end, snippet));
-	}
-	
-	/**
-	 * Determines if a method call expression is an assertion, written
-	 * in a non-fluent style (i.e. not using assertThat).
-	 * @param m The method call expression to examine
-	 * @return <tt>true</tt> if the method call is an assertion, <tt>false</tt>
-	 * otherwise
-	 */
-	protected static boolean isNonFluentAssertion(MethodCallExpr m)
-	{
-		String name = m.getName().asString();
-		return name.compareTo("assert")
-				* name.compareTo("assertEquals")
-				* name.compareTo("assertTrue")
-				* name.compareTo("assertFalse") == 0;
-	}
-	
-	/**
-	 * Determines if a method call expression is a fluent assertion,
-	 * i.e. using assertThat.
-	 * @param m The method call expression to examine
-	 * @return <tt>true</tt> if the method call is a fluent assertion, <tt>false</tt>
-	 * otherwise
-	 */
-	protected static boolean isFluentAssertion(MethodCallExpr m)
-	{
-		String name = m.getName().asString();
-		return name.compareTo("assertThat") == 0;
 	}
 	
 	/**

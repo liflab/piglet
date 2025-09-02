@@ -23,46 +23,32 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
  * Counts non-fluent assertions (that is, assertions not using
  * assertThat) but does not store them.
  */
-public class NonFluentAssertionsCounter extends AssertionCounter
+public class FluentAssertionsCounter extends AssertionCounter
 {
 	/**
 	 * Creates a new non-fluent assertions counter.
 	 * @param filename
 	 */
-	public NonFluentAssertionsCounter(String filename)
+	public FluentAssertionsCounter(String filename)
 	{
-		super("Non-fluent assertions", filename);
+		super("Fluent assertions", filename);
 	}
 	
 	@Override
 	public void visit(MethodCallExpr n, Void v)
 	{
 		super.visit(n, v);
-		if (isNonFluentAssertion(n))
+		if (isFluentAssertion(n))
 		{
 			addToken(n);
 		}
 	}
 
 	@Override
-	public NonFluentAssertionsCounter newFinder(String filename)
+	public FluentAssertionsCounter newFinder(String filename)
 	{
-		return new NonFluentAssertionsCounter(filename);
+		return new FluentAssertionsCounter(filename);
 	}
 	
-	/**
-	 * Determines if a method call expression is an assertion, written
-	 * in a non-fluent style (i.e. not using assertThat).
-	 * @param m The method call expression to examine
-	 * @return <tt>true</tt> if the method call is an assertion, <tt>false</tt>
-	 * otherwise
-	 */
-	protected static boolean isNonFluentAssertion(MethodCallExpr m)
-	{
-		String name = m.getName().asString();
-		return name.compareTo("assert")
-				* name.compareTo("assertEquals")
-				* name.compareTo("assertTrue")
-				* name.compareTo("assertFalse") == 0;
-	}
+	
 }

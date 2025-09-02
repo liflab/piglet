@@ -116,6 +116,7 @@ public class AssertionFinderRunnable implements Runnable
 				{
 					AssertionFinder new_f = f.newFinder(file);
 					new_f.visit(m, null);
+					m_found.addAll(new_f.getFoundTokens());
 				}
 			}
 		}
