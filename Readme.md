@@ -33,7 +33,24 @@ HTML report in the file `report.html`.
 
 ### Symbol resolution
 
-TODO.
+Some token finders need to determine the type of various expressions:
+variables, method arguments or return types. Most often these definitions
+are not in the test files to analyze, but either in additional source files
+or in referenced libraries. It is possible to specify these files and
+libraries as follows.
+
+1. **Java source folders** can be added using the `--source` argument.
+   You can provide a colon-separated list of folders containing additional
+   source files, e.g.:
+```
+codefinder --source /my/project/src:/my/project/otherfolder /my/project/srctest
+```
+   This will tell that the folders `src` and `otherfolder` are to be
+   scanned for additional definitions of the symbols.
+
+2. **Dependent libraries** (i.e. JAR files) can be added using the
+   `--jar` argument. As with source folders, supply a colon-separated
+   list of folders containing JAR files to consider.
 
 ### Options
 
@@ -47,7 +64,10 @@ The full list of command line option is given below.
 : Additional source in path
 
 `-t <n>`, `--threads <n>`
-: Use up to n threads (default: number of cores minus 1)
+: Use up to `n` threads (default: number of cores minus 1). Note that
+  the use of multi-threading provides disputable speed-up, since each
+  thread must instantiate and update its own `JavaParser` object.
+  [YMMV](https://dictionary.cambridge.org/dictionary/english/ymmv).
 
 `-q`, `--quiet`
 : Do not show error messages
