@@ -49,22 +49,34 @@ public class IteratedAssertionFinder extends AssertionFinder
 	@Override
 	public void visit(ForStmt n, Void v)
 	{
-		super.visit(n, v);
-		findAssertions(n, n, v);
+		try {
+			super.visit(n, v);
+			findAssertions(n, n, v);
+		} catch (Throwable t) {
+			m_errors.add(t);
+		}
 	}
 	
 	@Override
 	public void visit(DoStmt n, Void v)
 	{
-		super.visit(n, v);
-		findAssertions(n, n, v);
+		try {
+			super.visit(n, v);
+			findAssertions(n, n, v);
+		} catch (Throwable t) {
+			m_errors.add(t);
+		}
 	}
 	
 	@Override
 	public void visit(WhileStmt n, Void v)
 	{
-		super.visit(n, v);
-		findAssertions(n, n, v);
+		try {
+			super.visit(n, v);
+			findAssertions(n, n, v);
+		} catch (Throwable t) {
+			m_errors.add(t);
+		}
 	}
 	
 	public class IteratedAssertionToken extends FoundToken

@@ -52,8 +52,12 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	@Override
 	public void visit(IfStmt n, Void v)
 	{
-		super.visit(n, v);
-		findAssertions(n, n);
+		try {
+			super.visit(n, v);
+			findAssertions(n, n);
+		} catch (Throwable t) {
+			m_errors.add(t);
+		}
 	}
 
 	/**

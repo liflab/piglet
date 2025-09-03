@@ -272,6 +272,11 @@
 	    <include name="**/*.jar" if="${build.jar.withdeps}"/>
 	  </zipgroupfileset>
 	</jar>
+	<!-- Remove any signatures from bundled JAR files -->
+	<jar destfile="clean.jar" filesetmanifest="merge" duplicate="preserve" level="9">
+	  <zipfileset src="${build.jar.filename}-${build.version}.jar" excludes="**/*_.RSA,**/*_.SF" />
+	</jar>
+	<move file="clean.jar" tofile="${build.jar.filename}-${build.version}.jar" overwrite="true" />
 	<jar destfile="${build.jar.filename}-${build.version}-sources.jar" filesetmanifest="skip">
 	  <fileset dir="${build.srcdir}">
 	     <include name="**/*"/>

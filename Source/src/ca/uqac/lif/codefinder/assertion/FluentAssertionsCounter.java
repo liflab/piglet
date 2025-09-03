@@ -44,10 +44,14 @@ public class FluentAssertionsCounter extends AssertionCounter
 	@Override
 	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, v);
-		if (isFluentAssertion(n))
-		{
-			addToken(n);
+		try {
+			super.visit(n, v);
+			if (isFluentAssertion(n))
+			{
+				addToken(n);
+			}
+		} catch (Throwable t) {
+			m_errors.add(t);
 		}
 	}
 

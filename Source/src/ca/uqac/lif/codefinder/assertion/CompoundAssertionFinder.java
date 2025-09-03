@@ -49,10 +49,17 @@ public class CompoundAssertionFinder extends AssertionFinder
 	@Override
 	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, v);
-		if (isAssertionNotEquals(n) && containsCompound(n))
+		try
 		{
-			addToken(n);
+			super.visit(n, v);
+			if (isAssertionNotEquals(n) && containsCompound(n))
+			{
+				addToken(n);
+			}
+		}
+		catch (Throwable t)
+		{
+			m_errors.add(t);
 		}
 	}
 

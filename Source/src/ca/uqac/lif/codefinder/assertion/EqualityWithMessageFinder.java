@@ -48,10 +48,14 @@ public class EqualityWithMessageFinder extends AssertionFinder
 	@Override
 	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, v);
-		if (isAssertionEquals(n) && hasMessage(n))
-		{
-			addToken(n);
+		try {
+			super.visit(n, v);
+			if (isAssertionEquals(n) && hasMessage(n))
+			{
+				addToken(n);
+			}
+		} catch (Throwable t) {
+			m_errors.add(t);
 		}
 	}
 

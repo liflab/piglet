@@ -17,6 +17,7 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -31,6 +32,11 @@ public abstract class AssertionFinder extends TokenFinder
 {
 	/** The set of found tokens */
 	protected final Set<FoundToken> m_found;
+	
+	/**
+	 * The set of errors found during parsing
+	 */
+	protected final Set<Throwable> m_errors = new HashSet<Throwable>();
 	
 	/**
 	 * Creates a new assertion finder.
@@ -131,5 +137,11 @@ public abstract class AssertionFinder extends TokenFinder
 	{
 		String name = m.getName().asString();
 		return name.compareTo("assertThat") == 0;
+	}
+	
+	@Override
+	public Set<Throwable> getErrors()
+	{
+		return m_errors;
 	}
 }

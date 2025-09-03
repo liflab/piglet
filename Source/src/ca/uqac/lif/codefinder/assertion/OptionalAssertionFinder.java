@@ -61,10 +61,14 @@ public class OptionalAssertionFinder extends AssertionFinder
 	@Override
 	public void visit(MethodCallExpr n, Void v)
 	{
-		super.visit(n, v);
-		if (containsOptional(n))
-		{
-			addToken(n);
+		try {
+			super.visit(n, v);
+			if (containsOptional(n))
+			{
+				addToken(n);
+			}
+		} catch (Throwable t) {
+			m_errors.add(t);
 		}
 	}
 	
