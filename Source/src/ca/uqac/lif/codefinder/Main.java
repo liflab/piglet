@@ -45,6 +45,7 @@ import ca.uqac.lif.codefinder.assertion.EqualAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.FoundToken;
 import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.NonFluentAssertionsCounter;
+import ca.uqac.lif.codefinder.assertion.OptionalAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder;
 import ca.uqac.lif.codefinder.assertion.EqualStringFinder;
 import ca.uqac.lif.codefinder.assertion.EqualityWithMessageFinder;
@@ -162,7 +163,7 @@ public class Main
 	 */
 	public static int doMain(String[] args) throws Exception
 	{
-		// Force static init of TokenTypes’ tables up-front
+		// Force static init of tables for TokenTypes up-front
 		try
 		{
 			com.github.javaparser.TokenTypes.isComment(0); // harmless probe
@@ -231,6 +232,7 @@ public class Main
 		finders.add(new EqualNonPrimitiveFinder(null, s_setUnresolved));
 		finders.add(new EqualStringFinder(null));
 		finders.add(new EqualityWithMessageFinder(null));
+		finders.add(new OptionalAssertionFinder(null));
 
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? s_limit : total));

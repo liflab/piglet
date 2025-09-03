@@ -90,4 +90,30 @@ public final class TypeChecks
 		// 4) Arrays, primitives, null, unions/intersections (not handled here)
 		return false;
 	}
+
+	/** True if the resolved type is exactly java.util.Optional<T> for some T. */
+	public static boolean isOptionalType(ResolvedType t)
+	{
+		if (!t.isReferenceType())
+			return false;
+
+		ResolvedReferenceType ref = t.asReferenceType();
+		// This gives you the full generic qualified name like java.util.Optional
+		String qn = ref.getQualifiedName();
+
+		return "java.util.Optional".equals(qn);
+	}
+
+	/** Get the type argument inside Optional<T>, or empty if not an Optional. */
+	public static java.util.Optional<ResolvedType> unwrapOptional(ResolvedType t)
+	{
+		if (!isOptionalType(t))
+			return java.util.Optional.empty();
+		ResolvedReferenceType ref = t.asReferenceType();
+		if (!ref.typeParametersValues().isEmpty())
+		{
+			return java.util.Optional.of(ref.typeParametersValues().get(0));
+		}
+		return java.util.Optional.empty();
+	}
 }

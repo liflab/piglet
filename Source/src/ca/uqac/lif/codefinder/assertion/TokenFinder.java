@@ -92,6 +92,12 @@ public abstract class TokenFinder extends VoidVisitorAdapter<Void>
 	public abstract Collection<FoundToken> getFoundTokens();
 	
 	/**
+	 * Gets the errors encountered during the analysis.
+	 * @return A collection of errors encountered during the analysis
+	 */
+	public abstract Collection<Throwable> getErrors();
+	
+	/**
 	 * Gets the number of tokens found by this finder.
 	 * @return The number of tokens found
 	 */

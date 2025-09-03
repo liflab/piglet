@@ -17,18 +17,85 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.resolution.types.ResolvedType;
 
-public abstract class OptionalAssertionFinder extends AssertionFinder
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.util.TypeChecks;
+import ca.uqac.lif.codefinder.util.Types;
+
+/**
+ * Finds assertions involving the use of optional values.
+ */
+public class OptionalAssertionFinder extends AssertionFinder
 {
-	public OptionalAssertionFinder(String name, String filename)
+	/**
+	 * Creates a new optional assertion finder.
+	 * @param name The name of the finder
+	 * @param filename The name of the file in which the finder is defined
+	 */
+	public OptionalAssertionFinder(String filename)
 	{
-		super(name, filename);
+		super("Assertions with Optional", filename);
 	}
 	
-	protected OptionalAssertionFinder(String name, String filename, ThreadContext context)
+	/**
+	 * Creates a new optional assertion finder.
+	 * @param name The name of the finder
+	 * @param filename The name of the file in which the finder is defined
+	 * @param context The thread context in which the finder is executed
+	 */
+	protected OptionalAssertionFinder(String filename, ThreadContext context)
 	{
-		super(name, filename, context);
+		super("Assertions with Optional", filename, context);
 	}
 
+	@Override
+	public OptionalAssertionFinder newFinder(String filename, ThreadContext context)
+	{
+		return new OptionalAssertionFinder(filename, context);
+	}
+	
+	@Override
+	public void visit(MethodCallExpr n, Void v)
+	{
+		super.visit(n, v);
+		if (containsOptional(n))
+		{
+			addToken(n);
+		}
+	}
+	
+	/**
+	 * Determines if an expression contains an optional value.
+	 * @param n The expression to examine
+	 * @return <tt>true</tt> if the expression contains an optional value,
+	 * <tt>false</tt> otherwise
+	 */
+	protected boolean containsOptional(Expression n)
+	{
+		ResolvedType type1 = Types.safeTypeOf(n, m_context.getTypeSolver()).orElse(null);
+		if (type1 == null)
+		{
+			return false;
+		}
+		if (TypeChecks.isOptionalType(type1))
+		{
+			return true;
+		}
+		for (Node c : n.getChildNodes())
+		{
+			if (c instanceof Expression)
+			{
+				Expression e = (Expression) c;
+				if (containsOptional(e))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

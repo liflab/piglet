@@ -27,6 +27,7 @@ import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 
 public final class Types
@@ -41,6 +42,19 @@ public final class Types
 	public static ResolvedType typeOf(Expression e, TypeSolver ts)
 	{
 		return JavaParserFacade.get(ts).getType(e);
+	}
+
+	public static Optional<ResolvedType> safeTypeOf(Expression e, TypeSolver ts)
+	{
+		try {
+			return Optional.of(JavaParserFacade.get(ts).getType(e));
+		} catch (UnsolvedSymbolException | UnsupportedOperationException ex) {
+			return Optional.empty(); // don’t crash the run
+		} catch (RuntimeException ex) {
+			// some versions wrap UnsolvedSymbolException
+			if (ex.getCause() instanceof UnsolvedSymbolException) return Optional.empty();
+			throw ex;
+		}
 	}
 
 	/** Resolve the declared type of a field/variable/parameter node. */
