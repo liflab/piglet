@@ -17,6 +17,8 @@
  */
 package ca.uqac.lif.codefinder.thread;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -30,7 +32,10 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.FoundToken;
+import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
+import ca.uqac.lif.fs.FileSystemException;
+import ca.uqac.lif.fs.FileUtils;
 
 /**
  * A runnable that processes a single Java file to find assertions.
@@ -40,8 +45,8 @@ public class AssertionFinderRunnable implements Runnable
 	/** The file name */
 	protected final String m_file;
 	
-	/** The contents of the file */
-	protected final String m_is;
+	/** The file source from which to read */
+	protected final FileSource m_fSource;
 	
 	/** The set of finders to use */
 	protected final Set<AssertionFinder> m_finders;
@@ -58,18 +63,17 @@ public class AssertionFinderRunnable implements Runnable
 	/**
 	 * Creates a new runnable.
 	 * @param context The thread context
-	 * @param file The file name
-	 * @param code The contents of the file
+	 * @param source The file source from which to read
 	 * @param finders The set of finders to use
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AssertionFinderRunnable(String file, String code, Set<AssertionFinder> finders, boolean quiet, StatusCallback status)
+	public AssertionFinderRunnable(FileSource source, Set<AssertionFinder> finders, boolean quiet, StatusCallback status)
 	{
 		super();
-		m_file = file;
-		m_is = code;
+		m_file = source.getFilename();
+		m_fSource = source;
 		m_finders = finders;
 		m_quiet = quiet;
 		m_callback = status;
@@ -80,7 +84,25 @@ public class AssertionFinderRunnable implements Runnable
 	public void run()
 	{
 		ThreadContext context = Main.CTX.get();
-		processFile(context, m_file, m_is, m_finders, m_quiet);
+		InputStream is;
+		String code = "";
+		try
+		{
+			is = m_fSource.getStream();
+			code = new String(FileUtils.toBytes(is));
+			is.close();
+		}
+		catch (FileSystemException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		processFile(context, m_file, code, m_finders, m_quiet);
 		if (m_callback != null)
 		{
 			m_callback.done();

@@ -18,7 +18,6 @@
 package ca.uqac.lif.codefinder;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,7 +61,6 @@ import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
-import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.util.CliParser;
 import ca.uqac.lif.util.CliParser.Argument;
@@ -478,11 +476,11 @@ public class Main
 		while (provider.hasNext() && (limit == -1 || count < limit))
 		{
 			count++;
-			FileSource fs = provider.next();
-			InputStream stream = fs.getStream();
-			String code = new String(FileUtils.toBytes(stream));
-			stream.close();
-			AssertionFinderRunnable r = new AssertionFinderRunnable(fs.getFilename(), code, finders,
+			FileSource f_source = provider.next();
+			//InputStream stream = fs.getStream();
+			//String code = new String(FileUtils.toBytes(stream));
+			//stream.close();
+			AssertionFinderRunnable r = new AssertionFinderRunnable(f_source, finders,
 					quiet, status);
 			tasks.add(r);
 			futures.add(e.submit(r));

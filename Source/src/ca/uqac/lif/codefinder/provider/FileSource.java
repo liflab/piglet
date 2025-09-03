@@ -19,6 +19,9 @@ package ca.uqac.lif.codefinder.provider;
 
 import java.io.InputStream;
 
+import ca.uqac.lif.fs.FileSystem;
+import ca.uqac.lif.fs.FileSystemException;
+
 /**
  * Represents a source file to be analyzed, encapsulating its name and input stream.
  */
@@ -27,19 +30,23 @@ public class FileSource
 	/** The name of the file. */
 	protected final String m_name;
 	
+	/** The file system the file belongs to. */
+	protected final FileSystem m_fileSystem;
+	
 	/** The input stream to read the file's contents. */
-	protected final InputStream m_stream;
+	protected InputStream m_stream;
 	
 	/**
 	 * Constructs a FileSource with the given name and input stream.
 	 * @param name The name of the file
 	 * @param stream The input stream to read the file's contents
 	 */
-	public FileSource(String name, InputStream stream)
+	public FileSource(FileSystem fs, String name)
 	{
 		super();
+		m_fileSystem = fs;
 		m_name = name;
-		m_stream = stream;
+		m_stream = null;
 	}
 	
 	@Override
@@ -60,9 +67,14 @@ public class FileSource
 	/**
 	 * Returns the input stream for the file's contents.
 	 * @return The input stream
+	 * @throws FileSystemException 
 	 */
-	public InputStream getStream()
+	public InputStream getStream() throws FileSystemException
 	{
+		if (m_stream == null)
+		{
+			m_stream = m_fileSystem.readFrom(m_name);
+		}
 		return m_stream;
 	}
 }

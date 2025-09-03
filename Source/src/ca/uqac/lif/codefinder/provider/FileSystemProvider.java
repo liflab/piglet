@@ -32,13 +32,13 @@ public class FileSystemProvider implements FileProvider
 {
 	/** The file system to read files from. */
 	protected final FileSystem m_fs;
-	
+
 	/** The list of file names available in the file system. */
 	protected List<String> m_filenames;
-	
+
 	/** Iterator over the file names. */
 	protected Iterator<String> m_iterator;
-	
+
 	/**
 	 * Constructs a FileSystemProvider for the given file system.
 	 * @param fs The file system to provide files from
@@ -55,7 +55,7 @@ public class FileSystemProvider implements FileProvider
 		m_filenames = jff.getFiles();
 		m_iterator = m_filenames.iterator();
 	}
-	
+
 	/**
 	 * Indicates whether there are more files to be provided from the file system.
 	 * @return <tt>true</tt> if there are more files, <tt>false</tt> otherwise
@@ -68,22 +68,13 @@ public class FileSystemProvider implements FileProvider
 
 	/**
 	 * Provides the next file from the file system.
-	 * @return The next {@link FileSource} object, or <tt>null</tt> if an error occurs
+	 * @return The next {@link FileSource} object
 	 */
 	@Override
 	public FileSource next()
 	{
-		try
-		{
-			String filename = m_iterator.next();
-			return new FileSource(filename, m_fs.readFrom(filename));
-		}
-		catch (FileSystemException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+		String filename = m_iterator.next();
+		return new FileSource(m_fs, filename);
 	}
 
 	/**
