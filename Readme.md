@@ -7,6 +7,19 @@ source file provided, and looks for occurrence of JUnit's various `assert`
 statements, collecting those that correspond to one of more particular
 patterns.
 
+The tool works by running multiple `TokenFinder` objects over a source
+file. Each token finder traverses the parse tree, and looks for whatever
+pattern it has been coded to look for. Every time a token finder finds an
+occurrence of that pattern, it creates a `FoundToken` object that encapsulates
+the file name and location withing that file (line number ranges) where this
+pattern is contained.
+
+Once all token finders have been run on all test files, a final report
+collating their findings is displayed in summarized form at the command line,
+and in a more legible form in an external HTML file that can be opened in a
+web browser. For every found pattern, a hyperlink is provided to the actual
+source file where the pattern was found.
+
 Usage
 -----
 
@@ -51,6 +64,14 @@ codefinder --source /my/project/src:/my/project/otherfolder /my/project/srctest
 2. **Dependent libraries** (i.e. JAR files) can be added using the
    `--jar` argument. As with source folders, supply a colon-separated
    list of folders containing JAR files to consider.
+
+### Suggested setup
+
+- Create a `root` folder containing the CodeFinder JARs, and a `Projects`
+  folder containing (each in its folder) the projects that need to be
+  analyzed.
+- Create one profile for each project under the root, and use *relative*
+  paths to refer to these projects in the profiles.
 
 ### Options
 
@@ -153,7 +174,7 @@ right-click on the jar, click "Properties", then fill the Javadoc location.
 Developing using Eclipse 
 ------------------------
 
-If you wish to develop the tool in Eclipse:
+If you wish to develop the tool in [Eclipse](https://eclipse.org):
 
 In short:
 
