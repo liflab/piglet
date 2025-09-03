@@ -22,6 +22,8 @@ import java.util.TreeSet;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+
 /**
  * An abstract base class for finders that look for assertions in Java code.
  */
@@ -42,6 +44,18 @@ public abstract class AssertionFinder extends TokenFinder
 	}
 	
 	/**
+	 * Creates a new assertion finder.
+	 * @param name The name of this finder
+	 * @param filename The name of the file to analyze
+	 * @param parser A Java parser instance
+	 */
+	protected AssertionFinder(String name, String filename, ThreadContext context)
+	{
+		super(name, filename, context);
+		m_found = new TreeSet<FoundToken>();
+	}
+	
+	/**
 	 * Gets the set of found tokens.
 	 * @return The set of found tokens
 	 */
@@ -57,13 +71,8 @@ public abstract class AssertionFinder extends TokenFinder
 		return m_found.size();
 	}
 	
-	/**
-	 * Creates a new instance of the same type of finder, for a different file.
-	 * @param filename The name of the new file
-	 * @return A new instance of the same type of finder
-	 */
 	@Override
-	public abstract AssertionFinder newFinder(String filename);
+	public abstract AssertionFinder newFinder(String filename, ThreadContext context);
 
 	/**
 	 * Adds a found token to the set of found tokens.

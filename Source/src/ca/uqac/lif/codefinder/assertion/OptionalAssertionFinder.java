@@ -17,44 +17,18 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import com.github.javaparser.ast.expr.MethodCallExpr;
-
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 
-/**
- * Counts non-fluent assertions (that is, assertions not using
- * assertThat) but does not store them.
- */
-public class FluentAssertionsCounter extends AssertionCounter
+public abstract class OptionalAssertionFinder extends AssertionFinder
 {
-	/**
-	 * Creates a new non-fluent assertions counter.
-	 * @param filename
-	 */
-	public FluentAssertionsCounter(String filename)
+	public OptionalAssertionFinder(String name, String filename)
 	{
-		super("Fluent assertions", filename);
+		super(name, filename);
 	}
 	
-	protected FluentAssertionsCounter(String filename, ThreadContext context)
+	protected OptionalAssertionFinder(String name, String filename, ThreadContext context)
 	{
-		super("Fluent assertions", filename, context);
-	}
-	
-	@Override
-	public void visit(MethodCallExpr n, Void v)
-	{
-		super.visit(n, v);
-		if (isFluentAssertion(n))
-		{
-			addToken(n);
-		}
+		super(name, filename, context);
 	}
 
-	@Override
-	public FluentAssertionsCounter newFinder(String filename, ThreadContext context)
-	{
-		return new FluentAssertionsCounter(filename, context);
-	}	
-	
 }

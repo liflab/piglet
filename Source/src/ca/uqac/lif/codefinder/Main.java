@@ -32,16 +32,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder;
@@ -58,6 +55,8 @@ import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
+import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
+import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
@@ -118,8 +117,10 @@ public class Main
 	/** Whether to show unresolved symbols **/
 	protected static boolean s_unresolved = false;
 
-	/** Number of threads to use */
-	protected static int s_threads = 2;
+	/**
+	 * Number of threads to use. If not specified, use
+	 * number of processors - 1. */
+	protected static int s_threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
 
 	/** The name of the root package to look for in the source tree **/
 	public static String s_root = null;
@@ -129,6 +130,10 @@ public class Main
 
 	/** Limit to the number of files to process (for testing purposes) */
 	protected static int s_limit = -1;
+
+	protected static CombinedTypeSolver sharedSolver;
+
+	public static ThreadLocal<ThreadContext> CTX;
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -143,7 +148,7 @@ public class Main
 	 * @throws IOException
 	 *           When an I/O error occurs
 	 */
-	public static void main(String[] args) throws FileSystemException, IOException
+	public static void main(String[] args) throws Exception, FileSystemException, IOException
 	{
 		System.exit(doMain(args));
 	}
@@ -153,13 +158,21 @@ public class Main
 	 * 
 	 * @param args
 	 *          Command line arguments
+	 * @throws Exception 
 	 * @throws FileSystemException
 	 *           When a file system error occurs
-	 * @throws IOException
-	 *           When an I/O error occurs
 	 */
-	public static int doMain(String[] args)
+	public static int doMain(String[] args) throws Exception
 	{
+		// Force static init of TokenTypes’ tables up-front
+		try
+		{
+			com.github.javaparser.TokenTypes.isComment(0); // harmless probe
+		}
+		catch (Throwable ignored)
+		{
+		}
+
 		/* Setup command line options */
 		CliParser cli = setupCli();
 		s_map = cli.parse(args);
@@ -168,6 +181,7 @@ public class Main
 		{
 			return ret;
 		}
+
 
 		/* Setup the file provider */
 		List<String> folders = s_map.getOthers(); // The files to read from
@@ -190,49 +204,24 @@ public class Main
 		Set<FoundToken> found = new HashSet<>();
 		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, s_summary)));
 
-		/* Setup parser (boilerplate code) */
-		CombinedTypeSolver typeSolver = null;
-		try
-		{
-			typeSolver = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
-		}
-		catch (IOException e)
-		{
-			s_stderr.println("Could not set up type solver");
-			return RET_IO;
-		}
-		catch (Exception e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		ParserConfiguration parserConfiguration = Solvers.parserConfig(typeSolver);
-		typeSolver.add(new ReflectionTypeSolver());
-		for (String s_sourcePath : s_sourcePaths)
-		{
-			if (s_sourcePath != null)
-			{
-				typeSolver.add(new JavaParserTypeSolver(s_sourcePath, parserConfiguration));
-			}
-		}
-		for (String s_jarPath : s_jarPaths)
-		{
-			if (s_jarPath != null)
-			{
-				try
-				{
-					typeSolver
-							.add(new com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver(
-									s_jarPath));
-				}
-				catch (IOException e)
-				{
-					s_stderr.println("Could not read jar file: " + s_jarPath);
-					return RET_IO;
-				}
-			}
-		}
-		typeSolver.add(new ClassLoaderTypeSolver(Thread.currentThread().getContextClassLoader()));
+		CTX = ThreadLocal.withInitial(() -> {
+			try {
+		    CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
+		    
+		    // Wire parser to THIS thread’s solver
+		    ParserConfiguration threadPc = new ParserConfiguration()
+		        .setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
+		        .setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));
+
+		    return new ThreadContext(
+		        ts,
+		        new JavaParser(threadPc),
+		        com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts)
+		    );
+		  } catch (Exception e) {
+		    throw new RuntimeException("Failed to init per-thread context", e);
+		  }
+		});
 
 		// Instantiate assertion finders
 		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
@@ -241,19 +230,27 @@ public class Main
 		finders.add(new ConditionalAssertionFinder(null));
 		finders.add(new EqualAssertionFinder(null));
 		finders.add(new IteratedAssertionFinder(null));
-		finders.add(new EqualNonPrimitiveFinder(null, typeSolver, s_setUnresolved));
+		finders.add(new EqualNonPrimitiveFinder(null, s_setUnresolved));
 		finders.add(new EqualStringFinder(null));
-		finders.add(new EqualityWithMessageFinder(null, typeSolver));
+		finders.add(new EqualityWithMessageFinder(null));
 
 		// Read file(s)
-		StatusCallback status = new StatusCallback(s_stdout, total);
-		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(s_threads);
-		//s_stdout.println("Using " + s_threads + " thread" + (s_threads > 1 ? "s" : ""));
+		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? s_limit : total));
+		Thread status_thread = new Thread(status);
+		AtomicInteger THREAD_ID = new AtomicInteger(1);
+		ThreadFactory tf = r -> {
+		  Thread t = new Thread(r);
+		  t.setName("anl-" + THREAD_ID.incrementAndGet());
+		  t.setDaemon(false);
+		  return t;
+		};
+		ExecutorService executor = Executors.newFixedThreadPool(s_threads, tf);
 		long start_time = System.currentTimeMillis();
 		long end_time = -1;
+		status_thread.start();
 		try
 		{
-			processBatch(executor, parserConfiguration, fsp, finders, found, s_quiet, status, s_limit);
+			processBatch(executor, fsp, finders, found, s_quiet, status, s_limit);
 		}
 		catch (IOException e)
 		{
@@ -285,9 +282,9 @@ public class Main
 		end_time = System.currentTimeMillis();
 		long duration = end_time - start_time;
 		s_stdout.print("\r\033[2K");
-		s_stdout.println(fsp.filesProvided() + " file(s) analyzed");
+		s_stdout.println((s_limit >= 0 ? s_limit : total) + " file(s) analyzed");
 		s_stdout.println(found.size() + " assertion(s) found");
-		s_stdout.println("Analysis time: " + (duration / 1000) + " s");
+		s_stdout.println("Analysis time: " + formatDuration(duration));
 		s_stdout.println();
 
 		/* Categorize results and produce report */
@@ -453,6 +450,8 @@ public class Main
 				.withDescription("Show unresolved symbols"));
 		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p")
 				.withDescription("Search in source tree for package p"));
+		cli.addArgument(new Argument().withShortName("l").withLongName("sample").withArgument("p")
+				.withDescription("Sample code snippets with probability p"));
 		return cli;
 	}
 
@@ -469,7 +468,7 @@ public class Main
 		cli.printHelp("", s_stdout);
 	}
 
-	protected static void processBatch(ExecutorService e, ParserConfiguration conf, FileProvider provider,
+	protected static void processBatch(ExecutorService e, FileProvider provider,
 			Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
 			int limit) throws IOException, FileSystemException
 	{
@@ -483,10 +482,8 @@ public class Main
 			InputStream stream = fs.getStream();
 			String code = new String(FileUtils.toBytes(stream));
 			stream.close();
-			// e.execute(new AssertionFinderRunnable(new JavaParser(conf), fs.getFilename(),
-			// code, finders, found, quiet, status));
-			AssertionFinderRunnable r = new AssertionFinderRunnable(new JavaParser(conf),
-					fs.getFilename(), code, finders, quiet, status);
+			AssertionFinderRunnable r = new AssertionFinderRunnable(fs.getFilename(), code, finders,
+					quiet, status);
 			tasks.add(r);
 			futures.add(e.submit(r));
 		}
@@ -494,11 +491,6 @@ public class Main
 		e.shutdown(); // All tasks are finished, shutdown the executor
 		for (AssertionFinderRunnable r : tasks)
 		{
-			/*if (r.getFound().isEmpty())
-			{
-				System.out.println("File " + r.m_file + ": " + r.getFound().size()
-						+ " assertion" + (r.getFound().size() > 1 ? "s" : "") + " found");
-			}*/
 			found.addAll(r.getFound());
 		}
 	}
@@ -525,9 +517,9 @@ public class Main
 				throw new RuntimeException("Task failed", ee.getCause());
 			}
 		}
-		
+
 	}
-	
+
 	protected static void categorize(Map<String, List<FoundToken>> map, Set<FoundToken> found)
 	{
 		for (FoundToken t : found)
@@ -633,4 +625,27 @@ public class Main
 			}
 		}
 	}
+	
+	/**
+	 * Formats a duration in milliseconds into a human-readable string.
+	 * @param duration The duration in milliseconds
+	 * @return A human-readable string representing the duration
+	 */
+	public static String formatDuration(long duration)
+	{
+		if (duration < 1000)
+		{
+			return duration + " ms";
+		}
+		else if (duration < 60000)
+		{
+			return (duration / 1000) + " s";
+		}
+		else
+		{
+			long minutes = duration / 60000;
+			long seconds = (duration % 60000) / 1000;
+			return minutes + " min " + seconds + " s";
+		}
+	}	
 }

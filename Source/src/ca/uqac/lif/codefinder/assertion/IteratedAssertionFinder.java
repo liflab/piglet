@@ -23,6 +23,8 @@ import com.github.javaparser.ast.stmt.DoStmt;
 import com.github.javaparser.ast.stmt.ForStmt;
 import com.github.javaparser.ast.stmt.WhileStmt;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+
 /**
  * Finds assertions nested inside a for, while or do block.
  */
@@ -33,10 +35,15 @@ public class IteratedAssertionFinder extends AssertionFinder
 		super("Iterated assertions", filename);
 	}
 	
-	@Override
-	public AssertionFinder newFinder(String filename)
+	protected IteratedAssertionFinder(String filename, ThreadContext context)
 	{
-		return new IteratedAssertionFinder(filename);
+		super("Iterated assertions", filename, context);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename, ThreadContext context)
+	{
+		return new IteratedAssertionFinder(filename, context);
 	}
 	
 	@Override

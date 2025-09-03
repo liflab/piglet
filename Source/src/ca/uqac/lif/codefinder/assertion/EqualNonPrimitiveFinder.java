@@ -20,9 +20,9 @@ package ca.uqac.lif.codefinder.assertion;
 import java.util.Set;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.types.ResolvedType;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
 
@@ -31,21 +31,24 @@ import ca.uqac.lif.codefinder.util.Types;
  */
 public class EqualNonPrimitiveFinder extends AssertionFinder
 {
-	protected static TypeSolver m_typeSolver = null;
-
 	protected final Set<String> m_unresolved;
 
-	public EqualNonPrimitiveFinder(String filename, TypeSolver ts, Set<String> unresolved)
+	public EqualNonPrimitiveFinder(String filename, Set<String> unresolved)
 	{
 		super("Equality between non-primitive values", filename);
-		m_typeSolver = ts;
+		m_unresolved = unresolved;
+	}
+	
+	protected EqualNonPrimitiveFinder(String filename, Set<String> unresolved, ThreadContext context)
+	{
+		super("Equality between non-primitive values", filename, context);
 		m_unresolved = unresolved;
 	}
 
 	@Override
-	public AssertionFinder newFinder(String filename)
+	public AssertionFinder newFinder(String filename, ThreadContext context)
 	{
-		return new EqualNonPrimitiveFinder(filename, m_typeSolver, m_unresolved);
+		return new EqualNonPrimitiveFinder(filename, m_unresolved, context);
 	}
 
 	@Override
@@ -56,7 +59,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		{
 			if (isAssertionEquals(n) && hasNonPrimitive(n))
 			{
-				ResolvedType type1 = Types.typeOf(n.getArgument(0), m_typeSolver);
+				ResolvedType type1 = Types.typeOf(n.getArgument(0), m_context.getTypeSolver());
 				if (TypeChecks.isSubtypeOf(type1, "java.util.Map"))
 				{
 					m_found.add(new EqualMapToken(m_filename, n.getBegin().get().line, n.toString()));
@@ -103,7 +106,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		boolean unresolved = false;
 		try
 		{
-			ResolvedType type1 = Types.typeOf(n.getArgument(0), m_typeSolver);
+			ResolvedType type1 = Types.typeOf(n.getArgument(0), m_context.getTypeSolver());
 			primitive1 = isPrimitive(type1);
 		}
 		catch (Exception e)
@@ -113,7 +116,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		}
 		try
 		{
-			ResolvedType type2 = Types.typeOf(n.getArgument(1), m_typeSolver);
+			ResolvedType type2 = Types.typeOf(n.getArgument(1), m_context.getTypeSolver());
 			primitive2 = isPrimitive(type2);
 		}
 		catch (Exception e)

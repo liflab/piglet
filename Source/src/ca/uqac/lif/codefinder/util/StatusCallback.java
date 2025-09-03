@@ -17,12 +17,15 @@
  */
 package ca.uqac.lif.codefinder.util;
 
+import java.util.concurrent.locks.ReentrantLock;
+
+import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
 
 /**
  * A callback to report status of a long operation in the console.
  */
-public class StatusCallback
+public class StatusCallback implements Runnable
 {
 	/** The width of the progress bar */
 	protected static final int s_barWidth = 32;
@@ -30,14 +33,17 @@ public class StatusCallback
 	/** The number of items currently done */
 	protected int m_currentlyDone;
 	
+	/** A lock to protect access to the currently done counter */
+	protected final ReentrantLock m_lock;
+	
 	/** The total number of items */
 	protected final int m_total;
 	
 	/** The output printer */
 	protected final AnsiPrinter m_out;
 	
-	/** The time of the last update of the display */
-	protected long m_lastUpdate = 0;
+	/** The start time of the operation */
+	protected long m_startTime = 0;
 	
 	/**
 	 * Creates a new status callback.
@@ -49,33 +55,52 @@ public class StatusCallback
 		super();
 		m_out = out;
 		m_total = total;
+		m_lock = new ReentrantLock();
 		printBar();
 	}
 	
-	/**
-	 * Marks one item as done and updates the display if needed.
-	 */
-	public synchronized void done()
+	@Override
+	public void run()
 	{
-		m_currentlyDone++;
-		long update = System.currentTimeMillis();
-		if (m_lastUpdate == 0 || update - m_lastUpdate >= 1000)
+		m_startTime = System.currentTimeMillis();
+		printBar();
+		while (m_currentlyDone < m_total)
 		{
-			m_lastUpdate = update;
+			try
+			{
+				Thread.sleep(1000);
+			}
+			catch (InterruptedException e)
+			{
+				// Ignore
+			}
 			printBar();
 		}
 	}
 	
 	/**
+	 * Marks one item as done and updates the display if needed.
+	 */
+	public void done()
+	{
+		m_lock.lock();
+		m_currentlyDone++;
+		m_lock.unlock();
+	}	
+	
+	/**
 	 * Prints the progress bar.
 	 */
-	protected synchronized void printBar()
+	protected void printBar()
 	{
+		m_lock.lock();
+		int done = m_currentlyDone;
+		m_lock.unlock();
 		m_out.print("\r\033[2K");
 		m_out.setForegroundColor(Color.LIGHT_GRAY);
 		m_out.print("[");
 		m_out.setForegroundColor(Color.RED);
-		int chars = (int) Math.ceil(((float) m_currentlyDone / (float) m_total) * s_barWidth);
+		int chars = (int) Math.ceil(((float) done / (float) m_total) * s_barWidth);
 		for (int i = 0; i < chars; i++)
 		{
 			m_out.print("#");
@@ -87,6 +112,24 @@ public class StatusCallback
 		m_out.setForegroundColor(Color.LIGHT_GRAY);
 		m_out.print("] ");
 		m_out.resetColors();
-		m_out.print(m_currentlyDone + " / " + m_total);
+		int width = Integer.toString(m_total).length();
+		m_out.print(String.format("%" + width + "d/%" + width + "d", done, m_total));
+		long eta = calculateEta(done);
+		if (eta >= 0)
+		{
+			m_out.print(String.format(" ETA: %s", Main.formatDuration(eta)));
+		}
+	}
+	
+	protected long calculateEta(int done)
+	{
+		if (done == 0)
+		{
+			return -1;
+		}
+		long now = System.currentTimeMillis();
+		long elapsed = now - m_startTime;
+		double avg_time_per_item = (double) elapsed / (double) done;
+		return (long) (avg_time_per_item * (m_total - done));
 	}
 }

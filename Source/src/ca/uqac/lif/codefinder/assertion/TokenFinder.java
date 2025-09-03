@@ -21,6 +21,8 @@ import java.util.Collection;
 
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+
 public abstract class TokenFinder extends VoidVisitorAdapter<Void>
 {
 	/** The name of the file to analyze */
@@ -28,6 +30,9 @@ public abstract class TokenFinder extends VoidVisitorAdapter<Void>
 	
 	/** The name of this finder */
 	protected final String m_name;
+	
+	/** A Java parser instance */
+	protected final ThreadContext m_context;
 	
 	/**
 	 * Creates a new token finder.
@@ -39,6 +44,21 @@ public abstract class TokenFinder extends VoidVisitorAdapter<Void>
 		super();
 		m_filename = filename;
 		m_name = name;
+		m_context = null;
+	}
+	
+	/**
+	 * Creates a new token finder.
+	 * @param name The name of this finder
+	 * @param filename The name of the file to analyze
+	 * @param context A thread context
+	 */
+	protected TokenFinder(String name, String filename, ThreadContext context)
+	{
+		super();
+		m_filename = filename;
+		m_name = name;
+		m_context = context;
 	}
 	
 	/**
@@ -53,9 +73,10 @@ public abstract class TokenFinder extends VoidVisitorAdapter<Void>
 	/**
 	 * Creates a new instance of the same type of finder, for a different file.
 	 * @param filename The name of the new file
+	 * @param context A thread context
 	 * @return A new instance of the same type of finder
 	 */
-	public abstract TokenFinder newFinder(String filename);
+	public abstract TokenFinder newFinder(String filename, ThreadContext context);
 	
 	/**
 	 * Gets all tokens found by this finder.

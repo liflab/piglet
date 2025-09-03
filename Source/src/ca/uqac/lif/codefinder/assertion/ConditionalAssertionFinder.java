@@ -21,6 +21,8 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.IfStmt;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+
 
 /**
  * Finds assertions nested inside an <tt>if</tt> block.
@@ -35,11 +37,16 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	{
 		super("Conditional assertions", filename);
 	}
+	
+	protected ConditionalAssertionFinder(String filename, ThreadContext context)
+	{
+		super("Conditional assertions", filename, context);
+	}
 
 	@Override
-	public AssertionFinder newFinder(String filename)
+	public AssertionFinder newFinder(String filename, ThreadContext context)
 	{
-		return new ConditionalAssertionFinder(filename);
+		return new ConditionalAssertionFinder(filename, context);
 	}
 
 	@Override
@@ -47,7 +54,6 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	{
 		super.visit(n, v);
 		findAssertions(n, n);
-
 	}
 
 	/**

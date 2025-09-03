@@ -23,6 +23,8 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+
 
 /**
  * Finds assertions containing a call to method Object.equals.
@@ -34,10 +36,15 @@ public class EqualAssertionFinder extends AssertionFinder
 		super("Object.equals", filename);
 	}
 	
-	@Override
-	public AssertionFinder newFinder(String filename)
+	protected EqualAssertionFinder(String name, String filename, ThreadContext context)
 	{
-		return new EqualAssertionFinder(filename);
+		super(name, filename, context);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename, ThreadContext context)
+	{
+		return new EqualAssertionFinder(m_name, filename, context);
 	}
 
 	@Override

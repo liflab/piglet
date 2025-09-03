@@ -20,6 +20,8 @@ package ca.uqac.lif.codefinder.assertion;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+
 /**
  * Finds assertions stating the equality of two strings.
  */
@@ -30,10 +32,15 @@ public class EqualStringFinder extends AssertionFinder
 		super("Equality between strings", filename);
 	}
 	
-	@Override
-	public AssertionFinder newFinder(String filename)
+	protected EqualStringFinder(String filename, ThreadContext context)
 	{
-		return new EqualStringFinder(filename);
+		super("Equality between strings", filename, context);
+	}
+	
+	@Override
+	public AssertionFinder newFinder(String filename, ThreadContext context)
+	{
+		return new EqualStringFinder(filename, context);
 	}
 	
 	@Override

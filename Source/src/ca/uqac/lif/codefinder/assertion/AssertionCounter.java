@@ -19,6 +19,8 @@ package ca.uqac.lif.codefinder.assertion;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+
 /**
  * Counts fluent assertions (i.e., using assertThat)
  * but does not store them.
@@ -31,6 +33,12 @@ public abstract class AssertionCounter extends AssertionFinder
 	public AssertionCounter(String name, String filename)
 	{
 		super(name + " count", filename);
+		m_count = 0;
+	}
+	
+	protected AssertionCounter(String name, String filename, ThreadContext context)
+	{
+		super(name + " count", filename, context);
 		m_count = 0;
 	}
 

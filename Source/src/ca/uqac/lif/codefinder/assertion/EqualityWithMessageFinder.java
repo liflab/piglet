@@ -18,9 +18,9 @@
 package ca.uqac.lif.codefinder.assertion;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.types.ResolvedType;
 
+import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.Types;
 
 
@@ -29,18 +29,20 @@ import ca.uqac.lif.codefinder.util.Types;
  */
 public class EqualityWithMessageFinder extends AssertionFinder
 {	
-	protected final TypeSolver m_typeSolver;
-	
-	public EqualityWithMessageFinder(String filename, TypeSolver ts)
+	public EqualityWithMessageFinder(String filename)
 	{
 		super("With text message", filename);
-		m_typeSolver = ts;
+	}
+	
+	protected EqualityWithMessageFinder(String filename, ThreadContext context)
+	{
+		super("With text message", filename, context);
 	}
 
 	@Override
-	public AssertionFinder newFinder(String filename)
+	public AssertionFinder newFinder(String filename, ThreadContext context)
 	{
-		return new EqualityWithMessageFinder(filename, m_typeSolver);
+		return new EqualityWithMessageFinder(filename, context);
 	}
 
 	@Override
@@ -61,7 +63,7 @@ public class EqualityWithMessageFinder extends AssertionFinder
 		}
 		try
 		{
-			ResolvedType type1 = Types.typeOf(n.getArgument(0), m_typeSolver);
+			ResolvedType type1 = Types.typeOf(n.getArgument(0), m_context.getTypeSolver());
 			return type1.describe().compareTo("java.lang.String") == 0;
 		}
 		catch (Exception e)

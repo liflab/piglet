@@ -112,7 +112,7 @@ public final class Solvers
 				.setSymbolResolver(new JavaSymbolSolver(ts));
 	}
 	
-	protected static void traverseSourceRoots(String root, FileSystem fs, Set<String> found_roots) throws FileSystemException
+	public static void traverseSourceRoots(String root, FileSystem fs, Set<String> found_roots) throws FileSystemException
 	{
 		for (String f : fs.ls())
 		{

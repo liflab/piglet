@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder;
+package ca.uqac.lif.codefinder.thread;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 
+import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.FoundToken;
 import ca.uqac.lif.codefinder.util.StatusCallback;
@@ -37,9 +37,6 @@ import ca.uqac.lif.codefinder.util.StatusCallback;
  */
 public class AssertionFinderRunnable implements Runnable
 {
-	/** The Java parser to use */
-	protected final JavaParser m_parser;
-	
 	/** The file name */
 	protected final String m_file;
 	
@@ -60,7 +57,7 @@ public class AssertionFinderRunnable implements Runnable
 	
 	/**
 	 * Creates a new runnable.
-	 * @param p The Java parser to use
+	 * @param context The thread context
 	 * @param file The file name
 	 * @param code The contents of the file
 	 * @param finders The set of finders to use
@@ -68,10 +65,9 @@ public class AssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AssertionFinderRunnable(JavaParser p, String file, String code, Set<AssertionFinder> finders, boolean quiet, StatusCallback status)
+	public AssertionFinderRunnable(String file, String code, Set<AssertionFinder> finders, boolean quiet, StatusCallback status)
 	{
 		super();
-		m_parser = p;
 		m_file = file;
 		m_is = code;
 		m_finders = finders;
@@ -83,7 +79,8 @@ public class AssertionFinderRunnable implements Runnable
 	@Override
 	public void run()
 	{
-		processFile(m_parser, m_file, m_is, m_finders, m_quiet);
+		ThreadContext context = Main.CTX.get();
+		processFile(context, m_file, m_is, m_finders, m_quiet);
 		if (m_callback != null)
 		{
 			m_callback.done();
@@ -99,11 +96,11 @@ public class AssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(JavaParser p, String file, String code, Set<AssertionFinder> finders, boolean quiet)
+	protected void processFile(ThreadContext context, String file, String code, Set<AssertionFinder> finders, boolean quiet)
 	{
 		try
 		{
-			CompilationUnit u = p.parse(code).getResult().get();
+			CompilationUnit u = context.parser.parse(code).getResult().get();
 			List<MethodDeclaration> methods = getTestCases(u);
 			/*if (methods.isEmpty() && !quiet)
 			{
@@ -114,7 +111,7 @@ public class AssertionFinderRunnable implements Runnable
 			{
 				for (AssertionFinder f : finders)
 				{
-					AssertionFinder new_f = f.newFinder(file);
+					AssertionFinder new_f = f.newFinder(file, context);
 					new_f.visit(m, null);
 					m_found.addAll(new_f.getFoundTokens());
 				}
