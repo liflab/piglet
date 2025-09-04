@@ -17,10 +17,6 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import java.util.List;
-
-import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 import ca.uqac.lif.codefinder.thread.ThreadContext;
@@ -31,16 +27,20 @@ import ca.uqac.lif.codefinder.thread.ThreadContext;
  */
 public class EqualAssertionFinder extends AssertionFinder
 {	
+	protected boolean m_inAssert = false;
+
+	protected boolean m_foundEquals = false;
+
 	public EqualAssertionFinder(String filename)
 	{
 		super("Object.equals", filename);
 	}
-	
+
 	protected EqualAssertionFinder(String name, String filename, ThreadContext context)
 	{
 		super(name, filename, context);
 	}
-	
+
 	@Override
 	public AssertionFinder newFinder(String filename, ThreadContext context)
 	{
@@ -50,70 +50,36 @@ public class EqualAssertionFinder extends AssertionFinder
 	@Override
 	public boolean visit(MethodCallExpr n)
 	{
-		try {
-			super.visit(n);
-			if (isAssertionEquals(n) && containsEquals(n))
+		super.visit(n);
+		if (!isAssertion(n))
+		{
+			if (m_inAssert && isEquals(n))
 			{
-				addToken(n);
-				return false;
+				m_foundEquals = true;
 			}
-		} catch (Throwable t) {
-			m_errors.add(t);
+			return false;
 		}
+		m_inAssert = true;
 		return true;
 	}
 
-	protected static boolean containsEquals(Node n)
+	@Override
+	public boolean leave(MethodCallExpr n)
 	{
-		List<Node> children = n.getChildNodes();
-		for (int i = 1; i < children.size(); i++)
+		if (isAssertionEquals(n))
 		{
-			Node child = children.get(i);
-			if (child instanceof MethodCallExpr)
+			m_inAssert = false;
+			if (m_foundEquals)
 			{
-				MethodCallExpr me = (MethodCallExpr) child;
-				if (me.getName().asString().compareTo("equals") == 0)
-				{
-					return true;
-				}
-			}
-			if (containsEquals(child))
-			{
-				return true;
+				addToken(n);
+				m_foundEquals = false;
 			}
 		}
-		return false;
+		return super.leave(n);
 	}
-	
-	protected static boolean isComplex(BinaryExpr be)
-	{
-		com.github.javaparser.ast.expr.BinaryExpr.Operator op = be.getOperator();
-		switch (op)
-		{
-		case AND:
-		case BINARY_AND:
-		case BINARY_OR:
-		case DIVIDE:
-		case LEFT_SHIFT:
-		case MINUS:
-		case MULTIPLY:
-		case OR:
-		case PLUS:
-		case REMAINDER:
-		case SIGNED_RIGHT_SHIFT:
-		case UNSIGNED_RIGHT_SHIFT:
-		case XOR:
-			return true;
-		case EQUALS:
-		case GREATER:
-		case GREATER_EQUALS:
-		case LESS:
-		case LESS_EQUALS:
-		case NOT_EQUALS:
-		default:
-			return false;
-		}
 
+	protected static boolean isEquals(MethodCallExpr me)
+	{
+		return me.getName().asString().compareTo("equals") == 0;
 	}
-	
 }

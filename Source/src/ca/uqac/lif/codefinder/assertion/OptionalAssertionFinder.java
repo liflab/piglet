@@ -33,6 +33,10 @@ import ca.uqac.lif.codefinder.util.Types.ResolveResult;
  */
 public class OptionalAssertionFinder extends AssertionFinder
 {
+	protected boolean m_foundOptional = false;
+	
+	protected boolean m_inAssert = false;
+	
 	/**
 	 * Creates a new optional assertion finder.
 	 * @param name The name of the finder
@@ -64,17 +68,43 @@ public class OptionalAssertionFinder extends AssertionFinder
 	public boolean visit(MethodCallExpr n)
 	{
 		super.visit(n);
-		try {
-			if (isAssertion(n) && containsOptional(n))
+		if (!isAssertion(n))
+		{
+			return false;
+		}
+		m_inAssert = true;
+		return true;
+	}
+	
+	@Override
+	public boolean leave(MethodCallExpr n)
+	{
+		if (isAssertion(n))
+		{
+			if (m_foundOptional)
 			{
 				addToken(n);
-				return false;
 			}
-		} catch (Throwable t) {
-			m_errors.add(t);
+			m_foundOptional = false;
+			m_inAssert = false;
 		}
 		return true;
 	}
+	
+	protected boolean isOptional(Expression n)
+	{
+		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n, m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		if (rr.reason == ResolveReason.UNSOLVED || rr.reason == ResolveReason.TIMEOUT)
+		{
+			return false;
+		}
+		ResolvedType type1 = rr.value.orElse(null);
+		return TypeChecks.isOptionalType(type1);
+	}
+	
+	
+	
+	
 	
 	/**
 	 * Determines if an expression contains an optional value.

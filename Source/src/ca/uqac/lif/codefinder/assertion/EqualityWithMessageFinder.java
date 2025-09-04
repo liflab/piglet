@@ -50,8 +50,12 @@ public class EqualityWithMessageFinder extends AssertionFinder
 	public boolean visit(MethodCallExpr n)
 	{
 		super.visit(n);
+		if (!isAssertionEquals(n))
+		{
+			return false;
+		}
 		try {
-			if (isAssertionEquals(n) && hasMessage(n))
+			if (hasMessage(n))
 			{
 				addToken(n);
 				return false;

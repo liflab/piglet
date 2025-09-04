@@ -35,26 +35,22 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 	{
 		super("Non-fluent assertions", filename);
 	}
-	
+
 	protected NonFluentAssertionsCounter(String filename, ThreadContext context)
 	{
 		super("Non-fluent assertions", filename, context);
 	}
-	
+
 	@Override
 	public boolean visit(MethodCallExpr n)
 	{
 		super.visit(n);
-		try {
-			if (isNonFluentAssertion(n))
-			{
-				addToken(n);
-				return false;
-			}
-		} catch (Throwable t) {
-			m_errors.add(t);
+		if (!isNonFluentAssertion(n))
+		{
+			return false;
 		}
-		return true;
+		addToken(n);
+		return false;
 	}
 
 	@Override
@@ -62,7 +58,7 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 	{
 		return new NonFluentAssertionsCounter(filename, context);
 	}
-	
+
 	/**
 	 * Determines if a method call expression is an assertion, written
 	 * in a non-fluent style (i.e. not using assertThat).

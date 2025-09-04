@@ -17,7 +17,6 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.DoStmt;
 import com.github.javaparser.ast.stmt.ForStmt;
@@ -29,7 +28,9 @@ import ca.uqac.lif.codefinder.thread.ThreadContext;
  * Finds assertions nested inside a for, while or do block.
  */
 public class IteratedAssertionFinder extends AssertionFinder
-{	
+{
+	protected int m_inLoop = 0;
+	
 	public IteratedAssertionFinder(String filename)
 	{
 		super("Iterated assertions", filename);
@@ -50,7 +51,15 @@ public class IteratedAssertionFinder extends AssertionFinder
 	public boolean visit(ForStmt n)
 	{
 		super.visit(n);
-		findAssertions(n, n);
+		m_inLoop++;
+		return true;
+	}
+	
+	@Override
+	public boolean leave(ForStmt n)
+	{
+		super.leave(n);
+		m_inLoop--;
 		return true;
 	}
 	
@@ -58,7 +67,15 @@ public class IteratedAssertionFinder extends AssertionFinder
 	public boolean visit(DoStmt n)
 	{
 		super.visit(n);
-		findAssertions(n, n);
+		m_inLoop++;
+		return true;
+	}
+	
+	@Override
+	public boolean leave(DoStmt n)
+	{
+		super.leave(n);
+		m_inLoop--;
 		return true;
 	}
 	
@@ -66,7 +83,27 @@ public class IteratedAssertionFinder extends AssertionFinder
 	public boolean visit(WhileStmt n)
 	{
 		super.visit(n);
-		findAssertions(n, n);
+		m_inLoop++;
+		return true;
+	}
+	
+	@Override
+	public boolean leave(WhileStmt n)
+	{
+		super.leave(n);
+		m_inLoop--;
+		return true;
+	}
+	
+	@Override
+	public boolean visit(MethodCallExpr n)
+	{
+		super.visit(n);
+		if (m_inLoop > 0 && isAssertion(n))
+		{
+			addToken(n);
+			return false;
+		}
 		return true;
 	}
 	
@@ -76,19 +113,5 @@ public class IteratedAssertionFinder extends AssertionFinder
 		{
 			super(IteratedAssertionFinder.this.getName(), filename, start_line, end_line, snippet);
 		}	
-	}
-	
-	protected void findAssertions(Node source, Node n)
-	{
-		if (n instanceof MethodCallExpr && isAssertion((MethodCallExpr) n))
-		{
-			int start = source.getBegin().get().line;
-			int end = n.getBegin().get().line;
-			m_found.add(new IteratedAssertionToken(m_filename, start, end, AssertionFinder.trimLines(source.toString(), end - start + 1)));
-		}
-		for (Node child : n.getChildNodes())
-		{
-			findAssertions(source, child);
-		}
 	}
 }

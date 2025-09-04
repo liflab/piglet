@@ -109,6 +109,7 @@ public class StatusCallback implements Runnable
 		m_out.clearLine();
 		m_out.println("Timeouts: " + String.format("%3d", timeouts) + " ");
 		int done = m_currentlyDone.get();
+		m_out.clearLine();
 		m_out.setForegroundColor(Color.LIGHT_GRAY);
 		m_out.print("[");
 		m_out.setForegroundColor(Color.RED);

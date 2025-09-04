@@ -17,9 +17,9 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.IfStmt;
+import com.github.javaparser.ast.stmt.SwitchStmt;
 
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 
@@ -29,6 +29,8 @@ import ca.uqac.lif.codefinder.thread.ThreadContext;
  */
 public class ConditionalAssertionFinder extends AssertionFinder
 {	
+	protected int m_inCondition = 0;
+
 	/**
 	 * Creates a new conditional assertion finder.
 	 * @param filename The name of the file to analyze
@@ -37,7 +39,7 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	{
 		super("Conditional assertions", filename);
 	}
-	
+
 	protected ConditionalAssertionFinder(String filename, ThreadContext context)
 	{
 		super("Conditional assertions", filename, context);
@@ -52,32 +54,44 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	@Override
 	public boolean visit(IfStmt n)
 	{
-		try {
-			super.visit(n);
-			findAssertions(n, n);
-		} catch (Throwable t) {
-			m_errors.add(t);
-		}
+		super.visit(n);
+		m_inCondition++;
 		return true;
 	}
-
-	/**
-	 * Recursively finds assertions in a node.
-	 * @param source The source node to extract line numbers from
-	 * @param n The node to examine
-	 */
-	protected void findAssertions(Node source, Node n)
+	
+	@Override
+	public boolean leave(IfStmt n)
 	{
-		if (n instanceof MethodCallExpr && isAssertion((MethodCallExpr) n))
+		super.leave(n);
+		m_inCondition--;
+		return true;
+	}
+	
+	@Override
+	public boolean visit(SwitchStmt n)
+	{
+		super.visit(n);
+		m_inCondition++;
+		return true;
+	}
+	
+	@Override
+	public boolean leave(SwitchStmt n)
+	{
+		super.leave(n);
+		m_inCondition--;
+		return true;
+	}
+	
+	@Override
+	public boolean visit(MethodCallExpr n)
+	{
+		super.visit(n);
+		if (m_inCondition > 0 && isAssertion(n))
 		{
-			int start = source.getBegin().get().line;
-			int end = n.getBegin().get().line;
-			addToken(start, end, AssertionFinder.trimLines(source.toString(), end - start + 1));
-			return;
+			addToken(n);
+			return false;
 		}
-		for (Node child : n.getChildNodes())
-		{
-			findAssertions(source, child);
-		}
+		return true;
 	}
 }

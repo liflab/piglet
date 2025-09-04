@@ -29,7 +29,9 @@ import ca.uqac.lif.codefinder.thread.ThreadContext;
  * Finds assertions containing Boolean connectives.
  */
 public class CompoundAssertionFinder extends AssertionFinder
-{	
+{
+	protected boolean m_inAssert;
+	
 	public CompoundAssertionFinder(String filename)
 	{
 		super("Compound assertions", filename);
@@ -50,6 +52,10 @@ public class CompoundAssertionFinder extends AssertionFinder
 	public boolean visit(MethodCallExpr n)
 	{
 		super.visit(n);
+		if (!isAssertion(n))
+		{
+			return false;
+		}
 		try
 		{
 			if (isAssertionNotEquals(n) && containsCompound(n))

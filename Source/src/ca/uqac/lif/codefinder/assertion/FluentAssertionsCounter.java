@@ -35,26 +35,22 @@ public class FluentAssertionsCounter extends AssertionCounter
 	{
 		super("Fluent assertions", filename);
 	}
-	
+
 	protected FluentAssertionsCounter(String filename, ThreadContext context)
 	{
 		super("Fluent assertions", filename, context);
 	}
-	
+
 	@Override
 	public boolean visit(MethodCallExpr n)
 	{
 		super.visit(n);
-		try {
-			if (isFluentAssertion(n))
-			{
-				addToken(n);
-				return false;
-			}
-		} catch (Throwable t) {
-			m_errors.add(t);
+		if (!isFluentAssertion(n))
+		{
+			return false;
 		}
-		return true;
+		addToken(n);
+		return false;
 	}
 
 	@Override
@@ -62,5 +58,5 @@ public class FluentAssertionsCounter extends AssertionCounter
 	{
 		return new FluentAssertionsCounter(filename, context);
 	}	
-	
+
 }

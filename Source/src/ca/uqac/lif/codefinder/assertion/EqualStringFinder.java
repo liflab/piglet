@@ -51,9 +51,13 @@ public class EqualStringFinder extends AssertionFinder
 	public boolean visit(MethodCallExpr n)
 	{
 		super.visit(n);
+		if (!isAssertionEquals(n))
+		{
+			return false;
+		}
 		try
 		{
-			if (isAssertionEquals(n) && comparesStrings(n))
+			if (comparesStrings(n))
 			{
 				addToken(n);
 				return false;
