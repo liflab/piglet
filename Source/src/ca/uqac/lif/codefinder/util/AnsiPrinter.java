@@ -350,6 +350,91 @@ public class AnsiPrinter extends PrintStream
 			return m_enabled;
 		}
 		
+		/**
+		 * Sets the text to boldface.
+		 * @return This printer
+		 */
+		public AnsiPrinter bold()
+		{
+			printBytes("\u001B[1m");
+			return this;
+		}
+		
+		/**
+		 * Sets the text to normal weight (not boldface).
+		 * @return This printer
+		 */
+		public AnsiPrinter unbold()
+		{
+			printBytes("\u001B[22m");
+			return this;
+		}
+		
+		/**
+		 * Clears the screen and moves the cursor to the top left corner.
+		 * @return This printer
+		 */
+		public AnsiPrinter clearScreen()
+		{
+			printBytes("\u001B[2J");
+			printBytes("\u001B[H");
+			return this;
+		}
+		
+		/**
+		 * Moves the cursor to the start of the last line of the console.
+		 * @return This printer
+		 */
+		public AnsiPrinter moveStartLastLine()
+		{
+			printBytes("\u001B[1F");
+			return this;
+		}
+		
+		/**
+		 * Moves the cursor to the beginning of the current line.
+		 * @return This printer
+		 */
+		public AnsiPrinter moveBeginningLine()
+		{
+			printBytes("\r");
+			return this;
+		}
+		
+		/**
+		 * Clears the current line.
+		 * @return This printer
+		 */
+		public AnsiPrinter clearLine()
+		{
+			printBytes("\u001B[2K");
+			return this;
+		}
+		
+		/**
+		 * Hides the cursor.
+		 * @return This printer
+		 */
+		public AnsiPrinter hideCursor()
+		{
+			printBytes("\u001B[?25h");
+			return this;
+		}
+		
+		/**
+		 * Shows the cursor.
+		 * @return This printer
+		 */
+		public AnsiPrinter showCursor()
+		{
+			printBytes("\u001B[?25l");
+			return this;
+		}
+		
+		/**
+		 * Sets the color scheme to white text on black background.
+		 * @return This printer
+		 */
 		public AnsiPrinter setWhiteOnBlack()
 		{
 			resetColors();

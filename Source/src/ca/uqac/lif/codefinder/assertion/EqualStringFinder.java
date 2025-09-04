@@ -20,7 +20,9 @@ package ca.uqac.lif.codefinder.assertion;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
+import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder.UnresolvedException;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.util.Types;
 
 /**
  * Finds assertions stating the equality of two strings.
@@ -31,34 +33,42 @@ public class EqualStringFinder extends AssertionFinder
 	{
 		super("Equality between strings", filename);
 	}
-	
+
 	protected EqualStringFinder(String filename, ThreadContext context)
 	{
 		super("Equality between strings", filename, context);
 	}
-	
+
 	@Override
 	public AssertionFinder newFinder(String filename, ThreadContext context)
 	{
 		return new EqualStringFinder(filename, context);
 	}
-	
+
 	@Override
 	public void visit(MethodCallExpr n, Void v)
 	{
 		super.visit(n, v);
-		if (isAssertionEquals(n) && comparesStrings(n))
+		try
 		{
-			addToken(n);
+			if (isAssertionEquals(n) && comparesStrings(n))
+			{
+				addToken(n);
+			}
+		}
+		catch (UnresolvedException e)
+		{
+			m_errors.add(e);
 		}
 	}
-	
+
 	/**
 	 * Determines whether the given method call expression compares two strings.
 	 * @param n The method call expression to examine
 	 * @return true if the method call compares two strings, false otherwise
+	 * @throws UnresolvedException 
 	 */
-	protected static boolean comparesStrings(MethodCallExpr n)
+	protected boolean comparesStrings(MethodCallExpr n) throws UnresolvedException
 	{
 		if (n.getArguments().size() < 2)
 		{
@@ -66,8 +76,8 @@ public class EqualStringFinder extends AssertionFinder
 		}
 		try
 		{
-			ResolvedType type1 = n.getArgument(0).calculateResolvedType();
-			ResolvedType type2 = n.getArgument(1).calculateResolvedType();
+			ResolvedType type1 = Types.smartTypeOf(n.getArgument(0), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(UnresolvedException::new);
+			ResolvedType type2 = Types.smartTypeOf(n.getArgument(1), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(UnresolvedException::new);
 			if (type1.describe().equals("java.lang.String") && type2.describe().equals("java.lang.String"))
 			{
 				return true;

@@ -80,7 +80,7 @@ public class OptionalAssertionFinder extends AssertionFinder
 	 */
 	protected boolean containsOptional(Expression n)
 	{
-		ResolvedType type1 = Types.safeTypeOf(n, m_context.getTypeSolver()).orElse(null);
+		ResolvedType type1 = Types.smartTypeOf(n, null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElse(null);
 		if (type1 == null)
 		{
 			return false;

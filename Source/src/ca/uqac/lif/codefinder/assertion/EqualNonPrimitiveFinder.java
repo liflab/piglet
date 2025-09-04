@@ -59,7 +59,8 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		{
 			if (isAssertionEquals(n) && hasNonPrimitive(n))
 			{
-				ResolvedType type1 = Types.typeOf(n.getArgument(0), m_context.getTypeSolver());
+				// Use smartTypeOf with timeout from context
+				ResolvedType type1 = Types.smartTypeOf(n.getArgument(0), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(UnresolvedException::new);
 				if (TypeChecks.isSubtypeOf(type1, "java.util.Map"))
 				{
 					m_found.add(new EqualMapToken(m_filename, n.getBegin().get().line, n.toString()));
@@ -106,7 +107,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		boolean unresolved = false;
 		try
 		{
-			ResolvedType type1 = Types.typeOf(n.getArgument(0), m_context.getTypeSolver());
+			ResolvedType type1 = Types.smartTypeOf(n.getArgument(0), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(Exception::new);
 			primitive1 = isPrimitive(type1);
 		}
 		catch (Exception e)
@@ -116,7 +117,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 		}
 		try
 		{
-			ResolvedType type2 = Types.typeOf(n.getArgument(1), m_context.getTypeSolver());
+			ResolvedType type2 = Types.smartTypeOf(n.getArgument(1), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(Exception::new);
 			primitive2 = isPrimitive(type2);
 		}
 		catch (Exception e)

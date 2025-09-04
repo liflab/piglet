@@ -65,6 +65,11 @@ codefinder --source /my/project/src:/my/project/otherfolder /my/project/srctest
    `--jar` argument. As with source folders, supply a colon-separated
    list of folders containing JAR files to consider.
 
+Symbol resolution is a costly operation in some cases. To speed up the analysis,
+it is possible to set a timeout to the resolution of a symbol (using the
+`--resolution-timeout` command line parameter). The symbol will
+be considered unresolved if the timeout expires. The default value is 100 ms.
+
 ### Suggested setup
 
 - Create a `root` folder containing the CodeFinder JARs, and a `Projects`

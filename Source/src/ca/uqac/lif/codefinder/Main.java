@@ -129,8 +129,9 @@ public class Main
 
 	/** Limit to the number of files to process (for testing purposes) */
 	protected static int s_limit = -1;
-
-	protected static CombinedTypeSolver sharedSolver;
+	
+	/** Timeout for type resolution operations (in milliseconds) */
+	protected static long s_resolutionTimeout = 100;
 
 	public static ThreadLocal<ThreadContext> CTX;
 
@@ -215,7 +216,8 @@ public class Main
 		    return new ThreadContext(
 		        ts,
 		        new JavaParser(threadPc),
-		        com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts)
+		        com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
+		        s_resolutionTimeout
 		    );
 		  } catch (Exception e) {
 		    throw new RuntimeException("Failed to init per-thread context", e);
@@ -247,6 +249,7 @@ public class Main
 		ExecutorService executor = Executors.newFixedThreadPool(s_threads, tf);
 		long start_time = System.currentTimeMillis();
 		long end_time = -1;
+		s_stdout.hideCursor();
 		status_thread.start();
 		try
 		{
@@ -329,6 +332,18 @@ public class Main
 			if (ret != RET_NOTHING)
 			{
 				return ret;
+			}
+		}
+		if (map.containsKey("resolution-timeout"))
+		{
+			try
+			{
+				s_resolutionTimeout = Long.parseLong(map.getOptionValue("resolution-timeout").trim());
+			}
+			catch (NumberFormatException e)
+			{
+				s_stderr.println("Invalid resolution timeout: " + map.getOptionValue("resolution-timeout"));
+				return RET_NOTHING;
 			}
 		}
 		if (map.containsKey("no-color"))
@@ -452,6 +467,8 @@ public class Main
 				.withDescription("Search in source tree for package p"));
 		cli.addArgument(new Argument().withShortName("l").withLongName("sample").withArgument("p")
 				.withDescription("Sample code snippets with probability p"));
+		cli.addArgument(new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
+				.withDescription("Set timeout for type resolution operations (in ms, default: 100)"));
 		return cli;
 	}
 
@@ -647,5 +664,18 @@ public class Main
 			long seconds = (duration % 60000) / 1000;
 			return minutes + " min " + seconds + " s";
 		}
-	}	
+	}
+	
+	/**
+	 * Formats a duration in milliseconds into a string of the form HH:MM:SS.
+	 * @param duration The duration in milliseconds
+	 * @return A string of the form HH:MM:SS
+	 */
+	public static String formatHms(long duration)
+	{
+		long hours = duration / 3600000;
+		long minutes = (duration % 3600000) / 60000;
+		long seconds = (duration % 60000) / 1000;
+		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+	}
 }

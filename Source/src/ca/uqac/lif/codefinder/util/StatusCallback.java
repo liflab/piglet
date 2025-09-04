@@ -17,7 +17,7 @@
  */
 package ca.uqac.lif.codefinder.util;
 
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
@@ -31,10 +31,10 @@ public class StatusCallback implements Runnable
 	protected static final int s_barWidth = 32;
 	
 	/** The number of items currently done */
-	protected int m_currentlyDone;
-	
-	/** A lock to protect access to the currently done counter */
-	protected final ReentrantLock m_lock;
+	protected final AtomicInteger m_currentlyDone;
+
+	/** The number of resolution timeouts encountered so far */
+	protected final AtomicInteger m_resolutionTimeouts;
 	
 	/** The total number of items */
 	protected final int m_total;
@@ -55,7 +55,8 @@ public class StatusCallback implements Runnable
 		super();
 		m_out = out;
 		m_total = total;
-		m_lock = new ReentrantLock();
+		m_currentlyDone = new AtomicInteger(0);
+		m_resolutionTimeouts = new AtomicInteger(0);
 		printBar();
 	}
 	
@@ -64,7 +65,7 @@ public class StatusCallback implements Runnable
 	{
 		m_startTime = System.currentTimeMillis();
 		printBar();
-		while (m_currentlyDone < m_total)
+		while (m_currentlyDone.get() < m_total)
 		{
 			try
 			{
@@ -83,20 +84,26 @@ public class StatusCallback implements Runnable
 	 */
 	public void done()
 	{
-		m_lock.lock();
-		m_currentlyDone++;
-		m_lock.unlock();
+		m_currentlyDone.incrementAndGet();
 	}	
+	
+	/**
+	 * Marks that a resolution timeout has occurred.
+	 */
+	public void resolutionTimeout()
+	{
+		m_resolutionTimeouts.incrementAndGet();
+	}
 	
 	/**
 	 * Prints the progress bar.
 	 */
 	protected void printBar()
 	{
-		m_lock.lock();
-		int done = m_currentlyDone;
-		m_lock.unlock();
-		m_out.print("\r\033[2K");
+		int timeouts = m_resolutionTimeouts.get();
+		m_out.clearLine();
+		m_out.println("Timeouts: " + String.format("%3d", timeouts) + " ");
+		int done = m_currentlyDone.get();
 		m_out.setForegroundColor(Color.LIGHT_GRAY);
 		m_out.print("[");
 		m_out.setForegroundColor(Color.RED);
@@ -114,11 +121,14 @@ public class StatusCallback implements Runnable
 		m_out.resetColors();
 		int width = Integer.toString(m_total).length();
 		m_out.print(String.format("%" + width + "d/%" + width + "d", done, m_total));
+		long elapsed = System.currentTimeMillis() - m_startTime;
+		m_out.print(String.format(" Elapsed: %s", Main.formatHms(elapsed)));
 		long eta = calculateEta(done);
 		if (eta >= 0)
 		{
 			m_out.print(String.format(" ETA: %s", Main.formatDuration(eta)));
 		}
+		m_out.moveStartLastLine();
 	}
 	
 	protected long calculateEta(int done)

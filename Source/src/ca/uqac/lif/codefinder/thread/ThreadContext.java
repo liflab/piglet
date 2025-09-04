@@ -43,18 +43,25 @@ public final class ThreadContext
 	 * A Java parser facade
 	 */
 	final JavaParserFacade facade;
+	
+	/**
+	 * A timeout for type resolution operations (in milliseconds).
+	 */
+	final long m_resolutionTimeout;
 
 	/**
 	 * Creates a new thread context.
 	 * @param ts The type solver
 	 * @param parser A Java parser instance
 	 * @param facade A Java parser facade
+	 * @param resolutionTimeout A timeout for type resolution operations (in milliseconds)
 	 */
-	public ThreadContext(CombinedTypeSolver ts, JavaParser parser, JavaParserFacade facade)
+	public ThreadContext(CombinedTypeSolver ts, JavaParser parser, JavaParserFacade facade, long resolutionTimeout)
 	{
 		this.ts = ts;
 		this.parser = parser;
 		this.facade = facade;
+		m_resolutionTimeout = resolutionTimeout;
 	}
 	
 	/**
@@ -66,4 +73,14 @@ public final class ThreadContext
 	{
 		return ts;
 	}
+	
+	/**
+	 * Gets the resolution timeout in milliseconds.
+	 * @return The resolution timeout in milliseconds
+	 */
+	public long getResolutionTimeout()
+	{
+		return m_resolutionTimeout;
+	}
+	
 }
