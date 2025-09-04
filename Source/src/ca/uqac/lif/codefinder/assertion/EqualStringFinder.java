@@ -23,6 +23,8 @@ import com.github.javaparser.resolution.types.ResolvedType;
 import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder.UnresolvedException;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.Types;
+import ca.uqac.lif.codefinder.util.Types.ResolveReason;
+import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
 /**
  * Finds assertions stating the equality of two strings.
@@ -74,20 +76,13 @@ public class EqualStringFinder extends AssertionFinder
 		{
 			return false;
 		}
-		try
+
+		ResolveResult<ResolvedType> rr1 = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		ResolveResult<ResolvedType> rr2 = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		if ((rr1.reason == ResolveReason.RESOLVED && rr1.value.orElse(null).describe().equals("java.lang.String")) ||
+				(rr2.reason == ResolveReason.RESOLVED && rr2.value.orElse(null).describe().equals("java.lang.String")))
 		{
-			ResolvedType type1 = Types.smartTypeOf(n.getArgument(0), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(UnresolvedException::new);
-			ResolvedType type2 = Types.smartTypeOf(n.getArgument(1), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(UnresolvedException::new);
-			if (type1.describe().equals("java.lang.String") && type2.describe().equals("java.lang.String"))
-			{
-				return true;
-			}
-		}
-		catch (Exception e)
-		{
-			// Unable to resolve type
-			// Ignore for the moment
-			return false;
+			return true;
 		}
 		return false;
 	}

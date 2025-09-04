@@ -17,6 +17,7 @@
  */
 package ca.uqac.lif.codefinder.assertion;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -25,6 +26,7 @@ import com.github.javaparser.resolution.types.ResolvedType;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
+import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
 /**
  * Finds assertions that compare non-primitive values using equality.
@@ -33,34 +35,59 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 {
 	protected final Set<String> m_unresolved;
 
-	public EqualNonPrimitiveFinder(String filename, Set<String> unresolved)
+	public EqualNonPrimitiveFinder(String filename)
 	{
 		super("Equality between non-primitive values", filename);
-		m_unresolved = unresolved;
+		m_unresolved = new HashSet<>();
 	}
-	
-	protected EqualNonPrimitiveFinder(String filename, Set<String> unresolved, ThreadContext context)
+
+	protected EqualNonPrimitiveFinder(String filename, ThreadContext context)
 	{
 		super("Equality between non-primitive values", filename, context);
-		m_unresolved = unresolved;
+		m_unresolved = new HashSet<>();
 	}
 
 	@Override
 	public AssertionFinder newFinder(String filename, ThreadContext context)
 	{
-		return new EqualNonPrimitiveFinder(filename, m_unresolved, context);
+		return new EqualNonPrimitiveFinder(filename, context);
 	}
 
 	@Override
 	public void visit(MethodCallExpr n, Void v)
 	{
 		super.visit(n, v);
-		try
+		if (!isAssertionEquals(n))
 		{
-			if (isAssertionEquals(n) && hasNonPrimitive(n))
+			return;
+		}
+		ResolveResult<ResolvedType> res1 = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		if (res1.reason == Types.ResolveReason.UNSOLVED)
+		{
+			m_found.add(new EqualUnresolvedToken(m_filename, n.getBegin().get().line, n.toString()));
+			return;
+		}
+		if (res1.reason == Types.ResolveReason.TIMEOUT)
+		{
+			// TODO: report timeout
+			return;
+		}
+		ResolveResult<ResolvedType> res2 = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		if (res2.reason == Types.ResolveReason.UNSOLVED)
+		{
+			m_found.add(new EqualUnresolvedToken(m_filename, n.getBegin().get().line, n.toString()));
+			return;
+		}
+		if (res2.reason == Types.ResolveReason.TIMEOUT)
+		{
+			// TODO: report timeout
+			return;
+		}
+		if (hasNonPrimitive(res1.value.orElse(null), res2.value.orElse(null)))
+		{
+			if (res1.reason == Types.ResolveReason.RESOLVED)
 			{
-				// Use smartTypeOf with timeout from context
-				ResolvedType type1 = Types.smartTypeOf(n.getArgument(0), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(UnresolvedException::new);
+				ResolvedType type1 = res1.value.orElse(null);
 				if (TypeChecks.isSubtypeOf(type1, "java.util.Map"))
 				{
 					m_found.add(new EqualMapToken(m_filename, n.getBegin().get().line, n.toString()));
@@ -83,10 +110,6 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 				}
 			}
 		}
-		catch (UnresolvedException e)
-		{
-			m_found.add(new EqualUnresolvedToken(m_filename, n.getBegin().get().line, n.toString()));
-		}
 	}
 
 	/**
@@ -94,42 +117,10 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	 * non-primitive.
 	 * @param n The method call expression to examine
 	 * @return true if at least one argument is non-primitive, false otherwise
-	 * @throws UnresolvedException 
 	 */
-	protected boolean hasNonPrimitive(MethodCallExpr n) throws UnresolvedException
+	protected boolean hasNonPrimitive(ResolvedType type1, ResolvedType type2)
 	{
-		if (n.getArguments().size() < 2)
-		{
-			return false;
-		}
-		boolean primitive1 = true;
-		boolean primitive2 = true;
-		boolean unresolved = false;
-		try
-		{
-			ResolvedType type1 = Types.smartTypeOf(n.getArgument(0), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(Exception::new);
-			primitive1 = isPrimitive(type1);
-		}
-		catch (Exception e)
-		{
-			m_unresolved.add(n.getArgument(1).toString());
-			unresolved = true;
-		}
-		try
-		{
-			ResolvedType type2 = Types.smartTypeOf(n.getArgument(1), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(Exception::new);
-			primitive2 = isPrimitive(type2);
-		}
-		catch (Exception e)
-		{
-			m_unresolved.add(n.getArgument(1).toString());
-			unresolved = true;
-		}
-		if (unresolved)
-		{
-			throw new UnresolvedException();
-		}
-		return !primitive1 && !primitive2;
+		return !isPrimitive(type1) && !isPrimitive(type2);
 	}
 
 	/**

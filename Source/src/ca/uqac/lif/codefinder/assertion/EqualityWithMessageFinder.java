@@ -22,6 +22,7 @@ import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.Types;
+import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
 
 /**
@@ -33,7 +34,7 @@ public class EqualityWithMessageFinder extends AssertionFinder
 	{
 		super("With text message", filename);
 	}
-	
+
 	protected EqualityWithMessageFinder(String filename, ThreadContext context)
 	{
 		super("With text message", filename, context);
@@ -65,16 +66,13 @@ public class EqualityWithMessageFinder extends AssertionFinder
 		{
 			return false;
 		}
-		try
-		{
-			ResolvedType type1 = Types.smartTypeOf(n.getArgument(0), null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElseThrow(Exception::new);
-			return type1.describe().compareTo("java.lang.String") == 0;
-		}
-		catch (Exception e)
+		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		if (rr.reason != Types.ResolveReason.RESOLVED)
 		{
 			// Unable to resolve type
 			// Ignore for the moment
 			return false;
 		}
+		return rr.value.orElse(null).describe().compareTo("java.lang.String") == 0;
 	}
 }

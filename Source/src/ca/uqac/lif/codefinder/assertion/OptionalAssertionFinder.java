@@ -25,6 +25,8 @@ import com.github.javaparser.resolution.types.ResolvedType;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
+import ca.uqac.lif.codefinder.util.Types.ResolveReason;
+import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
 /**
  * Finds assertions involving the use of optional values.
@@ -63,7 +65,7 @@ public class OptionalAssertionFinder extends AssertionFinder
 	{
 		try {
 			super.visit(n, v);
-			if (containsOptional(n))
+			if (isAssertion(n) && containsOptional(n))
 			{
 				addToken(n);
 			}
@@ -80,11 +82,12 @@ public class OptionalAssertionFinder extends AssertionFinder
 	 */
 	protected boolean containsOptional(Expression n)
 	{
-		ResolvedType type1 = Types.smartTypeOf(n, null, m_context.getTypeSolver(), m_context.getResolutionTimeout()).orElse(null);
-		if (type1 == null)
+		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n, m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		if (rr.reason == ResolveReason.UNSOLVED || rr.reason == ResolveReason.TIMEOUT)
 		{
 			return false;
 		}
+		ResolvedType type1 = rr.value.orElse(null);
 		if (TypeChecks.isOptionalType(type1))
 		{
 			return true;

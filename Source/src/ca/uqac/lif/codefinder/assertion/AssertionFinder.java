@@ -139,6 +139,17 @@ public abstract class AssertionFinder extends TokenFinder
 		return name.compareTo("assertThat") == 0;
 	}
 	
+	/**
+	 * Determines if a method call expression is an assertion.
+	 * @param m The method call expression to examine
+	 * @return <tt>true</tt> if the method call is an assertion, <tt>false</tt>
+	 * otherwise
+	 */
+	protected static boolean isAssertion(MethodCallExpr m)
+	{
+		return isAssertionEquals(m) || isAssertionNotEquals(m) || isAssertThat(m);
+	}
+	
 	@Override
 	public Set<Throwable> getErrors()
 	{

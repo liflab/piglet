@@ -20,7 +20,6 @@ package ca.uqac.lif.codefinder;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -93,10 +92,6 @@ public class Main
 
 	/** The path in which the executable is executed **/
 	protected static final FilePath s_homePath = new FilePath(System.getProperty("user.dir"));
-
-	/** Set of unresolved symbols **/
-	protected static final Set<String> s_setUnresolved = Collections
-			.synchronizedSet(new HashSet<String>());
 
 	/** The parsed command line arguments **/
 	protected static ArgumentMap s_map;
@@ -231,7 +226,7 @@ public class Main
 		finders.add(new ConditionalAssertionFinder(null));
 		finders.add(new EqualAssertionFinder(null));
 		finders.add(new IteratedAssertionFinder(null));
-		finders.add(new EqualNonPrimitiveFinder(null, s_setUnresolved));
+		finders.add(new EqualNonPrimitiveFinder(null));
 		finders.add(new EqualStringFinder(null));
 		finders.add(new EqualityWithMessageFinder(null));
 		finders.add(new OptionalAssertionFinder(null));
@@ -300,7 +295,7 @@ public class Main
 			hd = new HardDisk(output_path.toString()).open();
 			HtmlReporter reporter = new HtmlReporter(
 					new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
-			reporter.report(reverse_path, categorized, s_setUnresolved);
+			reporter.report(reverse_path, categorized, new HashSet<String>());
 			hd.close();
 		}
 		catch (IOException e)
@@ -634,7 +629,7 @@ public class Main
 			CliReporter cli_reporter = new CliReporter(s_stdout, m_summary);
 			try
 			{
-				cli_reporter.report(null, m_found, s_setUnresolved);
+				cli_reporter.report(null, m_found, new HashSet<String>());
 			}
 			catch (IOException e)
 			{
