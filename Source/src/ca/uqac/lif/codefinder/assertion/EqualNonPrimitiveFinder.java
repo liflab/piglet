@@ -54,34 +54,34 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(MethodCallExpr n, Void v)
+	public boolean visit(MethodCallExpr n)
 	{
-		super.visit(n, v);
+		super.visit(n);
 		if (!isAssertionEquals(n))
 		{
-			return;
+			return true;
 		}
 		ResolveResult<ResolvedType> res1 = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
 		if (res1.reason == Types.ResolveReason.UNSOLVED)
 		{
 			m_found.add(new EqualUnresolvedToken(m_filename, n.getBegin().get().line, n.toString()));
-			return;
+			return true;
 		}
 		if (res1.reason == Types.ResolveReason.TIMEOUT)
 		{
 			// TODO: report timeout
-			return;
+			return true;
 		}
 		ResolveResult<ResolvedType> res2 = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
 		if (res2.reason == Types.ResolveReason.UNSOLVED)
 		{
 			m_found.add(new EqualUnresolvedToken(m_filename, n.getBegin().get().line, n.toString()));
-			return;
+			return true;
 		}
 		if (res2.reason == Types.ResolveReason.TIMEOUT)
 		{
 			// TODO: report timeout
-			return;
+			return true;
 		}
 		if (hasNonPrimitive(res1.value.orElse(null), res2.value.orElse(null)))
 		{
@@ -110,6 +110,7 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 				}
 			}
 		}
+		return true;
 	}
 
 	/**
@@ -224,7 +225,12 @@ public class EqualNonPrimitiveFinder extends AssertionFinder
 	protected static class UnresolvedException extends Throwable
 	{
 		/** Dummy UID **/
-		private static final long serialVersionUID = 1L;		
+		private static final long serialVersionUID = 1L;	
+		
+		public UnresolvedException(String message)
+		{
+			super(message);
+		}
 	}
 
 }

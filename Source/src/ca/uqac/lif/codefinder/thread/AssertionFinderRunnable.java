@@ -32,6 +32,7 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.assertion.AssertionFinder;
 import ca.uqac.lif.codefinder.assertion.FoundToken;
+import ca.uqac.lif.codefinder.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
@@ -131,10 +132,11 @@ public class AssertionFinderRunnable implements Runnable
 			}*/
 			for (MethodDeclaration m : methods)
 			{
+				PushPopVisitableNode pm = new PushPopVisitableNode(m);
 				for (AssertionFinder f : finders)
 				{
 					AssertionFinder new_f = f.newFinder(file, context);
-					new_f.visit(m, null);
+					pm.accept(new_f);
 					m_found.addAll(new_f.getFoundTokens());
 				}
 			}

@@ -19,11 +19,11 @@ package ca.uqac.lif.codefinder.assertion;
 
 import java.util.Collection;
 
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
+import ca.uqac.lif.codefinder.ast.PushPopVisitorAdapter;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 
-public abstract class TokenFinder extends VoidVisitorAdapter<Void>
+public abstract class TokenFinder extends PushPopVisitorAdapter
 {
 	/** The name of the file to analyze */
 	protected final String m_filename;

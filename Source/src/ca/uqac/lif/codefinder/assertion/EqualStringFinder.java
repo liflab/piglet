@@ -48,20 +48,22 @@ public class EqualStringFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(MethodCallExpr n, Void v)
+	public boolean visit(MethodCallExpr n)
 	{
-		super.visit(n, v);
+		super.visit(n);
 		try
 		{
 			if (isAssertionEquals(n) && comparesStrings(n))
 			{
 				addToken(n);
+				return false;
 			}
 		}
 		catch (UnresolvedException e)
 		{
 			m_errors.add(e);
 		}
+		return true;
 	}
 
 	/**
@@ -83,6 +85,10 @@ public class EqualStringFinder extends AssertionFinder
 				(rr2.reason == ResolveReason.RESOLVED && rr2.value.orElse(null).describe().equals("java.lang.String")))
 		{
 			return true;
+		}
+		if (rr1.reason == ResolveReason.TIMEOUT || rr2.reason == ResolveReason.TIMEOUT)
+		{
+			throw new UnresolvedException("Timeout while resolving type in " + n.toString());
 		}
 		return false;
 	}

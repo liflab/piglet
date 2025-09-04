@@ -48,17 +48,19 @@ public class EqualAssertionFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(MethodCallExpr n, Void v)
+	public boolean visit(MethodCallExpr n)
 	{
 		try {
-			super.visit(n, v);
+			super.visit(n);
 			if (isAssertionEquals(n) && containsEquals(n))
 			{
 				addToken(n);
+				return false;
 			}
 		} catch (Throwable t) {
 			m_errors.add(t);
 		}
+		return true;
 	}
 
 	protected static boolean containsEquals(Node n)

@@ -43,13 +43,15 @@ public abstract class AssertionCounter extends AssertionFinder
 	}
 
 	@Override
-	public void visit(MethodCallExpr n, Void v)
+	public boolean visit(MethodCallExpr n)
 	{
-		super.visit(n, v);
+		super.visit(n);
 		if (isFluentAssertion(n))
 		{
 			m_count++;
+			return false;
 		}
+		return true;
 	}
 	
 	@Override

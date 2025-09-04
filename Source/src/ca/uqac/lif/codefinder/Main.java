@@ -279,7 +279,7 @@ public class Main
 		}
 		end_time = System.currentTimeMillis();
 		long duration = end_time - start_time;
-		s_stdout.print("\r\033[2K");
+		status.cleanup();
 		s_stdout.println((s_limit >= 0 ? s_limit : total) + " file(s) analyzed");
 		s_stdout.println(found.size() + " assertion(s) found");
 		s_stdout.println("Analysis time: " + formatDuration(duration));

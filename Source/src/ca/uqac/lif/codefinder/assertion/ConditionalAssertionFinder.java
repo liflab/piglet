@@ -50,14 +50,15 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	}
 
 	@Override
-	public void visit(IfStmt n, Void v)
+	public boolean visit(IfStmt n)
 	{
 		try {
-			super.visit(n, v);
+			super.visit(n);
 			findAssertions(n, n);
 		} catch (Throwable t) {
 			m_errors.add(t);
 		}
+		return true;
 	}
 
 	/**
@@ -67,11 +68,12 @@ public class ConditionalAssertionFinder extends AssertionFinder
 	 */
 	protected void findAssertions(Node source, Node n)
 	{
-		if (n instanceof MethodCallExpr /*&& isNonFluentAssertion((MethodCallExpr) n)*/)
+		if (n instanceof MethodCallExpr && isAssertion((MethodCallExpr) n))
 		{
 			int start = source.getBegin().get().line;
 			int end = n.getBegin().get().line;
 			addToken(start, end, AssertionFinder.trimLines(source.toString(), end - start + 1));
+			return;
 		}
 		for (Node child : n.getChildNodes())
 		{

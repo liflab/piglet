@@ -47,36 +47,27 @@ public class IteratedAssertionFinder extends AssertionFinder
 	}
 	
 	@Override
-	public void visit(ForStmt n, Void v)
+	public boolean visit(ForStmt n)
 	{
-		try {
-			super.visit(n, v);
-			findAssertions(n, n, v);
-		} catch (Throwable t) {
-			m_errors.add(t);
-		}
+		super.visit(n);
+		findAssertions(n, n);
+		return true;
 	}
 	
 	@Override
-	public void visit(DoStmt n, Void v)
+	public boolean visit(DoStmt n)
 	{
-		try {
-			super.visit(n, v);
-			findAssertions(n, n, v);
-		} catch (Throwable t) {
-			m_errors.add(t);
-		}
+		super.visit(n);
+		findAssertions(n, n);
+		return true;
 	}
 	
 	@Override
-	public void visit(WhileStmt n, Void v)
+	public boolean visit(WhileStmt n)
 	{
-		try {
-			super.visit(n, v);
-			findAssertions(n, n, v);
-		} catch (Throwable t) {
-			m_errors.add(t);
-		}
+		super.visit(n);
+		findAssertions(n, n);
+		return true;
 	}
 	
 	public class IteratedAssertionToken extends FoundToken
@@ -87,9 +78,9 @@ public class IteratedAssertionFinder extends AssertionFinder
 		}	
 	}
 	
-	protected void findAssertions(Node source, Node n, Void v)
+	protected void findAssertions(Node source, Node n)
 	{
-		if (n instanceof MethodCallExpr /* && isNonFluentAssertion((MethodCallExpr) n)*/)
+		if (n instanceof MethodCallExpr && isAssertion((MethodCallExpr) n))
 		{
 			int start = source.getBegin().get().line;
 			int end = n.getBegin().get().line;
@@ -97,7 +88,7 @@ public class IteratedAssertionFinder extends AssertionFinder
 		}
 		for (Node child : n.getChildNodes())
 		{
-			findAssertions(source, child, v);
+			findAssertions(source, child);
 		}
 	}
 }

@@ -42,17 +42,19 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 	}
 	
 	@Override
-	public void visit(MethodCallExpr n, Void v)
+	public boolean visit(MethodCallExpr n)
 	{
+		super.visit(n);
 		try {
-			super.visit(n, v);
 			if (isNonFluentAssertion(n))
 			{
 				addToken(n);
+				return false;
 			}
 		} catch (Throwable t) {
 			m_errors.add(t);
 		}
+		return true;
 	}
 
 	@Override

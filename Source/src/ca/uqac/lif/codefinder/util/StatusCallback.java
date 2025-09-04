@@ -79,6 +79,11 @@ public class StatusCallback implements Runnable
 		}
 	}
 	
+	public void cleanup()
+	{
+		m_out.moveBeginningLine().clearLine().moveStartLastLine().clearLine();
+	}
+	
 	/**
 	 * Marks one item as done and updates the display if needed.
 	 */
