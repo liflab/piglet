@@ -66,7 +66,8 @@ public class EqualAssertionFinder extends AssertionFinder
 	@Override
 	public boolean leave(MethodCallExpr n)
 	{
-		if (isAssertionEquals(n))
+		super.leave(n);
+		if (isAssertion(n))
 		{
 			m_inAssert = false;
 			if (m_foundEquals)
@@ -75,7 +76,7 @@ public class EqualAssertionFinder extends AssertionFinder
 				m_foundEquals = false;
 			}
 		}
-		return super.leave(n);
+		return true;
 	}
 
 	protected static boolean isEquals(MethodCallExpr me)

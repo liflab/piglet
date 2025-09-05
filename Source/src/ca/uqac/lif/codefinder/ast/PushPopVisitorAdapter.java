@@ -106,7 +106,7 @@ public class PushPopVisitorAdapter implements PushPopVisitor
 {
 
 	@Override
-	public boolean leave(NodeList n)
+	public boolean leave(@SuppressWarnings("rawtypes") NodeList n)
 	{
 
 		return true;
@@ -813,7 +813,7 @@ public class PushPopVisitorAdapter implements PushPopVisitor
 	}
 
 	@Override
-	public boolean visit(NodeList n)
+	public boolean visit(@SuppressWarnings("rawtypes") NodeList n)
 	{
 
 		return true;

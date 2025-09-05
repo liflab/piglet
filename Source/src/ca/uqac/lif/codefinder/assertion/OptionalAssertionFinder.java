@@ -18,7 +18,7 @@
 package ca.uqac.lif.codefinder.assertion;
 
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
@@ -31,7 +31,7 @@ import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 /**
  * Finds assertions involving the use of optional values.
  */
-public class OptionalAssertionFinder extends AssertionFinder
+public class OptionalAssertionFinder extends TypeAwareAssertionFinder
 {
 	protected boolean m_foundOptional = false;
 	
@@ -79,17 +79,31 @@ public class OptionalAssertionFinder extends AssertionFinder
 	@Override
 	public boolean leave(MethodCallExpr n)
 	{
-		if (isAssertion(n))
+		super.leave(n);
+		if (isAssertion(n) && m_foundOptional)
 		{
-			if (m_foundOptional)
-			{
-				addToken(n);
-			}
-			m_foundOptional = false;
+			addToken(n);
 			m_inAssert = false;
+			m_foundOptional = false;
 		}
 		return true;
+		
 	}
+	
+	@Override
+	public boolean visitTypedNode(Node n)
+	{
+		if (!(n instanceof Expression))
+		{
+			return true;
+		}
+		if (m_inAssert && isOptional((Expression) n))
+		{
+			m_foundOptional = true;
+		}
+		return false;
+	}
+
 	
 	protected boolean isOptional(Expression n)
 	{
@@ -100,41 +114,5 @@ public class OptionalAssertionFinder extends AssertionFinder
 		}
 		ResolvedType type1 = rr.value.orElse(null);
 		return TypeChecks.isOptionalType(type1);
-	}
-	
-	
-	
-	
-	
-	/**
-	 * Determines if an expression contains an optional value.
-	 * @param n The expression to examine
-	 * @return <tt>true</tt> if the expression contains an optional value,
-	 * <tt>false</tt> otherwise
-	 */
-	protected boolean containsOptional(Expression n)
-	{
-		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n, m_context.getTypeSolver(), m_context.getResolutionTimeout());
-		if (rr.reason == ResolveReason.UNSOLVED || rr.reason == ResolveReason.TIMEOUT)
-		{
-			return false;
-		}
-		ResolvedType type1 = rr.value.orElse(null);
-		if (TypeChecks.isOptionalType(type1))
-		{
-			return true;
-		}
-		for (Node c : n.getChildNodes())
-		{
-			if (c instanceof Expression)
-			{
-				Expression e = (Expression) c;
-				if (containsOptional(e))
-				{
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+	}	
 }
