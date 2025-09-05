@@ -21,6 +21,15 @@ public class PushPopVisitableNode implements PushPopVisitable
 		super();
 		m_cu = cu;
 	}
+	
+	/**
+	 * Get the node contained in this visitable.
+	 * @return The node
+	 */
+	public Node getNode()
+	{
+		return m_cu;
+	}
 
 	@Override
 	public void accept(PushPopVisitor v)
@@ -28,6 +37,11 @@ public class PushPopVisitableNode implements PushPopVisitable
 		go(m_cu, v);
 	}
 
+	/**
+	 * Recursively visit a node and its children with a visitor.
+	 * @param n The node to visit
+	 * @param v The visitor
+	 */
 	protected void go(Node n, PushPopVisitor v)
 	{
 		boolean b = visitWithType(n, v);
@@ -41,6 +55,12 @@ public class PushPopVisitableNode implements PushPopVisitable
 		leaveWithType(n, v);
 	}
 
+	/**
+	 * Visit a node with the appropriate typed visit method.
+	 * @param n The node to visit
+	 * @param v The visitor
+	 * @return The value returned by the visitor
+	 */
 	protected boolean visitWithType(Node n, PushPopVisitor v)
 	{
 		if (n instanceof AnnotationDeclaration)
@@ -246,6 +266,11 @@ public class PushPopVisitableNode implements PushPopVisitable
 		return true;
 	}
 
+	/**
+	 * Leave a node with the appropriate typed leave method.
+	 * @param n The node to leave
+	 * @param v The visitor
+	 */
 	protected void leaveWithType(Node n, PushPopVisitor v)
 	{
 		if (n instanceof AnnotationDeclaration)

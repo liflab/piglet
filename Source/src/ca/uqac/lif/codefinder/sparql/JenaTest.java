@@ -74,7 +74,7 @@ public class JenaTest
 		
 		ThreadContext ctx = CTX.get();
 		
-    ParseResult<CompilationUnit> cu = ctx.getParser().parse("class A { void f() { g(3); } }");
+    ParseResult<CompilationUnit> cu = ctx.getParser().parse("class A { void f() { g(3); assertTrue(x); } }");
     if (!cu.isSuccessful())
 		{
 			System.out.println("Parse error");
@@ -92,11 +92,11 @@ public class JenaTest
 	       (uri) -> new ResolveType(globalAstIndex));
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		RDFDataMgr.write(baos, r.getModel(), Lang.TURTLE);
+		RDFDataMgr.write(baos, r.getModel(), Lang.RDFXML);
 		System.out.println(baos.toString());
 
 		ResultSet resultSet1 = QueryExecution.model(r.getModel())
 				.query(prefixes + "SELECT ?x WHERE {   ?x lif:name \"f\" }").select();
-    ResultSetFormatter.out(resultSet1);
+    //ResultSetFormatter.out(resultSet1);
 	}
 }
