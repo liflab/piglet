@@ -128,6 +128,7 @@ public class Main
 	/** Timeout for type resolution operations (in milliseconds) */
 	protected static long s_resolutionTimeout = 100;
 
+	/** Thread-local context (parser, type solver, etc.) */
 	public static ThreadLocal<ThreadContext> CTX;
 
 	/**

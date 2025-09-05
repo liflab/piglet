@@ -83,4 +83,13 @@ public final class ThreadContext
 		return m_resolutionTimeout;
 	}
 	
+	/**
+	 * Gets the Java parser instance specific to this thread.
+	 * @return The Java parser instance
+	 */
+	public JavaParser getParser()
+	{
+		return parser;
+	}
+	
 }

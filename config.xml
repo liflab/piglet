@@ -78,9 +78,9 @@
       </files>
      <bundle>true</bundle>
     </dependency>
-    <dependency>
      <!--
-     Already bundled with the Jena dependency below
+	     Already bundled with the Jena dependency below
+    <dependency>
      <name>SLF4J</name>
       <classname>org.slf4j.Logger</classname>
       <files>
