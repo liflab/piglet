@@ -29,7 +29,7 @@ import org.codelibs.jhighlight.renderer.Renderer;
 import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
 
 import ca.uqac.lif.codefinder.Main;
-import ca.uqac.lif.codefinder.assertion.FoundToken;
+import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.fs.FilePath;
 
 public class HtmlReporter implements Reporter

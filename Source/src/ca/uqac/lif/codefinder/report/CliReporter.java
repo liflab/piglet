@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ca.uqac.lif.codefinder.assertion.FoundToken;
+import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
 import ca.uqac.lif.fs.FilePath;

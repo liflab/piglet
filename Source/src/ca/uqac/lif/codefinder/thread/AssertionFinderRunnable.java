@@ -30,9 +30,9 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.Main;
-import ca.uqac.lif.codefinder.assertion.AssertionFinder;
-import ca.uqac.lif.codefinder.assertion.FoundToken;
-import ca.uqac.lif.codefinder.ast.PushPopVisitableNode;
+import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
+import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
@@ -50,7 +50,7 @@ public class AssertionFinderRunnable implements Runnable
 	protected final FileSource m_fSource;
 	
 	/** The set of finders to use */
-	protected final Set<AssertionFinder> m_finders;
+	protected final Set<AstAssertionFinder> m_finders;
 	
 	/** The set of found tokens */
 	protected final Set<FoundToken> m_found;
@@ -70,7 +70,7 @@ public class AssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AssertionFinderRunnable(FileSource source, Set<AssertionFinder> finders, boolean quiet, StatusCallback status)
+	public AssertionFinderRunnable(FileSource source, Set<AstAssertionFinder> finders, boolean quiet, StatusCallback status)
 	{
 		super();
 		m_file = source.getFilename();
@@ -119,7 +119,7 @@ public class AssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(ThreadContext context, String file, String code, Set<AssertionFinder> finders, boolean quiet)
+	protected void processFile(ThreadContext context, String file, String code, Set<AstAssertionFinder> finders, boolean quiet)
 	{
 		try
 		{
@@ -133,9 +133,9 @@ public class AssertionFinderRunnable implements Runnable
 			for (MethodDeclaration m : methods)
 			{
 				PushPopVisitableNode pm = new PushPopVisitableNode(m);
-				for (AssertionFinder f : finders)
+				for (AstAssertionFinder f : finders)
 				{
-					AssertionFinder new_f = f.newFinder(file, context);
+					AstAssertionFinder new_f = f.newFinder(file, context);
 					pm.accept(new_f);
 					m_found.addAll(new_f.getFoundTokens());
 				}

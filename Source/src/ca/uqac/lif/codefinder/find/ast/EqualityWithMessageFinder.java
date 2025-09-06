@@ -1,0 +1,84 @@
+/*
+    Analysis of assertions in Java programs
+    Copyright (C) 2025 Sylvain Hallé, Sarika Machhindra Kadam
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package ca.uqac.lif.codefinder.find.ast;
+
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.resolution.types.ResolvedType;
+
+import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.util.Types;
+import ca.uqac.lif.codefinder.util.Types.ResolveResult;
+
+
+/**
+ * Finds assertions containing a call to method Object.equals.
+ */
+public class EqualityWithMessageFinder extends AstAssertionFinder
+{	
+	public EqualityWithMessageFinder(String filename)
+	{
+		super("With text message", filename);
+	}
+
+	protected EqualityWithMessageFinder(String filename, ThreadContext context)
+	{
+		super("With text message", filename, context);
+	}
+
+	@Override
+	public AstAssertionFinder newFinder(String filename, ThreadContext context)
+	{
+		return new EqualityWithMessageFinder(filename, context);
+	}
+
+	@Override
+	public boolean visit(MethodCallExpr n)
+	{
+		super.visit(n);
+		if (!isAssertionEquals(n))
+		{
+			return false;
+		}
+		try {
+			if (hasMessage(n))
+			{
+				addToken(n);
+				return false;
+			}
+		} catch (Throwable t) {
+			m_errors.add(t);
+		}
+		return true;
+	}
+
+	protected boolean hasMessage(MethodCallExpr n)
+	{
+		if (n.getArguments().size() != 3)
+		{
+			return false;
+		}
+		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
+		if (rr.reason != Types.ResolveReason.RESOLVED)
+		{
+			// Unable to resolve type
+			// Ignore for the moment
+			return false;
+		}
+		return rr.value.orElse(null).describe().compareTo("java.lang.String") == 0;
+	}
+}

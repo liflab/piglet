@@ -37,17 +37,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import ca.uqac.lif.codefinder.assertion.AssertionFinder;
-import ca.uqac.lif.codefinder.assertion.CompoundAssertionFinder;
-import ca.uqac.lif.codefinder.assertion.ConditionalAssertionFinder;
-import ca.uqac.lif.codefinder.assertion.EqualAssertionFinder;
-import ca.uqac.lif.codefinder.assertion.FoundToken;
-import ca.uqac.lif.codefinder.assertion.IteratedAssertionFinder;
-import ca.uqac.lif.codefinder.assertion.NonFluentAssertionsCounter;
-import ca.uqac.lif.codefinder.assertion.OptionalAssertionFinder;
-import ca.uqac.lif.codefinder.assertion.EqualNonPrimitiveFinder;
-import ca.uqac.lif.codefinder.assertion.EqualStringFinder;
-import ca.uqac.lif.codefinder.assertion.EqualityWithMessageFinder;
+
+import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
+import ca.uqac.lif.codefinder.find.ast.CompoundAssertionFinder;
+import ca.uqac.lif.codefinder.find.ast.ConditionalAssertionFinder;
+import ca.uqac.lif.codefinder.find.ast.EqualAssertionFinder;
+import ca.uqac.lif.codefinder.find.ast.EqualNonPrimitiveFinder;
+import ca.uqac.lif.codefinder.find.ast.EqualStringFinder;
+import ca.uqac.lif.codefinder.find.ast.EqualityWithMessageFinder;
+import ca.uqac.lif.codefinder.find.ast.IteratedAssertionFinder;
+import ca.uqac.lif.codefinder.find.ast.NonFluentAssertionsCounter;
+import ca.uqac.lif.codefinder.find.ast.OptionalAssertionFinder;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
@@ -221,7 +222,7 @@ public class Main
 		});
 
 		// Instantiate assertion finders
-		Set<AssertionFinder> finders = new HashSet<AssertionFinder>();
+		Set<AstAssertionFinder> finders = new HashSet<AstAssertionFinder>();
 		finders.add(new NonFluentAssertionsCounter(null));
 		finders.add(new CompoundAssertionFinder(null));
 		finders.add(new ConditionalAssertionFinder(null));
@@ -482,7 +483,7 @@ public class Main
 	}
 
 	protected static void processBatch(ExecutorService e, FileProvider provider,
-			Set<AssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
+			Set<AstAssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
 			int limit) throws IOException, FileSystemException
 	{
 		int count = 0;
