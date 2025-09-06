@@ -91,12 +91,12 @@ public class JenaTest
 	  .put(NS + "resolvedType",
 	       (uri) -> new ResolveType(globalAstIndex));
 		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		RDFDataMgr.write(baos, r.getModel(), Lang.RDFXML);
-		System.out.println(baos.toString());
+		System.out.println(baos.toString());*/
 
 		ResultSet resultSet1 = QueryExecution.model(r.getModel())
-				.query(prefixes + "SELECT ?x WHERE {   ?x lif:name \"f\" }").select();
-    //ResultSetFormatter.out(resultSet1);
+				.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
+    ResultSetFormatter.out(resultSet1);
 	}
 }

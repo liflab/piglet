@@ -11,7 +11,7 @@ public class ModelBuilder
 
 	public static ModelBuilderResult buildModel(PushPopVisitableNode n)
 	{
-		AstToRdfVisitor visitor = new AstToRdfVisitor();
+		JavaAstToRdfVisitor visitor = new JavaAstToRdfVisitor();
 		n.accept(visitor);
 		return new ModelBuilderResult(visitor.getModel(), visitor.getIndex());
 	}

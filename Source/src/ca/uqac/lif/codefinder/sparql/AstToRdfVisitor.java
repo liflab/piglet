@@ -1,6 +1,5 @@
 package ca.uqac.lif.codefinder.sparql;
 
-import java.util.List;
 import java.util.Stack;
 
 import org.apache.jena.rdf.model.Literal;
@@ -116,7 +115,7 @@ import com.github.javaparser.ast.type.WildcardType;
 import ca.uqac.lif.codefinder.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.ast.PushPopVisitor;
 
-public class AstToRdfVisitor implements PushPopVisitor
+public abstract class AstToRdfVisitor implements PushPopVisitor
 {
 	public static final Property IN = ResourceFactory.createProperty(ModelBuilder.NS, "in");
 
@@ -553,7 +552,6 @@ public class AstToRdfVisitor implements PushPopVisitor
 	public boolean leave(MethodCallExpr n)
 	{
 		genericLeave(n);
-		m_parents.pop(); // Since we added the "args" node in visit()
 		return true;
 	}
 
@@ -991,10 +989,7 @@ public class AstToRdfVisitor implements PushPopVisitor
 	public boolean visit(BooleanLiteralExpr n)
 	{
 		genericVisit(n);
-		Resource bool_node = m_parents.peek();
-		Literal name_node = m_model.createLiteral(Boolean.toString(n.getValue()));
-		m_model.add(bool_node, VALUE, name_node);
-		return false;
+		return true;
 	}
 
 	@Override
@@ -1190,9 +1185,6 @@ public class AstToRdfVisitor implements PushPopVisitor
 	public boolean visit(IntegerLiteralExpr n)
 	{
 		genericVisit(n);
-		Resource int_node = m_parents.peek();
-		Literal name_node = m_model.createLiteral(n.getValue());
-		m_model.add(int_node, VALUE, name_node);
 		return true;
 	}
 
@@ -1270,41 +1262,14 @@ public class AstToRdfVisitor implements PushPopVisitor
 	public boolean visit(MethodCallExpr n)
 	{
 		genericVisit(n);
-		Resource method_node = m_parents.peek();
-		Literal name_node = m_model.createLiteral(n.getName().asString());
-		m_model.add(method_node, NAME, name_node);
-		Resource arg_node = m_model.createResource();
-		m_model.add(method_node, ARGUMENTS, arg_node);
-		for (Node a : n.getArguments())
-		{
-			AstToRdfVisitor arg_visitor = new AstToRdfVisitor(m_model, m_index, arg_node);
-			PushPopVisitableNode to_explore = new PushPopVisitableNode(a);
-			to_explore.accept(arg_visitor);
-		}
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean visit(MethodDeclaration n)
 	{
 		genericVisit(n);
-		Resource method_node = m_parents.peek();
-		List<Node> children = n.getChildNodes();
-		Literal name_node = m_model.createLiteral(children.get(0).toString());
-		m_model.add(method_node, NAME, name_node);
-		{
-			AstToRdfVisitor ret_visitor = new AstToRdfVisitor(m_model, m_index, null);
-			PushPopVisitableNode to_explore = new PushPopVisitableNode(children.get(1));
-			to_explore.accept(ret_visitor);
-			m_model.add(method_node, RETURNS, ret_visitor.getRoot());
-		}
-		{
-			AstToRdfVisitor body_visitor = new AstToRdfVisitor(m_model, m_index, method_node);
-			PushPopVisitableNode to_explore = new PushPopVisitableNode(children.get(children.size() - 1));
-			to_explore.accept(body_visitor);
-			//m_model.add(method_node, IN, body_visitor.getRoot());
-		}
-		return false;
+		return true;
 	}
 
 	@Override
@@ -1411,9 +1376,6 @@ public class AstToRdfVisitor implements PushPopVisitor
 	public boolean visit(StringLiteralExpr n)
 	{
 		genericVisit(n);
-		Resource str_node = m_parents.peek();
-		Literal name_node = m_model.createLiteral(n.getValue());
-		m_model.add(str_node, VALUE, name_node);
 		return true;
 	}
 
@@ -1646,9 +1608,10 @@ public class AstToRdfVisitor implements PushPopVisitor
 		String iri = AstIds.iriFor("", n);
 		Resource rdf_node = m_model.createResource(iri);
 		Resource rdf_parent = m_parents.isEmpty() ? null : m_parents.peek();
-		if (rdf_parent == null)
+		// If this is the first node, set it as root
+		if (m_root == null)
 		{
-			m_root = rdf_node;
+			m_root = rdf_parent != null ? rdf_parent : rdf_node;
 		}
 		m_parents.push(rdf_node);
 		m_index.put(iri, n);
@@ -1664,10 +1627,7 @@ public class AstToRdfVisitor implements PushPopVisitor
 
 	protected void genericLeave(Node n)
 	{
-		if (!m_parents.isEmpty())
-		{
-			m_parents.pop();
-		}
+		m_parents.pop();
 	}
 
 	public Resource getRoot()
