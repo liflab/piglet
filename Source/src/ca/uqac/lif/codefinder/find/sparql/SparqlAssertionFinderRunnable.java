@@ -35,9 +35,9 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.provider.FileSource;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -92,7 +92,7 @@ public class SparqlAssertionFinderRunnable implements Runnable
 	@Override
 	public void run()
 	{
-		ThreadContext context = Main.CTX.get();
+		TokenFinderContext context = Main.CTX.get();
 		InputStream is;
 		String code = "";
 		try
@@ -127,7 +127,7 @@ public class SparqlAssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(ThreadContext context, String file, String code, Set<SparqlTokenFinder> finders, boolean quiet)
+	protected void processFile(TokenFinderContext context, String file, String code, Set<SparqlTokenFinder> finders, boolean quiet)
 	{
 		try
 		{

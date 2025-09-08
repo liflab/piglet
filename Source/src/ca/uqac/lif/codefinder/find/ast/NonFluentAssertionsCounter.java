@@ -19,7 +19,8 @@ package ca.uqac.lif.codefinder.find.ast;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * Counts non-fluent assertions (that is, assertions not using
@@ -31,14 +32,14 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 	 * Creates a new non-fluent assertions counter.
 	 * @param filename
 	 */
-	public NonFluentAssertionsCounter(String filename)
+	public NonFluentAssertionsCounter()
 	{
-		super("Non-fluent assertions", filename);
+		this(null);
 	}
 
-	protected NonFluentAssertionsCounter(String filename, ThreadContext context)
+	protected NonFluentAssertionsCounter(TokenFinderContext context)
 	{
-		super("Non-fluent assertions", filename, context);
+		super("Non-fluent assertions", context);
 	}
 
 	@Override
@@ -52,13 +53,7 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 		addToken(n);
 		return false;
 	}
-
-	@Override
-	public NonFluentAssertionsCounter newFinder(String filename, ThreadContext context)
-	{
-		return new NonFluentAssertionsCounter(filename, context);
-	}
-
+	
 	/**
 	 * Determines if a method call expression is an assertion, written
 	 * in a non-fluent style (i.e. not using assertThat).
@@ -73,5 +68,14 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 				* name.compareTo("assertEquals")
 				* name.compareTo("assertTrue")
 				* name.compareTo("assertFalse") == 0;
+	}
+	
+	public static class NonFluentAssertionsCounterFactory extends TokenFinderFactory
+	{
+		@Override
+		public NonFluentAssertionsCounter newFinder()
+		{
+			return new NonFluentAssertionsCounter();
+		}
 	}
 }

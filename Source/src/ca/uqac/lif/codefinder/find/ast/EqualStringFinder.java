@@ -20,8 +20,9 @@ package ca.uqac.lif.codefinder.find.ast;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.ast.EqualNonPrimitiveFinder.UnresolvedException;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveReason;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
@@ -31,20 +32,14 @@ import ca.uqac.lif.codefinder.util.Types.ResolveResult;
  */
 public class EqualStringFinder extends AstAssertionFinder
 {
-	public EqualStringFinder(String filename)
+	public EqualStringFinder()
 	{
-		super("Equality between strings", filename);
+		this(null);
 	}
 
-	protected EqualStringFinder(String filename, ThreadContext context)
+	protected EqualStringFinder(TokenFinderContext context)
 	{
-		super("Equality between strings", filename, context);
-	}
-
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new EqualStringFinder(filename, context);
+		super("Equality between strings", context);
 	}
 
 	@Override
@@ -95,6 +90,15 @@ public class EqualStringFinder extends AstAssertionFinder
 			throw new UnresolvedException("Timeout while resolving type in " + n.toString());
 		}
 		return false;
+	}
+	
+	public static class EqualStringFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public EqualStringFinder newFinder()
+		{
+			return new EqualStringFinder();
+		}
 	}
 
 }

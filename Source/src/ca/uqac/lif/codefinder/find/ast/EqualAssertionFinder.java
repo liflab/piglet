@@ -19,7 +19,8 @@ package ca.uqac.lif.codefinder.find.ast;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 
 /**
@@ -31,20 +32,14 @@ public class EqualAssertionFinder extends AstAssertionFinder
 
 	protected boolean m_foundEquals = false;
 
-	public EqualAssertionFinder(String filename)
+	public EqualAssertionFinder()
 	{
-		super("Object.equals", filename);
+		this(null);
 	}
 
-	protected EqualAssertionFinder(String name, String filename, ThreadContext context)
+	protected EqualAssertionFinder(TokenFinderContext context)
 	{
-		super(name, filename, context);
-	}
-
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new EqualAssertionFinder(m_name, filename, context);
+		super("Object.equals", context);
 	}
 
 	@Override
@@ -82,5 +77,14 @@ public class EqualAssertionFinder extends AstAssertionFinder
 	protected static boolean isEquals(MethodCallExpr me)
 	{
 		return me.getName().asString().compareTo("equals") == 0;
+	}
+
+	public static class EqualAssertionFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public EqualAssertionFinder newFinder()
+		{
+			return new EqualAssertionFinder();
+		}
 	}
 }

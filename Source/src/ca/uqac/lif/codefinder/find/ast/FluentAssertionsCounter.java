@@ -19,7 +19,7 @@ package ca.uqac.lif.codefinder.find.ast;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 
 /**
  * Counts non-fluent assertions (that is, assertions not using
@@ -31,14 +31,14 @@ public class FluentAssertionsCounter extends AssertionCounter
 	 * Creates a new non-fluent assertions counter.
 	 * @param filename
 	 */
-	public FluentAssertionsCounter(String filename)
+	public FluentAssertionsCounter()
 	{
-		super("Fluent assertions", filename);
+		this(null);
 	}
 
-	protected FluentAssertionsCounter(String filename, ThreadContext context)
+	protected FluentAssertionsCounter(TokenFinderContext context)
 	{
-		super("Fluent assertions", filename, context);
+		super("Fluent assertions", context);
 	}
 
 	@Override
@@ -52,11 +52,5 @@ public class FluentAssertionsCounter extends AssertionCounter
 		addToken(n);
 		return false;
 	}
-
-	@Override
-	public FluentAssertionsCounter newFinder(String filename, ThreadContext context)
-	{
-		return new FluentAssertionsCounter(filename, context);
-	}	
 
 }

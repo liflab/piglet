@@ -24,7 +24,8 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
@@ -36,22 +37,15 @@ public class EqualNonPrimitiveFinder extends AstAssertionFinder
 {
 	protected final Set<String> m_unresolved;
 
-	public EqualNonPrimitiveFinder(String filename)
+	public EqualNonPrimitiveFinder()
 	{
-		super("Equality between non-primitive values", filename);
-		m_unresolved = new HashSet<>();
+		this(null);
 	}
 
-	protected EqualNonPrimitiveFinder(String filename, ThreadContext context)
+	protected EqualNonPrimitiveFinder(TokenFinderContext context)
 	{
-		super("Equality between non-primitive values", filename, context);
+		super("Equality between non-primitive values", context);
 		m_unresolved = new HashSet<>();
-	}
-
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new EqualNonPrimitiveFinder(filename, context);
 	}
 
 	@Override
@@ -231,6 +225,15 @@ public class EqualNonPrimitiveFinder extends AstAssertionFinder
 		public UnresolvedException(String message)
 		{
 			super(message);
+		}
+	}
+
+	public static class EqualNonPrimitiveFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public EqualNonPrimitiveFinder newFinder()
+		{
+			return new EqualNonPrimitiveFinder();
 		}
 	}
 

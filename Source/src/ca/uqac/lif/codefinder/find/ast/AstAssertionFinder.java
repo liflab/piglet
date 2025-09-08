@@ -24,7 +24,7 @@ import java.util.TreeSet;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 
 /**
  * An abstract base class for finders that look for assertions in Java code.
@@ -44,21 +44,20 @@ public abstract class AstAssertionFinder extends AstTokenFinder
 	 * @param name The name of this finder
 	 * @param filename The name of the file to analyze
 	 */
-	public AstAssertionFinder(String name, String filename)
+	public AstAssertionFinder(String name)
 	{
-		super(name, filename);
+		super(name);
 		m_found = new TreeSet<FoundToken>();
 	}
 	
 	/**
 	 * Creates a new assertion finder.
 	 * @param name The name of this finder
-	 * @param filename The name of the file to analyze
 	 * @param parser A Java parser instance
 	 */
-	protected AstAssertionFinder(String name, String filename, ThreadContext context)
+	protected AstAssertionFinder(String name, TokenFinderContext context)
 	{
-		super(name, filename, context);
+		super(name, context);
 		m_found = new TreeSet<FoundToken>();
 	}
 	
@@ -78,14 +77,11 @@ public abstract class AstAssertionFinder extends AstTokenFinder
 		return m_found.size();
 	}
 	
-	@Override
-	public abstract AstAssertionFinder newFinder(String filename, ThreadContext context);
-
 	/**
 	 * Adds a found token to the set of found tokens.
 	 * @param n The method call expression corresponding to the found token
 	 */
-	protected void addToken(MethodCallExpr n)
+	public void addToken(MethodCallExpr n)
 	{
 		m_found.add(new FoundToken(m_name, m_filename, n.getBegin().get().line, n.getEnd().get().line, n.toString()));
 	}

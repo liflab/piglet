@@ -22,7 +22,8 @@ import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveReason;
@@ -42,9 +43,9 @@ public class OptionalAssertionFinder extends TypeAwareAssertionFinder
 	 * @param name The name of the finder
 	 * @param filename The name of the file in which the finder is defined
 	 */
-	public OptionalAssertionFinder(String filename)
+	public OptionalAssertionFinder()
 	{
-		super("Assertions with Optional", filename);
+		this(null);
 	}
 	
 	/**
@@ -53,15 +54,9 @@ public class OptionalAssertionFinder extends TypeAwareAssertionFinder
 	 * @param filename The name of the file in which the finder is defined
 	 * @param context The thread context in which the finder is executed
 	 */
-	protected OptionalAssertionFinder(String filename, ThreadContext context)
+	protected OptionalAssertionFinder(TokenFinderContext context)
 	{
-		super("Assertions with Optional", filename, context);
-	}
-
-	@Override
-	public OptionalAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new OptionalAssertionFinder(filename, context);
+		super("Assertions with Optional", context);
 	}
 	
 	@Override
@@ -115,4 +110,13 @@ public class OptionalAssertionFinder extends TypeAwareAssertionFinder
 		ResolvedType type1 = rr.value.orElse(null);
 		return TypeChecks.isOptionalType(type1);
 	}	
+	
+	public static class OptionalAssertionFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public OptionalAssertionFinder newFinder()
+		{
+			return new OptionalAssertionFinder();
+		}
+	}
 }

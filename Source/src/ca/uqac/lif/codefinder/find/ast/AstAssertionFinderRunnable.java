@@ -31,8 +31,10 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.find.TokenFinder;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -49,7 +51,7 @@ public class AstAssertionFinderRunnable implements Runnable
 	protected final FileSource m_fSource;
 	
 	/** The set of finders to use */
-	protected final Set<AstAssertionFinder> m_finders;
+	protected final Set<TokenFinderFactory> m_finders;
 	
 	/** The set of found tokens */
 	protected final Set<FoundToken> m_found;
@@ -69,7 +71,7 @@ public class AstAssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AstAssertionFinderRunnable(FileSource source, Set<AstAssertionFinder> finders, boolean quiet, StatusCallback status)
+	public AstAssertionFinderRunnable(FileSource source, Set<TokenFinderFactory> finders, boolean quiet, StatusCallback status)
 	{
 		super();
 		m_file = source.getFilename();
@@ -83,7 +85,7 @@ public class AstAssertionFinderRunnable implements Runnable
 	@Override
 	public void run()
 	{
-		ThreadContext context = Main.CTX.get();
+		TokenFinderContext context = Main.CTX.get();
 		InputStream is;
 		String code = "";
 		try
@@ -118,7 +120,7 @@ public class AstAssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(ThreadContext context, String file, String code, Set<AstAssertionFinder> finders, boolean quiet)
+	protected void processFile(TokenFinderContext context, String file, String code, Set<TokenFinderFactory> finders, boolean quiet)
 	{
 		try
 		{
@@ -132,9 +134,11 @@ public class AstAssertionFinderRunnable implements Runnable
 			for (MethodDeclaration m : methods)
 			{
 				PushPopVisitableNode pm = new PushPopVisitableNode(m);
-				for (AstAssertionFinder f : finders)
+				for (TokenFinderFactory factory : finders)
 				{
-					AstAssertionFinder new_f = f.newFinder(file, context);
+					TokenFinder new_f = factory.newFinder();
+					new_f.setFilename(file);
+					new_f.setContext(context);
 					pm.accept(new_f);
 					m_found.addAll(new_f.getFoundTokens());
 				}

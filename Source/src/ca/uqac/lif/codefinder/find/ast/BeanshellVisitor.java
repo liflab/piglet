@@ -102,25 +102,25 @@ import com.github.javaparser.ast.type.VarType;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.type.WildcardType;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 
 /**
  * A visitor with empty visit and leave methods for all node types.
  */
-public class BeanshellVisitor extends AstAssertionFinder
+public abstract class BeanshellVisitor extends AstAssertionFinder
 {
-	public BeanshellVisitor(String name, String filename)
+	public BeanshellVisitor(String name)
 	{
-		super(name, filename);
+		this(name, null);
 	}
 
-	protected BeanshellVisitor(String name, String filename, ThreadContext context)
+	protected BeanshellVisitor(String name, TokenFinderContext context)
 	{
-		super(name, filename, context);
+		super(name, context);
 	}
 
 	@Override
-	public final boolean leave(@SuppressWarnings("rawtypes") NodeList n)
+	public boolean leave(@SuppressWarnings("rawtypes") NodeList n)
 	{
 		return leaveNodeList(n);
 
@@ -133,7 +133,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(AnnotationDeclaration n)
+	public boolean leave(AnnotationDeclaration n)
 	{
 		return leaveAnnotationDeclaration(n);
 
@@ -146,7 +146,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(AnnotationMemberDeclaration n)
+	public boolean leave(AnnotationMemberDeclaration n)
 	{
 		return leaveAnnotationMemberDeclaration(n);
 
@@ -159,7 +159,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(ArrayAccessExpr n)
+	public boolean leave(ArrayAccessExpr n)
 	{
 		return leaveArrayAccessExpr(n);
 
@@ -172,7 +172,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(ArrayCreationExpr n)
+	public boolean leave(ArrayCreationExpr n)
 	{
 		return leaveArrayCreationExpr(n);
 
@@ -185,7 +185,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(ArrayCreationLevel n)
+	public boolean leave(ArrayCreationLevel n)
 	{
 		return leaveArrayCreationLevel(n);
 
@@ -198,7 +198,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(ArrayInitializerExpr n)
+	public boolean leave(ArrayInitializerExpr n)
 	{
 		return leaveArrayInitializerExpr(n);
 
@@ -211,7 +211,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(ArrayType n)
+	public boolean leave(ArrayType n)
 	{
 		return leaveArrayType(n);
 	}
@@ -223,7 +223,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(AssertStmt n)
+	public boolean leave(AssertStmt n)
 	{
 		return leaveAssertStmt(n);
 
@@ -236,7 +236,7 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(AssignExpr n)
+	public boolean leave(AssignExpr n)
 	{
 		return leaveAssignExpr(n);
 
@@ -249,1354 +249,1347 @@ public class BeanshellVisitor extends AstAssertionFinder
 	}
 
 	@Override
-	public final boolean leave(BinaryExpr n)
+	public boolean leave(BinaryExpr n)
 	{
 		return leaveBinaryExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(BlockComment n)
+	public boolean leave(BlockComment n)
 	{
 		return leaveBlockComment(n);
 
 	}
 
 	@Override
-	public final boolean leave(BlockStmt n)
+	public boolean leave(BlockStmt n)
 	{
 		return leaveBlockStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(BooleanLiteralExpr n)
+	public boolean leave(BooleanLiteralExpr n)
 	{
 		return leaveBooleanLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(BreakStmt n)
+	public boolean leave(BreakStmt n)
 	{
 		return leaveBreakStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(CastExpr n)
+	public boolean leave(CastExpr n)
 	{
 		return leaveCastExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(CatchClause n)
+	public boolean leave(CatchClause n)
 	{
 		return leaveCatchClause(n);
 
 	}
 
 	@Override
-	public final boolean leave(CharLiteralExpr n)
+	public boolean leave(CharLiteralExpr n)
 	{
 		return leaveCharLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(ClassExpr n)
+	public boolean leave(ClassExpr n)
 	{
 		return leaveClassExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(ClassOrInterfaceDeclaration n)
+	public boolean leave(ClassOrInterfaceDeclaration n)
 	{
 		return leaveClassOrInterfaceDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(ClassOrInterfaceType n)
+	public boolean leave(ClassOrInterfaceType n)
 	{
 		return leaveClassOrInterfaceType(n);
 
 	}
 
 	@Override
-	public final boolean leave(CompilationUnit n)
+	public boolean leave(CompilationUnit n)
 	{
 		return leaveCompilationUnit(n);
 
 	}
 
 	@Override
-	public final boolean leave(ConditionalExpr n)
+	public boolean leave(ConditionalExpr n)
 	{
 		return leaveConditionalExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(ConstructorDeclaration n)
+	public boolean leave(ConstructorDeclaration n)
 	{
 		return leaveConstructorDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(ContinueStmt n)
+	public boolean leave(ContinueStmt n)
 	{
 		return leaveContinueStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(DoStmt n)
+	public boolean leave(DoStmt n)
 	{
 		return leaveDoStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(DoubleLiteralExpr n)
+	public boolean leave(DoubleLiteralExpr n)
 	{
 		return leaveDoubleLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(EmptyStmt n)
+	public boolean leave(EmptyStmt n)
 	{
 		return leaveEmptyStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(EnclosedExpr n)
+	public boolean leave(EnclosedExpr n)
 	{
 		return leaveEnclosedExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(EnumConstantDeclaration n)
+	public boolean leave(EnumConstantDeclaration n)
 	{
 		return leaveEnumConstantDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(EnumDeclaration n)
+	public boolean leave(EnumDeclaration n)
 	{
 		return leaveEnumDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(ExplicitConstructorInvocationStmt n)
+	public boolean leave(ExplicitConstructorInvocationStmt n)
 	{
 		return leaveExplicitConstructorInvocationStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(ExpressionStmt n)
+	public boolean leave(ExpressionStmt n)
 	{
 		return leaveExpressionStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(FieldAccessExpr n)
+	public boolean leave(FieldAccessExpr n)
 	{
 		return leaveFieldAccessExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(FieldDeclaration n)
+	public boolean leave(FieldDeclaration n)
 	{
 		return leaveFieldDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(ForStmt n)
+	public boolean leave(ForStmt n)
 	{
 		return leaveForStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(ForEachStmt n)
+	public boolean leave(ForEachStmt n)
 	{
 		return leaveForEachStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(IfStmt n)
+	public boolean leave(IfStmt n)
 	{
 		return leaveIfStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(ImportDeclaration n)
+	public boolean leave(ImportDeclaration n)
 	{
 		return leaveImportDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(InitializerDeclaration n)
+	public boolean leave(InitializerDeclaration n)
 	{
 		return leaveInitializerDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(InstanceOfExpr n)
+	public boolean leave(InstanceOfExpr n)
 	{
 		return leaveInstanceOfExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(IntegerLiteralExpr n)
+	public boolean leave(IntegerLiteralExpr n)
 	{
 		return leaveIntegerLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(IntersectionType n)
+	public boolean leave(IntersectionType n)
 	{
 		return leaveIntersectionType(n);
 
 	}
 
 	@Override
-	public final boolean leave(JavadocComment n)
+	public boolean leave(JavadocComment n)
 	{
 		return leaveJavadocComment(n);
 
 	}
 
 	@Override
-	public final boolean leave(LabeledStmt n)
+	public boolean leave(LabeledStmt n)
 	{
 		return leaveLabeledStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(LambdaExpr n)
+	public boolean leave(LambdaExpr n)
 	{
 		return leaveLambdaExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(LineComment n)
+	public boolean leave(LineComment n)
 	{
 		return leaveLineComment(n);
 
 	}
 
 	@Override
-	public final boolean leave(LocalClassDeclarationStmt n)
+	public boolean leave(LocalClassDeclarationStmt n)
 	{
 		return leaveLocalClassDeclarationStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(LocalRecordDeclarationStmt n)
+	public boolean leave(LocalRecordDeclarationStmt n)
 	{
 		return leaveLocalRecordDeclarationStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(LongLiteralExpr n)
+	public boolean leave(LongLiteralExpr n)
 	{
 		return leaveLongLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(MarkerAnnotationExpr n)
+	public boolean leave(MarkerAnnotationExpr n)
 	{
 		return leaveMarkerAnnotationExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(MemberValuePair n)
+	public boolean leave(MemberValuePair n)
 	{
 		return leaveMemberValuePair(n);
 
 	}
 
 	@Override
-	public final boolean leave(MethodCallExpr n)
+	public boolean leave(MethodCallExpr n)
 	{
 		return leaveMethodCallExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(MethodDeclaration n)
+	public boolean leave(MethodDeclaration n)
 	{
 		return leaveMethodDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(MethodReferenceExpr n)
+	public boolean leave(MethodReferenceExpr n)
 	{
 		return leaveMethodReferenceExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(NameExpr n)
+	public boolean leave(NameExpr n)
 	{
 		return leaveNameExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(Name n)
+	public boolean leave(Name n)
 	{
 		return leaveName(n);
 
 	}
 
 	@Override
-	public final boolean leave(NormalAnnotationExpr n)
+	public boolean leave(NormalAnnotationExpr n)
 	{
 		return leaveNormalAnnotationExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(NullLiteralExpr n)
+	public boolean leave(NullLiteralExpr n)
 	{
 		return leaveNullLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(ObjectCreationExpr n)
+	public boolean leave(ObjectCreationExpr n)
 	{
 		return leaveObjectCreationExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(PackageDeclaration n)
+	public boolean leave(PackageDeclaration n)
 	{
 		return leavePackageDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(Parameter n)
+	public boolean leave(Parameter n)
 	{
 		return leaveParameter(n);
 
 	}
 
 	@Override
-	public final boolean leave(PrimitiveType n)
+	public boolean leave(PrimitiveType n)
 	{
 		return leavePrimitiveType(n);
 
 	}
 
 	@Override
-	public final boolean leave(RecordDeclaration n)
+	public boolean leave(RecordDeclaration n)
 	{
 		return leaveRecordDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(CompactConstructorDeclaration n)
+	public boolean leave(CompactConstructorDeclaration n)
 	{
 		return leaveCompactConstructorDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(ReturnStmt n)
+	public boolean leave(ReturnStmt n)
 	{
 		return leaveReturnStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(SimpleName n)
+	public boolean leave(SimpleName n)
 	{
 		return leaveSimpleName(n);
 
 	}
 
 	@Override
-	public final boolean leave(SingleMemberAnnotationExpr n)
+	public boolean leave(SingleMemberAnnotationExpr n)
 	{
 		return leaveSingleMemberAnnotationExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(StringLiteralExpr n)
+	public boolean leave(StringLiteralExpr n)
 	{
 		return leaveStringLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(SuperExpr n)
+	public boolean leave(SuperExpr n)
 	{
 		return leaveSuperExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(SwitchEntry n)
+	public boolean leave(SwitchEntry n)
 	{
 		return leaveSwitchEntry(n);
 
 	}
 
 	@Override
-	public final boolean leave(SwitchStmt n)
+	public boolean leave(SwitchStmt n)
 	{
 		return leaveSwitchStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(SynchronizedStmt n)
+	public boolean leave(SynchronizedStmt n)
 	{
 		return leaveSynchronizedStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(ThisExpr n)
+	public boolean leave(ThisExpr n)
 	{
 		return leaveThisExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(ThrowStmt n)
+	public boolean leave(ThrowStmt n)
 	{
 		return leaveThrowStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(TryStmt n)
+	public boolean leave(TryStmt n)
 	{
 		return leaveTryStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(TypeExpr n)
+	public boolean leave(TypeExpr n)
 	{
 		return leaveTypeExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(TypeParameter n)
+	public boolean leave(TypeParameter n)
 	{
 		return leaveTypeParameter(n);
 
 	}
 
 	@Override
-	public final boolean leave(UnaryExpr n)
+	public boolean leave(UnaryExpr n)
 	{
 		return leaveUnaryExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(UnionType n)
+	public boolean leave(UnionType n)
 	{
 		return leaveUnionType(n);
 
 	}
 
 	@Override
-	public final boolean leave(UnknownType n)
+	public boolean leave(UnknownType n)
 	{
 		return leaveUnknownType(n);
 
 	}
 
 	@Override
-	public final boolean leave(VariableDeclarationExpr n)
+	public boolean leave(VariableDeclarationExpr n)
 	{
 		return leaveVariableDeclarationExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(VariableDeclarator n)
+	public boolean leave(VariableDeclarator n)
 	{
 		return leaveVariableDeclarator(n);
 
 	}
 
 	@Override
-	public final boolean leave(VoidType n)
+	public boolean leave(VoidType n)
 	{
 		return leaveVoidType(n);
 
 	}
 
 	@Override
-	public final boolean leave(WhileStmt n)
+	public boolean leave(WhileStmt n)
 	{
 		return leaveWhileStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(WildcardType n)
+	public boolean leave(WildcardType n)
 	{
 		return leaveWildcardType(n);
 
 	}
 
 	@Override
-	public final boolean leave(ModuleDeclaration n)
+	public boolean leave(ModuleDeclaration n)
 	{
 		return leaveModuleDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean leave(ModuleRequiresDirective n)
+	public boolean leave(ModuleRequiresDirective n)
 	{
 		return leaveModuleRequiresDirective(n);
 
 	}
 
 	@Override
-	public final boolean leave(ModuleExportsDirective n)
+	public boolean leave(ModuleExportsDirective n)
 	{
 		return leaveModuleExportsDirective(n);
 
 	}
 
 	@Override
-	public final boolean leave(ModuleProvidesDirective n)
+	public boolean leave(ModuleProvidesDirective n)
 	{
 		return leaveModuleProvidesDirective(n);
 
 	}
 
 	@Override
-	public final boolean leave(ModuleUsesDirective n)
+	public boolean leave(ModuleUsesDirective n)
 	{
 		return leaveModuleUsesDirective(n);
 
 	}
 
 	@Override
-	public final boolean leave(ModuleOpensDirective n)
+	public boolean leave(ModuleOpensDirective n)
 	{
 		return leaveModuleOpensDirective(n);
 
 	}
 
 	@Override
-	public final boolean leave(UnparsableStmt n)
+	public boolean leave(UnparsableStmt n)
 	{
 		return leaveUnparsableStmt(n);
 
 	}
 
 	@Override
-	public final boolean leave(ReceiverParameter n)
+	public boolean leave(ReceiverParameter n)
 	{
 		return leaveReceiverParameter(n);
 
 	}
 
 	@Override
-	public final boolean leave(VarType n)
+	public boolean leave(VarType n)
 	{
 		return leaveVarType(n);
 
 	}
 
 	@Override
-	public final boolean leave(Modifier n)
+	public boolean leave(Modifier n)
 	{
 		return leaveModifier(n);
 
 	}
 
 	@Override
-	public final boolean leave(SwitchExpr switchExpr)
+	public boolean leave(SwitchExpr switchExpr)
 	{
 		return leaveSwitchExpr(switchExpr);
 
 	}
 
 	@Override
-	public final boolean leave(TextBlockLiteralExpr n)
+	public boolean leave(TextBlockLiteralExpr n)
 	{
 		return leaveTextBlockLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(YieldStmt yieldStmt)
+	public boolean leave(YieldStmt yieldStmt)
 	{
 		return leaveYieldStmt(yieldStmt);
 
 	}
 
 	@Override
-	public final boolean leave(TypePatternExpr n)
+	public boolean leave(TypePatternExpr n)
 	{
 		return leaveTypePatternExpr(n);
 
 	}
 
 	@Override
-	public final boolean leave(RecordPatternExpr n)
+	public boolean leave(RecordPatternExpr n)
 	{
 		return leaveRecordPatternExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(@SuppressWarnings("rawtypes") NodeList n)
+	public boolean visit(@SuppressWarnings("rawtypes") NodeList n)
 	{
 		return visitNodeList(n);
 
 	}
 
 	@Override
-	public final boolean visit(AnnotationDeclaration n)
+	public boolean visit(AnnotationDeclaration n)
 	{
 		return visitAnnotationDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(AnnotationMemberDeclaration n)
+	public boolean visit(AnnotationMemberDeclaration n)
 	{
 		return visitAnnotationMemberDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(ArrayAccessExpr n)
+	public boolean visit(ArrayAccessExpr n)
 	{
 		return visitArrayAccessExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ArrayCreationExpr n)
+	public boolean visit(ArrayCreationExpr n)
 	{
 		return visitArrayCreationExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ArrayCreationLevel n)
+	public boolean visit(ArrayCreationLevel n)
 	{
 		return visitArrayCreationLevel(n);
 
 	}
 
 	@Override
-	public final boolean visit(ArrayInitializerExpr n)
+	public boolean visit(ArrayInitializerExpr n)
 	{
 		return visitArrayInitializerExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ArrayType n)
+	public boolean visit(ArrayType n)
 	{
 		return visitArrayType(n);
 
 	}
 
 	@Override
-	public final boolean visit(AssertStmt n)
+	public boolean visit(AssertStmt n)
 	{
 		return visitAssertStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(AssignExpr n)
+	public boolean visit(AssignExpr n)
 	{
 		return visitAssignExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(BinaryExpr n)
+	public boolean visit(BinaryExpr n)
 	{
 		return visitBinaryExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(BlockComment n)
+	public boolean visit(BlockComment n)
 	{
 		return visitBlockComment(n);
 
 	}
 
 	@Override
-	public final boolean visit(BlockStmt n)
+	public boolean visit(BlockStmt n)
 	{
 		return visitBlockStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(BooleanLiteralExpr n)
+	public boolean visit(BooleanLiteralExpr n)
 	{
 		return visitBooleanLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(BreakStmt n)
+	public boolean visit(BreakStmt n)
 	{
 		return visitBreakStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(CastExpr n)
+	public boolean visit(CastExpr n)
 	{
 		return visitCastExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(CatchClause n)
+	public boolean visit(CatchClause n)
 	{
 		return visitCatchClause(n);
 
 	}
 
 	@Override
-	public final boolean visit(CharLiteralExpr n)
+	public boolean visit(CharLiteralExpr n)
 	{
 		return visitCharLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ClassExpr n)
+	public boolean visit(ClassExpr n)
 	{
 		return visitClassExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ClassOrInterfaceDeclaration n)
+	public boolean visit(ClassOrInterfaceDeclaration n)
 	{
 		return visitClassOrInterfaceDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(ClassOrInterfaceType n)
+	public boolean visit(ClassOrInterfaceType n)
 	{
 		return visitClassOrInterfaceType(n);
 
 	}
 
 	@Override
-	public final boolean visit(CompilationUnit n)
+	public boolean visit(CompilationUnit n)
 	{
 		return visitCompilationUnit(n);
 
 	}
 
 	@Override
-	public final boolean visit(ConditionalExpr n)
+	public boolean visit(ConditionalExpr n)
 	{
 		return visitConditionalExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ConstructorDeclaration n)
+	public boolean visit(ConstructorDeclaration n)
 	{
 		return visitConstructorDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(ContinueStmt n)
+	public boolean visit(ContinueStmt n)
 	{
 		return visitContinueStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(DoStmt n)
+	public boolean visit(DoStmt n)
 	{
 		return visitDoStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(DoubleLiteralExpr n)
+	public boolean visit(DoubleLiteralExpr n)
 	{
 		return visitDoubleLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(EmptyStmt n)
+	public boolean visit(EmptyStmt n)
 	{
 		return visitEmptyStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(EnclosedExpr n)
+	public boolean visit(EnclosedExpr n)
 	{
 		return visitEnclosedExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(EnumConstantDeclaration n)
+	public boolean visit(EnumConstantDeclaration n)
 	{
 		return visitEnumConstantDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(EnumDeclaration n)
+	public boolean visit(EnumDeclaration n)
 	{
 		return visitEnumDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(ExplicitConstructorInvocationStmt n)
+	public boolean visit(ExplicitConstructorInvocationStmt n)
 	{
 		return visitExplicitConstructorInvocationStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(ExpressionStmt n)
+	public boolean visit(ExpressionStmt n)
 	{
 		return visitExpressionStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(FieldAccessExpr n)
+	public boolean visit(FieldAccessExpr n)
 	{
 		return visitFieldAccessExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(FieldDeclaration n)
+	public boolean visit(FieldDeclaration n)
 	{
 		return visitFieldDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(ForStmt n)
+	public boolean visit(ForStmt n)
 	{
 		return visitForStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(ForEachStmt n)
+	public boolean visit(ForEachStmt n)
 	{
 		return visitForEachStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(IfStmt n)
+	public boolean visit(IfStmt n)
 	{
 		return visitIfStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(ImportDeclaration n)
+	public boolean visit(ImportDeclaration n)
 	{
 		return visitImportDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(InitializerDeclaration n)
+	public boolean visit(InitializerDeclaration n)
 	{
 		return visitInitializerDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(InstanceOfExpr n)
+	public boolean visit(InstanceOfExpr n)
 	{
 		return visitInstanceOfExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(IntegerLiteralExpr n)
+	public boolean visit(IntegerLiteralExpr n)
 	{
 		return visitIntegerLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(IntersectionType n)
+	public boolean visit(IntersectionType n)
 	{
 		return visitIntersectionType(n);
 
 	}
 
 	@Override
-	public final boolean visit(JavadocComment n)
+	public boolean visit(JavadocComment n)
 	{
 		return visitJavadocComment(n);
 
 	}
 
 	@Override
-	public final boolean visit(LabeledStmt n)
+	public boolean visit(LabeledStmt n)
 	{
 		return visitLabeledStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(LambdaExpr n)
+	public boolean visit(LambdaExpr n)
 	{
 		return visitLambdaExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(LineComment n)
+	public boolean visit(LineComment n)
 	{
 		return visitLineComment(n);
 
 	}
 
 	@Override
-	public final boolean visit(LocalClassDeclarationStmt n)
+	public boolean visit(LocalClassDeclarationStmt n)
 	{
 		return visitLocalClassDeclarationStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(LocalRecordDeclarationStmt n)
+	public boolean visit(LocalRecordDeclarationStmt n)
 	{
 		return visitLocalRecordDeclarationStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(LongLiteralExpr n)
+	public boolean visit(LongLiteralExpr n)
 	{
 		return visitLongLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(MarkerAnnotationExpr n)
+	public boolean visit(MarkerAnnotationExpr n)
 	{
 		return visitMarkerAnnotationExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(MemberValuePair n)
+	public boolean visit(MemberValuePair n)
 	{
 		return visitMemberValuePair(n);
 
 	}
 
 	@Override
-	public final boolean visit(MethodCallExpr n)
+	public boolean visit(MethodCallExpr n)
 	{
 		return visitMethodCallExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(MethodDeclaration n)
+	public boolean visit(MethodDeclaration n)
 	{
 		return visitMethodDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(MethodReferenceExpr n)
+	public boolean visit(MethodReferenceExpr n)
 	{
 		return visitMethodReferenceExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(NameExpr n)
+	public boolean visit(NameExpr n)
 	{
 		return visitNameExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(Name n)
+	public boolean visit(Name n)
 	{
 		return visitName(n);
 
 	}
 
 	@Override
-	public final boolean visit(NormalAnnotationExpr n)
+	public boolean visit(NormalAnnotationExpr n)
 	{
 		return visitNormalAnnotationExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(NullLiteralExpr n)
+	public boolean visit(NullLiteralExpr n)
 	{
 		return visitNullLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ObjectCreationExpr n)
+	public boolean visit(ObjectCreationExpr n)
 	{
 		return visitObjectCreationExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(PackageDeclaration n)
+	public boolean visit(PackageDeclaration n)
 	{
 		return visitPackageDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(Parameter n)
+	public boolean visit(Parameter n)
 	{
 		return visitParameter(n);
 
 	}
 
 	@Override
-	public final boolean visit(PrimitiveType n)
+	public boolean visit(PrimitiveType n)
 	{
 		return visitPrimitiveType(n);
 
 	}
 
 	@Override
-	public final boolean visit(RecordDeclaration n)
+	public boolean visit(RecordDeclaration n)
 	{
 		return visitRecordDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(CompactConstructorDeclaration n)
+	public boolean visit(CompactConstructorDeclaration n)
 	{
 		return visitCompactConstructorDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(ReturnStmt n)
+	public boolean visit(ReturnStmt n)
 	{
 		return visitReturnStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(SimpleName n)
+	public boolean visit(SimpleName n)
 	{
 		return visitSimpleName(n);
 
 	}
 
 	@Override
-	public final boolean visit(SingleMemberAnnotationExpr n)
+	public boolean visit(SingleMemberAnnotationExpr n)
 	{
 		return visitSingleMemberAnnotationExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(StringLiteralExpr n)
+	public boolean visit(StringLiteralExpr n)
 	{
 		return visitStringLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(SuperExpr n)
+	public boolean visit(SuperExpr n)
 	{
 		return visitSuperExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(SwitchEntry n)
+	public boolean visit(SwitchEntry n)
 	{
 		return visitSwitchEntry(n);
 
 	}
 
 	@Override
-	public final boolean visit(SwitchStmt n)
+	public boolean visit(SwitchStmt n)
 	{
 		return visitSwitchStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(SynchronizedStmt n)
+	public boolean visit(SynchronizedStmt n)
 	{
 		return visitSynchronizedStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(ThisExpr n)
+	public boolean visit(ThisExpr n)
 	{
 		return visitThisExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(ThrowStmt n)
+	public boolean visit(ThrowStmt n)
 	{
 		return visitThrowStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(TryStmt n)
+	public boolean visit(TryStmt n)
 	{
 		return visitTryStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(TypeExpr n)
+	public boolean visit(TypeExpr n)
 	{
 		return visitTypeExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(TypeParameter n)
+	public boolean visit(TypeParameter n)
 	{
 		return visitTypeParameter(n);
 
 	}
 
 	@Override
-	public final boolean visit(UnaryExpr n)
+	public boolean visit(UnaryExpr n)
 	{
 		return visitUnaryExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(UnionType n)
+	public boolean visit(UnionType n)
 	{
 		return visitUnionType(n);
 
 	}
 
 	@Override
-	public final boolean visit(UnknownType n)
+	public boolean visit(UnknownType n)
 	{
 		return visitUnknownType(n);
 
 	}
 
 	@Override
-	public final boolean visit(VariableDeclarationExpr n)
+	public boolean visit(VariableDeclarationExpr n)
 	{
 		return visitVariableDeclarationExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(VariableDeclarator n)
+	public boolean visit(VariableDeclarator n)
 	{
 		return visitVariableDeclarator(n);
 
 	}
 
 	@Override
-	public final boolean visit(VoidType n)
+	public boolean visit(VoidType n)
 	{
 		return visitVoidType(n);
 
 	}
 
 	@Override
-	public final boolean visit(WhileStmt n)
+	public boolean visit(WhileStmt n)
 	{
 		return visitWhileStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(WildcardType n)
+	public boolean visit(WildcardType n)
 	{
 		return visitWildcardType(n);
 
 	}
 
 	@Override
-	public final boolean visit(ModuleDeclaration n)
+	public boolean visit(ModuleDeclaration n)
 	{
 		return visitModuleDeclaration(n);
 
 	}
 
 	@Override
-	public final boolean visit(ModuleRequiresDirective n)
+	public boolean visit(ModuleRequiresDirective n)
 	{
 		return visitModuleRequiresDirective(n);
 
 	}
 
 	@Override
-	public final boolean visit(ModuleExportsDirective n)
+	public boolean visit(ModuleExportsDirective n)
 	{
 		return visitModuleExportsDirective(n);
 
 	}
 
 	@Override
-	public final boolean visit(ModuleProvidesDirective n)
+	public boolean visit(ModuleProvidesDirective n)
 	{
 		return visitModuleProvidesDirective(n);
 
 	}
 
 	@Override
-	public final boolean visit(ModuleUsesDirective n)
+	public boolean visit(ModuleUsesDirective n)
 	{
 		return visitModuleUsesDirective(n);
 
 	}
 
 	@Override
-	public final boolean visit(ModuleOpensDirective n)
+	public boolean visit(ModuleOpensDirective n)
 	{
 		return visitModuleOpensDirective(n);
 
 	}
 
 	@Override
-	public final boolean visit(UnparsableStmt n)
+	public boolean visit(UnparsableStmt n)
 	{
 		return visitUnparsableStmt(n);
 
 	}
 
 	@Override
-	public final boolean visit(ReceiverParameter n)
+	public boolean visit(ReceiverParameter n)
 	{
 		return visitReceiverParameter(n);
 
 	}
 
 	@Override
-	public final boolean visit(VarType n)
+	public boolean visit(VarType n)
 	{
 		return visitVarType(n);
 
 	}
 
 	@Override
-	public final boolean visit(Modifier n)
+	public boolean visit(Modifier n)
 	{
 		return visitModifier(n);
 
 	}
 
 	@Override
-	public final boolean visit(SwitchExpr switchExpr)
+	public boolean visit(SwitchExpr switchExpr)
 	{
 		return visitSwitchExpr(switchExpr);
 
 	}
 
 	@Override
-	public final boolean visit(TextBlockLiteralExpr n)
+	public boolean visit(TextBlockLiteralExpr n)
 	{
 		return visitTextBlockLiteralExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(YieldStmt yieldStmt)
+	public boolean visit(YieldStmt yieldStmt)
 	{
 		return visitYieldStmt(yieldStmt);
 
 	}
 
 	@Override
-	public final boolean visit(TypePatternExpr n)
+	public boolean visit(TypePatternExpr n)
 	{
 		return visitTypePatternExpr(n);
 
 	}
 
 	@Override
-	public final boolean visit(RecordPatternExpr n)
+	public boolean visit(RecordPatternExpr n)
 	{
 		return visitRecordPatternExpr(n);
 
-	}
-
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	// --- Added missing visitXXX and leaveXXX methods ---
@@ -2317,7 +2310,9 @@ public class BeanshellVisitor extends AstAssertionFinder
 
 	protected boolean visitMethodCallExpr(MethodCallExpr n)
 	{
+		System.out.println("ME");
 		return true;
+		//return true;
 	}
 
 	protected boolean visitMethodDeclaration(MethodDeclaration n)

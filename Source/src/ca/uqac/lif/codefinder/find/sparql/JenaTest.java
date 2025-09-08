@@ -16,8 +16,8 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.Solvers;
 
 public class JenaTest
@@ -36,7 +36,7 @@ public class JenaTest
 
 	protected static final Property ARG_1 = ResourceFactory.createProperty(NS, "arg1");
 	
-	public static ThreadLocal<ThreadContext> CTX;
+	public static ThreadLocal<TokenFinderContext> CTX;
 	
 	protected static HashSet<String> s_sourcePaths = new HashSet<>();
 	
@@ -55,7 +55,7 @@ public class JenaTest
 		        .setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
 		        .setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));
 
-		    return new ThreadContext(
+		    return new TokenFinderContext(
 		        ts,
 		        new JavaParser(threadPc),
 		        com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
@@ -66,7 +66,7 @@ public class JenaTest
 		  }
 		});
 		
-		ThreadContext ctx = CTX.get();
+		TokenFinderContext ctx = CTX.get();
 		
     ParseResult<CompilationUnit> cu = ctx.getParser().parse("class A { void f() { g(3); assertTrue(x); } }");
     if (!cu.isSuccessful())

@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.thread;
+package ca.uqac.lif.codefinder.find;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
@@ -27,7 +27,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
  * In the case of JavaParser, this includes the type solver,
  * the parser and the parser facade.
  */
-public final class ThreadContext
+public final class TokenFinderContext
 {
 	/**
 	 * The type solver
@@ -56,7 +56,7 @@ public final class ThreadContext
 	 * @param facade A Java parser facade
 	 * @param resolutionTimeout A timeout for type resolution operations (in milliseconds)
 	 */
-	public ThreadContext(CombinedTypeSolver ts, JavaParser parser, JavaParserFacade facade, long resolutionTimeout)
+	public TokenFinderContext(CombinedTypeSolver ts, JavaParser parser, JavaParserFacade facade, long resolutionTimeout)
 	{
 		this.ts = ts;
 		this.parser = parser;

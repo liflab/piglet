@@ -21,7 +21,8 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.SwitchStmt;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 
 /**
@@ -35,20 +36,14 @@ public class ConditionalAssertionFinder extends AstAssertionFinder
 	 * Creates a new conditional assertion finder.
 	 * @param filename The name of the file to analyze
 	 */
-	public ConditionalAssertionFinder(String filename)
+	public ConditionalAssertionFinder()
 	{
-		super("Conditional assertions", filename);
+		super("Conditional assertions");
 	}
 
-	protected ConditionalAssertionFinder(String filename, ThreadContext context)
+	protected ConditionalAssertionFinder(TokenFinderContext context)
 	{
-		super("Conditional assertions", filename, context);
-	}
-
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new ConditionalAssertionFinder(filename, context);
+		super("Conditional assertions", context);
 	}
 
 	@Override
@@ -93,5 +88,14 @@ public class ConditionalAssertionFinder extends AstAssertionFinder
 			return false;
 		}
 		return true;
+	}
+	
+	public static class ConditionalAssertionFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public ConditionalAssertionFinder newFinder()
+		{
+			return new ConditionalAssertionFinder();
+		}
 	}
 }

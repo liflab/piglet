@@ -41,7 +41,8 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import bsh.EvalError;
 import bsh.Interpreter;
 import ca.uqac.lif.codefinder.find.FoundToken;
-import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinderRunnable;
 import ca.uqac.lif.codefinder.find.ast.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.ConditionalAssertionFinder;
@@ -58,7 +59,6 @@ import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
@@ -136,10 +136,10 @@ public class Main
 	protected static long s_resolutionTimeout = 100;
 
 	/** Thread-local context (parser, type solver, etc.) */
-	public static ThreadLocal<ThreadContext> CTX;
+	public static ThreadLocal<TokenFinderContext> CTX;
 
 	/** The set of assertion finders to use */
-	public static final Set<AstAssertionFinder> s_finders = new HashSet<AstAssertionFinder>();
+	public static final Set<TokenFinderFactory> s_finders = new HashSet<>();
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -219,7 +219,7 @@ public class Main
 						.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
 						.setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));
 
-				return new ThreadContext(
+				return new TokenFinderContext(
 						ts,
 						new JavaParser(threadPc),
 						com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
@@ -233,15 +233,15 @@ public class Main
 		// Instantiate assertion finders
 		if (s_finders.isEmpty())
 		{
-			s_finders.add(new NonFluentAssertionsCounter(null));
-			s_finders.add(new CompoundAssertionFinder(null));
-			s_finders.add(new ConditionalAssertionFinder(null));
-			s_finders.add(new EqualAssertionFinder(null));
-			s_finders.add(new IteratedAssertionFinder(null));
-			s_finders.add(new EqualNonPrimitiveFinder(null));
-			s_finders.add(new EqualStringFinder(null));
-			s_finders.add(new EqualityWithMessageFinder(null));
-			s_finders.add(new OptionalAssertionFinder(null));
+			s_finders.add(new NonFluentAssertionsCounter.NonFluentAssertionsCounterFactory());
+			s_finders.add(new CompoundAssertionFinder.CompoundAssertionFinderFactory());
+			s_finders.add(new ConditionalAssertionFinder.ConditionalAssertionFinderFactory());
+			s_finders.add(new EqualAssertionFinder.EqualAssertionFinderFactory());
+			s_finders.add(new IteratedAssertionFinder.IteratedAssertionFinderFactory());
+			s_finders.add(new EqualNonPrimitiveFinder.EqualNonPrimitiveFinderFactory());
+			s_finders.add(new EqualStringFinder.EqualStringFinderFactory());
+			s_finders.add(new EqualityWithMessageFinder.EqualityWithMessageFinderFactory());
+			s_finders.add(new OptionalAssertionFinder.OptionalAssertionFinderFactory());
 		}
 
 		// Read file(s)
@@ -346,17 +346,23 @@ public class Main
 		{
 			String bsh_file = map.getOptionValue("bsh");
 			s_stdout.println("Reading BeanShell script from " + bsh_file);
-			Interpreter interpreter = new Interpreter();
 			try
 			{
 				String bsh_code = readBeanshell(bsh_file);
+				Interpreter interpreter = new Interpreter();
+				// Use the same loader that sees your app’s classes
+				ClassLoader appCl = Main.class.getClassLoader();
+				interpreter.setClassLoader(appCl);
+				Thread.currentThread().setContextClassLoader(appCl);
+				interpreter.eval("import ca.uqac.lif.codefinder.find.ast.*");
+				interpreter.set("filename", "bar");
 				Object o = interpreter.eval(bsh_code);
-				if (o == null || !(o instanceof AstAssertionFinder))
+				if (o == null || !(o instanceof TokenFinderFactory))
 				{
-					s_stderr.println("BeanShell script did not return an AstAssertionFinder");
+					s_stderr.println("BeanShell script did not return a TokenFinderFactory");
 					return RET_BSH;
 				}
-				s_finders.add((AstAssertionFinder) o);
+				s_finders.add((TokenFinderFactory) o);
 			}
 			catch (FileSystemException e)
 			{
@@ -471,8 +477,7 @@ public class Main
 	protected static String readBeanshell(String filename) throws FileSystemException
 	{
 		FilePath bsh_path = s_homePath.chdir(getPathOfFile(filename));
-		FilePath reverse_path = bsh_path.chdir(getPathOfFile(filename));
-		HardDisk hd = new HardDisk(reverse_path.toString()).open();
+		HardDisk hd = new HardDisk(bsh_path.toString()).open();
 		String bsh_code = FileUtils.readStringFrom(hd, getFilename(filename));
 		return bsh_code;
 	}
@@ -532,7 +537,7 @@ public class Main
 	}
 
 	protected static void processBatch(ExecutorService e, FileProvider provider,
-			Set<AstAssertionFinder> finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
+			Set<TokenFinderFactory> finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
 			int limit) throws IOException, FileSystemException
 	{
 		int count = 0;

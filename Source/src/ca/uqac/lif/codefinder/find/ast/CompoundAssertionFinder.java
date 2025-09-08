@@ -23,7 +23,8 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * Finds assertions containing Boolean connectives.
@@ -32,22 +33,16 @@ public class CompoundAssertionFinder extends AstAssertionFinder
 {
 	protected boolean m_inAssert;
 	
-	public CompoundAssertionFinder(String filename)
+	public CompoundAssertionFinder()
 	{
-		super("Compound assertions", filename);
+		super("Compound assertions");
 	}
 	
-	protected CompoundAssertionFinder(String name, String filename, ThreadContext context)
+	protected CompoundAssertionFinder(String name, String filename, TokenFinderContext context)
 	{
-		super(name, filename, context);
+		super(name, context);
 	}
 	
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new CompoundAssertionFinder(m_name, filename, context);
-	}
-
 	@Override
 	public boolean visit(MethodCallExpr n)
 	{
@@ -119,5 +114,14 @@ public class CompoundAssertionFinder extends AstAssertionFinder
 			return false;
 		}
 
+	}
+	
+	public static class CompoundAssertionFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public CompoundAssertionFinder newFinder()
+		{
+			return new CompoundAssertionFinder();
+		}
 	}
 }

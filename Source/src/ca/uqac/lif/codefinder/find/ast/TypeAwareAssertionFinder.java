@@ -3,18 +3,18 @@ package ca.uqac.lif.codefinder.find.ast;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.*;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 
 public abstract class TypeAwareAssertionFinder extends AstAssertionFinder
 {
-	public TypeAwareAssertionFinder(String name, String filename)
+	public TypeAwareAssertionFinder(String name)
 	{
-		super(name, filename);
+		super(name);
 	}
 
-	protected TypeAwareAssertionFinder(String name, String filename, ThreadContext context)
+	protected TypeAwareAssertionFinder(String name, TokenFinderContext context)
 	{
-		super(name, filename, context);
+		super(name, context);
 	}
 
 	protected abstract boolean visitTypedNode(Node n);

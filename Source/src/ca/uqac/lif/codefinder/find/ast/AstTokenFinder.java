@@ -17,8 +17,8 @@
  */
 package ca.uqac.lif.codefinder.find.ast;
 
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.TokenFinder;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
 
 /**
  * An abstract base class for token finders that analyze the AST of a
@@ -27,25 +27,22 @@ import ca.uqac.lif.codefinder.thread.ThreadContext;
 public abstract class AstTokenFinder extends PushPopVisitorAdapter implements TokenFinder
 {
 	/** The name of the file to analyze */
-	protected final String m_filename;
+	protected String m_filename;
 	
 	/** The name of this finder */
 	protected final String m_name;
 	
 	/** A Java parser instance */
-	protected final ThreadContext m_context;
+	protected TokenFinderContext m_context;
 	
 	/**
 	 * Creates a new token finder.
 	 * @param name The name of this finder
 	 * @param filename The name of the file to analyze
 	 */
-	public AstTokenFinder(String name, String filename)
+	public AstTokenFinder(String name)
 	{
-		super();
-		m_filename = filename;
-		m_name = name;
-		m_context = null;
+		this(name, null);
 	}
 	
 	/**
@@ -54,12 +51,23 @@ public abstract class AstTokenFinder extends PushPopVisitorAdapter implements To
 	 * @param filename The name of the file to analyze
 	 * @param context A thread context
 	 */
-	protected AstTokenFinder(String name, String filename, ThreadContext context)
+	protected AstTokenFinder(String name, TokenFinderContext context)
 	{
 		super();
-		m_filename = filename;
 		m_name = name;
 		m_context = context;
+	}
+	
+	@Override
+	public void setContext(TokenFinderContext context)
+	{
+		m_context = context;
+	}
+	
+	@Override
+	public void setFilename(String filename)
+	{
+		m_filename = filename;
 	}
 	
 	@Override
@@ -67,14 +75,6 @@ public abstract class AstTokenFinder extends PushPopVisitorAdapter implements To
 	{
 		return m_name;
 	}
-	
-	/**
-	 * Creates a new instance of the same type of finder, for a different file.
-	 * @param filename The name of the new file
-	 * @param context A thread context
-	 * @return A new instance of the same type of finder
-	 */
-	public abstract AstTokenFinder newFinder(String filename, ThreadContext context);
 	
 	/**
 	 * Trims a string to a certain number of lines. This method

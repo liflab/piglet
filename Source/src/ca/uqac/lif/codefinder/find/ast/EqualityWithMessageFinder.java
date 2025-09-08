@@ -20,7 +20,8 @@ package ca.uqac.lif.codefinder.find.ast;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
@@ -30,20 +31,14 @@ import ca.uqac.lif.codefinder.util.Types.ResolveResult;
  */
 public class EqualityWithMessageFinder extends AstAssertionFinder
 {	
-	public EqualityWithMessageFinder(String filename)
+	public EqualityWithMessageFinder()
 	{
-		super("With text message", filename);
+		this(null);
 	}
 
-	protected EqualityWithMessageFinder(String filename, ThreadContext context)
+	protected EqualityWithMessageFinder(TokenFinderContext context)
 	{
-		super("With text message", filename, context);
-	}
-
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new EqualityWithMessageFinder(filename, context);
+		super("With text message", context);
 	}
 
 	@Override
@@ -80,5 +75,14 @@ public class EqualityWithMessageFinder extends AstAssertionFinder
 			return false;
 		}
 		return rr.value.orElse(null).describe().compareTo("java.lang.String") == 0;
+	}
+
+	public static class EqualityWithMessageFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public EqualityWithMessageFinder newFinder()
+		{
+			return new EqualityWithMessageFinder();
+		}
 	}
 }

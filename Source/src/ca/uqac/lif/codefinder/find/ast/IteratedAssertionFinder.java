@@ -23,7 +23,8 @@ import com.github.javaparser.ast.stmt.ForStmt;
 import com.github.javaparser.ast.stmt.WhileStmt;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
-import ca.uqac.lif.codefinder.thread.ThreadContext;
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * Finds assertions nested inside a for, while or do block.
@@ -32,20 +33,14 @@ public class IteratedAssertionFinder extends AstAssertionFinder
 {
 	protected int m_inLoop = 0;
 	
-	public IteratedAssertionFinder(String filename)
+	public IteratedAssertionFinder()
 	{
-		super("Iterated assertions", filename);
+		super(null);
 	}
 	
-	protected IteratedAssertionFinder(String filename, ThreadContext context)
+	protected IteratedAssertionFinder(TokenFinderContext context)
 	{
-		super("Iterated assertions", filename, context);
-	}
-	
-	@Override
-	public AstAssertionFinder newFinder(String filename, ThreadContext context)
-	{
-		return new IteratedAssertionFinder(filename, context);
+		super("Iterated assertions", context);
 	}
 	
 	@Override
@@ -114,5 +109,14 @@ public class IteratedAssertionFinder extends AstAssertionFinder
 		{
 			super(IteratedAssertionFinder.this.getName(), filename, start_line, end_line, snippet);
 		}	
+	}
+	
+	public static class IteratedAssertionFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public IteratedAssertionFinder newFinder()
+		{
+			return new IteratedAssertionFinder();
+		}
 	}
 }
