@@ -47,15 +47,6 @@ import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinderRunnable;
-import ca.uqac.lif.codefinder.find.ast.CompoundAssertionFinder;
-import ca.uqac.lif.codefinder.find.ast.ConditionalAssertionFinder;
-import ca.uqac.lif.codefinder.find.ast.EqualAssertionFinder;
-import ca.uqac.lif.codefinder.find.ast.EqualNonPrimitiveFinder;
-import ca.uqac.lif.codefinder.find.ast.EqualStringFinder;
-import ca.uqac.lif.codefinder.find.ast.EqualityWithMessageFinder;
-import ca.uqac.lif.codefinder.find.ast.IteratedAssertionFinder;
-import ca.uqac.lif.codefinder.find.ast.NonFluentAssertionsCounter;
-import ca.uqac.lif.codefinder.find.ast.OptionalAssertionFinder;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinder.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
@@ -147,9 +138,9 @@ public class Main
 
 	/** The set of assertion finders working through SPARQL queries */
 	public static final Set<SparqlTokenFinderFactory> s_sparqlFinders = new HashSet<>();
-	
+
 	/** Pattern to extract the name of an assertion from a comment */
-	protected static final Pattern s_namePat = Pattern.compile("/\\*\\s*name:(.*?)\\*/");
+	protected static final Pattern s_namePat = Pattern.compile("Name:([^\\*]+)");
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -241,7 +232,7 @@ public class Main
 		});
 
 		// Instantiate default assertion finders
-		if (s_astFinders.isEmpty())
+		/*if (s_astFinders.isEmpty())
 		{
 			s_astFinders.add(new NonFluentAssertionsCounter.NonFluentAssertionsCounterFactory());
 			s_astFinders.add(new CompoundAssertionFinder.CompoundAssertionFinderFactory());
@@ -252,7 +243,7 @@ public class Main
 			s_astFinders.add(new EqualStringFinder.EqualStringFinderFactory());
 			s_astFinders.add(new EqualityWithMessageFinder.EqualityWithMessageFinderFactory());
 			s_astFinders.add(new OptionalAssertionFinder.OptionalAssertionFinderFactory());
-		}
+		}*/
 
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? s_limit : total));
@@ -355,12 +346,38 @@ public class Main
 		if (map.containsKey("bsh"))
 		{
 			String bsh_file = map.getOptionValue("bsh");
-			s_stdout.println("Reading BeanShell script from " + bsh_file);
 			try
 			{
-				AstAssertionFinderFactory factory = readBeanshell(bsh_file);
-
-				s_astFinders.add(factory);
+				HardDisk hd = new HardDisk(s_homePath.toString()).open();
+				if (hd.isDirectory(bsh_file))
+				{
+					s_stdout.println("Reading BeanShell scripts from folder " + bsh_file);
+					hd.chdir(bsh_file);
+					List<String> files = FileUtils.ls(hd, "", "^.*bsh$");
+					for (String f : files)
+					{
+						try
+						{
+							AstAssertionFinderFactory factory = readBeanshell(bsh_file + "/" + f);
+							s_astFinders.add(factory);
+						}
+						catch (FileSystemException e)
+						{
+							s_stderr.println("File system error while reading BeanShell script");
+							return RET_FS;
+						}
+						catch (EvalError e)
+						{
+							s_stderr.println("Error while evaluating BeanShell script: " + e.getMessage());
+							return RET_BSH;
+						}
+					}
+				}
+				else
+				{
+						AstAssertionFinderFactory factory = readBeanshell(bsh_file);
+						s_astFinders.add(factory);
+				}
 			}
 			catch (FileSystemException e)
 			{
@@ -477,6 +494,8 @@ public class Main
 		FilePath bsh_path = s_homePath.chdir(getPathOfFile(filename));
 		HardDisk hd = new HardDisk(bsh_path.toString()).open();
 		String bsh_code = FileUtils.readStringFrom(hd, getFilename(filename));
+		bsh_code.replaceAll("^\\s*void visit\\(", "public void visit(");
+		bsh_code.replaceAll("^\\s*void leave\\(", "public void leave(");
 		Interpreter interpreter = new Interpreter();
 		// Use the same loader that sees your app’s classes
 		ClassLoader appCl = Main.class.getClassLoader();

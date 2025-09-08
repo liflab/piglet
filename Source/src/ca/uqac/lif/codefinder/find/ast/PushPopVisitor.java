@@ -13,408 +13,427 @@ import com.github.javaparser.ast.type.*;
 public interface PushPopVisitor
 {
   @SuppressWarnings("rawtypes")
-	public boolean leave(NodeList n); 
+	public void leave(NodeList n); 
 
-  public boolean leave(AnnotationDeclaration n); 
+  public void leave(AnnotationDeclaration n); 
 
-  public boolean leave(AnnotationMemberDeclaration n); 
+  public void leave(AnnotationMemberDeclaration n); 
 
-  public boolean leave(ArrayAccessExpr n); 
+  public void leave(ArrayAccessExpr n); 
 
-  public boolean leave(ArrayCreationExpr n); 
+  public void leave(ArrayCreationExpr n); 
 
-  public boolean leave(ArrayCreationLevel n); 
+  public void leave(ArrayCreationLevel n); 
 
-  public boolean leave(ArrayInitializerExpr n); 
+  public void leave(ArrayInitializerExpr n); 
 
-  public boolean leave(ArrayType n); 
+  public void leave(ArrayType n); 
 
-  public boolean leave(AssertStmt n); 
+  public void leave(AssertStmt n); 
 
-  public boolean leave(AssignExpr n); 
+  public void leave(AssignExpr n); 
 
-  public boolean leave(BinaryExpr n); 
+  public void leave(BinaryExpr n); 
 
-  public boolean leave(BlockComment n); 
+  public void leave(BlockComment n); 
 
-  public boolean leave(BlockStmt n); 
+  public void leave(BlockStmt n); 
 
-  public boolean leave(BooleanLiteralExpr n); 
+  public void leave(BooleanLiteralExpr n); 
 
-  public boolean leave(BreakStmt n); 
+  public void leave(BreakStmt n); 
 
-  public boolean leave(CastExpr n); 
+  public void leave(CastExpr n); 
 
-  public boolean leave(CatchClause n); 
+  public void leave(CatchClause n); 
 
-  public boolean leave(CharLiteralExpr n); 
+  public void leave(CharLiteralExpr n); 
 
-  public boolean leave(ClassExpr n); 
+  public void leave(ClassExpr n); 
 
-  public boolean leave(ClassOrInterfaceDeclaration n); 
+  public void leave(ClassOrInterfaceDeclaration n); 
 
-  public boolean leave(ClassOrInterfaceType n); 
+  public void leave(ClassOrInterfaceType n); 
 
-  public boolean leave(CompilationUnit n); 
+  public void leave(CompilationUnit n); 
 
-  public boolean leave(ConditionalExpr n); 
+  public void leave(ConditionalExpr n); 
 
-  public boolean leave(ConstructorDeclaration n); 
+  public void leave(ConstructorDeclaration n); 
 
-  public boolean leave(ContinueStmt n); 
+  public void leave(ContinueStmt n); 
 
-  public boolean leave(DoStmt n); 
+  public void leave(DoStmt n); 
 
-  public boolean leave(DoubleLiteralExpr n); 
+  public void leave(DoubleLiteralExpr n); 
 
-  public boolean leave(EmptyStmt n); 
+  public void leave(EmptyStmt n); 
 
-  public boolean leave(EnclosedExpr n); 
+  public void leave(EnclosedExpr n); 
 
-  public boolean leave(EnumConstantDeclaration n); 
+  public void leave(EnumConstantDeclaration n); 
 
-  public boolean leave(EnumDeclaration n); 
+  public void leave(EnumDeclaration n); 
 
-  public boolean leave(ExplicitConstructorInvocationStmt n); 
+  public void leave(ExplicitConstructorInvocationStmt n); 
 
-  public boolean leave(ExpressionStmt n); 
+  public void leave(ExpressionStmt n); 
 
-  public boolean leave(FieldAccessExpr n); 
+  public void leave(FieldAccessExpr n); 
 
-  public boolean leave(FieldDeclaration n); 
+  public void leave(FieldDeclaration n); 
 
-  public boolean leave(ForStmt n); 
+  public void leave(ForStmt n); 
 
-  public boolean leave(ForEachStmt n); 
+  public void leave(ForEachStmt n); 
 
-  public boolean leave(IfStmt n); 
+  public void leave(IfStmt n); 
 
-  public boolean leave(ImportDeclaration n); 
+  public void leave(ImportDeclaration n); 
 
-  public boolean leave(InitializerDeclaration n); 
+  public void leave(InitializerDeclaration n); 
 
-  public boolean leave(InstanceOfExpr n); 
+  public void leave(InstanceOfExpr n); 
 
-  public boolean leave(IntegerLiteralExpr n); 
+  public void leave(IntegerLiteralExpr n); 
 
-  public boolean leave(IntersectionType n); 
+  public void leave(IntersectionType n); 
 
-  public boolean leave(JavadocComment n); 
+  public void leave(JavadocComment n); 
 
-  public boolean leave(LabeledStmt n); 
+  public void leave(LabeledStmt n); 
 
-  public boolean leave(LambdaExpr n); 
+  public void leave(LambdaExpr n); 
 
-  public boolean leave(LineComment n); 
+  public void leave(LineComment n); 
 
-  public boolean leave(LocalClassDeclarationStmt n); 
+  public void leave(LocalClassDeclarationStmt n); 
 
-  public boolean leave(LocalRecordDeclarationStmt n); 
+  public void leave(LocalRecordDeclarationStmt n); 
 
-  public boolean leave(LongLiteralExpr n); 
+  public void leave(LongLiteralExpr n); 
 
-  public boolean leave(MarkerAnnotationExpr n); 
+  public void leave(MarkerAnnotationExpr n); 
 
-  public boolean leave(MemberValuePair n); 
+  public void leave(MemberValuePair n); 
 
-  public boolean leave(MethodCallExpr n); 
+  public void leave(MethodCallExpr n); 
 
-  public boolean leave(MethodDeclaration n); 
+  public void leave(MethodDeclaration n); 
 
-  public boolean leave(MethodReferenceExpr n); 
+  public void leave(MethodReferenceExpr n); 
 
-  public boolean leave(NameExpr n); 
+  public void leave(NameExpr n); 
 
-  public boolean leave(Name n); 
+  public void leave(Name n); 
 
-  public boolean leave(NormalAnnotationExpr n); 
+  public void leave(NormalAnnotationExpr n); 
 
-  public boolean leave(NullLiteralExpr n); 
+  public void leave(NullLiteralExpr n); 
 
-  public boolean leave(ObjectCreationExpr n); 
+  public void leave(ObjectCreationExpr n); 
 
-  public boolean leave(PackageDeclaration n); 
+  public void leave(PackageDeclaration n); 
 
-  public boolean leave(Parameter n); 
+  public void leave(Parameter n); 
 
-  public boolean leave(PrimitiveType n); 
+  public void leave(PrimitiveType n); 
 
-  public boolean leave(RecordDeclaration n); 
+  public void leave(RecordDeclaration n); 
 
-  public boolean leave(CompactConstructorDeclaration n); 
+  public void leave(CompactConstructorDeclaration n); 
 
-  public boolean leave(ReturnStmt n); 
+  public void leave(ReturnStmt n); 
 
-  public boolean leave(SimpleName n); 
+  public void leave(SimpleName n); 
 
-  public boolean leave(SingleMemberAnnotationExpr n); 
+  public void leave(SingleMemberAnnotationExpr n); 
 
-  public boolean leave(StringLiteralExpr n); 
+  public void leave(StringLiteralExpr n); 
 
-  public boolean leave(SuperExpr n); 
+  public void leave(SuperExpr n); 
 
-  public boolean leave(SwitchEntry n); 
+  public void leave(SwitchEntry n); 
 
-  public boolean leave(SwitchStmt n); 
+  public void leave(SwitchStmt n); 
 
-  public boolean leave(SynchronizedStmt n); 
+  public void leave(SynchronizedStmt n); 
 
-  public boolean leave(ThisExpr n); 
+  public void leave(ThisExpr n); 
 
-  public boolean leave(ThrowStmt n); 
+  public void leave(ThrowStmt n); 
 
-  public boolean leave(TryStmt n); 
+  public void leave(TryStmt n); 
 
-  public boolean leave(TypeExpr n); 
+  public void leave(TypeExpr n); 
 
-  public boolean leave(TypeParameter n); 
+  public void leave(TypeParameter n); 
 
-  public boolean leave(UnaryExpr n); 
+  public void leave(UnaryExpr n); 
 
-  public boolean leave(UnionType n); 
+  public void leave(UnionType n); 
 
-  public boolean leave(UnknownType n); 
+  public void leave(UnknownType n); 
 
-  public boolean leave(VariableDeclarationExpr n); 
+  public void leave(VariableDeclarationExpr n); 
 
-  public boolean leave(VariableDeclarator n); 
+  public void leave(VariableDeclarator n); 
 
-  public boolean leave(VoidType n); 
+  public void leave(VoidType n); 
 
-  public boolean leave(WhileStmt n); 
+  public void leave(WhileStmt n); 
 
-  public boolean leave(WildcardType n); 
+  public void leave(WildcardType n); 
 
-  public boolean leave(ModuleDeclaration n); 
+  public void leave(ModuleDeclaration n); 
 
-  public boolean leave(ModuleRequiresDirective n); 
+  public void leave(ModuleRequiresDirective n); 
 
-  public boolean leave(ModuleExportsDirective n); 
+  public void leave(ModuleExportsDirective n); 
 
-  public boolean leave(ModuleProvidesDirective n); 
+  public void leave(ModuleProvidesDirective n); 
 
-  public boolean leave(ModuleUsesDirective n); 
+  public void leave(ModuleUsesDirective n); 
 
-  public boolean leave(ModuleOpensDirective n); 
+  public void leave(ModuleOpensDirective n); 
 
-  public boolean leave(UnparsableStmt n); 
+  public void leave(UnparsableStmt n); 
 
-  public boolean leave(ReceiverParameter n); 
+  public void leave(ReceiverParameter n); 
 
-  public boolean leave(VarType n); 
+  public void leave(VarType n); 
 
-  public boolean leave(Modifier n); 
+  public void leave(Modifier n); 
 
-  public boolean leave(SwitchExpr switchExpr);
+  public void leave(SwitchExpr switchExpr);
 
-  public boolean leave(TextBlockLiteralExpr n); 
+  public void leave(TextBlockLiteralExpr n); 
 
-  public boolean leave(YieldStmt yieldStmt);
+  public void leave(YieldStmt yieldStmt);
 
-  public boolean leave(TypePatternExpr n); 
+  public void leave(TypePatternExpr n); 
 
-  public boolean leave(RecordPatternExpr n); 
+  public void leave(RecordPatternExpr n); 
   
   @SuppressWarnings("rawtypes")
-	public boolean visit(NodeList n); 
+	public void visit(NodeList n); 
 
-  public boolean visit(AnnotationDeclaration n); 
+  public void visit(AnnotationDeclaration n); 
 
-  public boolean visit(AnnotationMemberDeclaration n); 
+  public void visit(AnnotationMemberDeclaration n); 
 
-  public boolean visit(ArrayAccessExpr n); 
+  public void visit(ArrayAccessExpr n); 
 
-  public boolean visit(ArrayCreationExpr n); 
+  public void visit(ArrayCreationExpr n); 
 
-  public boolean visit(ArrayCreationLevel n); 
+  public void visit(ArrayCreationLevel n); 
 
-  public boolean visit(ArrayInitializerExpr n); 
+  public void visit(ArrayInitializerExpr n); 
 
-  public boolean visit(ArrayType n); 
+  public void visit(ArrayType n); 
 
-  public boolean visit(AssertStmt n); 
+  public void visit(AssertStmt n); 
 
-  public boolean visit(AssignExpr n); 
+  public void visit(AssignExpr n); 
 
-  public boolean visit(BinaryExpr n); 
+  public void visit(BinaryExpr n); 
 
-  public boolean visit(BlockComment n); 
+  public void visit(BlockComment n); 
 
-  public boolean visit(BlockStmt n); 
+  public void visit(BlockStmt n); 
 
-  public boolean visit(BooleanLiteralExpr n); 
+  public void visit(BooleanLiteralExpr n); 
 
-  public boolean visit(BreakStmt n); 
+  public void visit(BreakStmt n); 
 
-  public boolean visit(CastExpr n); 
+  public void visit(CastExpr n); 
 
-  public boolean visit(CatchClause n); 
+  public void visit(CatchClause n); 
 
-  public boolean visit(CharLiteralExpr n); 
+  public void visit(CharLiteralExpr n); 
 
-  public boolean visit(ClassExpr n); 
+  public void visit(ClassExpr n); 
 
-  public boolean visit(ClassOrInterfaceDeclaration n); 
+  public void visit(ClassOrInterfaceDeclaration n); 
 
-  public boolean visit(ClassOrInterfaceType n); 
+  public void visit(ClassOrInterfaceType n); 
 
-  public boolean visit(CompilationUnit n); 
+  public void visit(CompilationUnit n); 
 
-  public boolean visit(ConditionalExpr n); 
+  public void visit(ConditionalExpr n); 
 
-  public boolean visit(ConstructorDeclaration n); 
+  public void visit(ConstructorDeclaration n); 
 
-  public boolean visit(ContinueStmt n); 
+  public void visit(ContinueStmt n); 
 
-  public boolean visit(DoStmt n); 
+  public void visit(DoStmt n); 
 
-  public boolean visit(DoubleLiteralExpr n); 
+  public void visit(DoubleLiteralExpr n); 
 
-  public boolean visit(EmptyStmt n); 
+  public void visit(EmptyStmt n); 
 
-  public boolean visit(EnclosedExpr n); 
+  public void visit(EnclosedExpr n); 
 
-  public boolean visit(EnumConstantDeclaration n); 
+  public void visit(EnumConstantDeclaration n); 
 
-  public boolean visit(EnumDeclaration n); 
+  public void visit(EnumDeclaration n); 
 
-  public boolean visit(ExplicitConstructorInvocationStmt n); 
+  public void visit(ExplicitConstructorInvocationStmt n); 
 
-  public boolean visit(ExpressionStmt n); 
+  public void visit(ExpressionStmt n); 
 
-  public boolean visit(FieldAccessExpr n); 
+  public void visit(FieldAccessExpr n); 
 
-  public boolean visit(FieldDeclaration n); 
+  public void visit(FieldDeclaration n); 
 
-  public boolean visit(ForStmt n); 
+  public void visit(ForStmt n); 
 
-  public boolean visit(ForEachStmt n); 
+  public void visit(ForEachStmt n); 
 
-  public boolean visit(IfStmt n); 
+  public void visit(IfStmt n); 
 
-  public boolean visit(ImportDeclaration n); 
+  public void visit(ImportDeclaration n); 
 
-  public boolean visit(InitializerDeclaration n); 
+  public void visit(InitializerDeclaration n); 
 
-  public boolean visit(InstanceOfExpr n); 
+  public void visit(InstanceOfExpr n); 
 
-  public boolean visit(IntegerLiteralExpr n); 
+  public void visit(IntegerLiteralExpr n); 
 
-  public boolean visit(IntersectionType n); 
+  public void visit(IntersectionType n); 
 
-  public boolean visit(JavadocComment n); 
+  public void visit(JavadocComment n); 
 
-  public boolean visit(LabeledStmt n); 
+  public void visit(LabeledStmt n); 
 
-  public boolean visit(LambdaExpr n); 
+  public void visit(LambdaExpr n); 
 
-  public boolean visit(LineComment n); 
+  public void visit(LineComment n); 
 
-  public boolean visit(LocalClassDeclarationStmt n); 
+  public void visit(LocalClassDeclarationStmt n); 
 
-  public boolean visit(LocalRecordDeclarationStmt n); 
+  public void visit(LocalRecordDeclarationStmt n); 
 
-  public boolean visit(LongLiteralExpr n); 
+  public void visit(LongLiteralExpr n); 
 
-  public boolean visit(MarkerAnnotationExpr n); 
+  public void visit(MarkerAnnotationExpr n); 
 
-  public boolean visit(MemberValuePair n); 
+  public void visit(MemberValuePair n); 
 
-  public boolean visit(MethodCallExpr n); 
+  public void visit(MethodCallExpr n); 
 
-  public boolean visit(MethodDeclaration n); 
+  public void visit(MethodDeclaration n); 
 
-  public boolean visit(MethodReferenceExpr n); 
+  public void visit(MethodReferenceExpr n); 
 
-  public boolean visit(NameExpr n); 
+  public void visit(NameExpr n); 
 
-  public boolean visit(Name n); 
+  public void visit(Name n); 
 
-  public boolean visit(NormalAnnotationExpr n); 
+  public void visit(NormalAnnotationExpr n); 
 
-  public boolean visit(NullLiteralExpr n); 
+  public void visit(NullLiteralExpr n); 
 
-  public boolean visit(ObjectCreationExpr n); 
+  public void visit(ObjectCreationExpr n); 
 
-  public boolean visit(PackageDeclaration n); 
+  public void visit(PackageDeclaration n); 
 
-  public boolean visit(Parameter n); 
+  public void visit(Parameter n); 
 
-  public boolean visit(PrimitiveType n); 
+  public void visit(PrimitiveType n); 
 
-  public boolean visit(RecordDeclaration n); 
+  public void visit(RecordDeclaration n); 
 
-  public boolean visit(CompactConstructorDeclaration n); 
+  public void visit(CompactConstructorDeclaration n); 
 
-  public boolean visit(ReturnStmt n); 
+  public void visit(ReturnStmt n); 
 
-  public boolean visit(SimpleName n); 
+  public void visit(SimpleName n); 
 
-  public boolean visit(SingleMemberAnnotationExpr n); 
+  public void visit(SingleMemberAnnotationExpr n); 
 
-  public boolean visit(StringLiteralExpr n); 
+  public void visit(StringLiteralExpr n); 
 
-  public boolean visit(SuperExpr n); 
+  public void visit(SuperExpr n); 
 
-  public boolean visit(SwitchEntry n); 
+  public void visit(SwitchEntry n); 
 
-  public boolean visit(SwitchStmt n); 
+  public void visit(SwitchStmt n); 
 
-  public boolean visit(SynchronizedStmt n); 
+  public void visit(SynchronizedStmt n); 
 
-  public boolean visit(ThisExpr n); 
+  public void visit(ThisExpr n); 
 
-  public boolean visit(ThrowStmt n); 
+  public void visit(ThrowStmt n); 
 
-  public boolean visit(TryStmt n); 
+  public void visit(TryStmt n); 
 
-  public boolean visit(TypeExpr n); 
+  public void visit(TypeExpr n); 
 
-  public boolean visit(TypeParameter n); 
+  public void visit(TypeParameter n); 
 
-  public boolean visit(UnaryExpr n); 
+  public void visit(UnaryExpr n); 
 
-  public boolean visit(UnionType n); 
+  public void visit(UnionType n); 
 
-  public boolean visit(UnknownType n); 
+  public void visit(UnknownType n); 
 
-  public boolean visit(VariableDeclarationExpr n); 
+  public void visit(VariableDeclarationExpr n); 
 
-  public boolean visit(VariableDeclarator n); 
+  public void visit(VariableDeclarator n); 
 
-  public boolean visit(VoidType n); 
+  public void visit(VoidType n); 
 
-  public boolean visit(WhileStmt n); 
+  public void visit(WhileStmt n); 
 
-  public boolean visit(WildcardType n); 
+  public void visit(WildcardType n); 
 
-  public boolean visit(ModuleDeclaration n); 
+  public void visit(ModuleDeclaration n); 
 
-  public boolean visit(ModuleRequiresDirective n); 
+  public void visit(ModuleRequiresDirective n); 
 
-  public boolean visit(ModuleExportsDirective n); 
+  public void visit(ModuleExportsDirective n); 
 
-  public boolean visit(ModuleProvidesDirective n); 
+  public void visit(ModuleProvidesDirective n); 
 
-  public boolean visit(ModuleUsesDirective n); 
+  public void visit(ModuleUsesDirective n); 
 
-  public boolean visit(ModuleOpensDirective n); 
+  public void visit(ModuleOpensDirective n); 
 
-  public boolean visit(UnparsableStmt n); 
+  public void visit(UnparsableStmt n); 
 
-  public boolean visit(ReceiverParameter n); 
+  public void visit(ReceiverParameter n); 
 
-  public boolean visit(VarType n); 
+  public void visit(VarType n); 
 
-  public boolean visit(Modifier n); 
+  public void visit(Modifier n); 
 
-  public boolean visit(SwitchExpr switchExpr);
+  public void visit(SwitchExpr switchExpr);
 
-  public boolean visit(TextBlockLiteralExpr n); 
+  public void visit(TextBlockLiteralExpr n); 
 
-  public boolean visit(YieldStmt yieldStmt); 
+  public void visit(YieldStmt yieldStmt); 
 
-  public boolean visit(TypePatternExpr n); 
+  public void visit(TypePatternExpr n); 
 
-  public boolean visit(RecordPatternExpr n); 
+  public void visit(RecordPatternExpr n);
+  
+  /**
+   * Indicates whether the visiting should stop. This method is typically
+   * called at the beginning of each visit/leave method to determine whether
+   * the method should proceed or return immediately.
+   * @return true if the visiting should stop, false otherwise
+   */
+  public boolean shouldStop();
+  
+  /**
+	 * Stops the visiting of the AST by throwing a {@link StopVisitingException}.
+	 * @throws StopVisitingException Always thrown to stop the visiting
+	 */
+  public void stop();
+  
+  /**
+   * Resets the internal state of the visitor, if any.
+   */
+  public void reset();
 }

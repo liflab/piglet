@@ -21,6 +21,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.ast.PushPopVisitor.StopVisitingException;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
@@ -41,23 +42,22 @@ public class EqualityWithMessageFinder extends AstAssertionFinder
 	}
 
 	@Override
-	public boolean visit(MethodCallExpr n)
+	public void visit(MethodCallExpr n) 
 	{
 		super.visit(n);
 		if (!isAssertionEquals(n))
 		{
-			return false;
+			stop();
 		}
 		try {
 			if (hasMessage(n))
 			{
 				addToken(n);
-				return false;
+				stop();
 			}
 		} catch (Throwable t) {
 			m_errors.add(t);
 		}
-		return true;
 	}
 
 	protected boolean hasMessage(MethodCallExpr n)

@@ -21,10 +21,10 @@ public class PushPopVisitableNode implements PushPopVisitable
 		super();
 		m_cu = cu;
 	}
-	
+
 	/**
 	 * Get the node contained in this visitable.
-	 * @return The node
+	 * @The node
 	 */
 	public Node getNode()
 	{
@@ -44,13 +44,15 @@ public class PushPopVisitableNode implements PushPopVisitable
 	 */
 	protected void go(Node n, PushPopVisitor v)
 	{
-		boolean b = visitWithType(n, v);
-		if (b)
+		visitWithType(n, v);
+		if (v.shouldStop())
 		{
-			for (Node child : n.getChildNodes())
-			{
-				go(child, v);
-			}
+			v.reset();
+			return;
+		}
+		for (Node child : n.getChildNodes())
+		{
+			go(child, v);
 		}
 		leaveWithType(n, v);
 	}
@@ -59,211 +61,210 @@ public class PushPopVisitableNode implements PushPopVisitable
 	 * Visit a node with the appropriate typed visit method.
 	 * @param n The node to visit
 	 * @param v The visitor
-	 * @return The value returned by the visitor
+	 * @The value returned by the visitor
 	 */
-	protected boolean visitWithType(Node n, PushPopVisitor v)
+	protected void visitWithType(Node n, PushPopVisitor v)
 	{
 		if (n instanceof AnnotationDeclaration)
-			return v.visit((AnnotationDeclaration) n);
+			v.visit((AnnotationDeclaration) n);
 		else if (n instanceof AnnotationMemberDeclaration)
-			return v.visit((AnnotationMemberDeclaration) n);
+			v.visit((AnnotationMemberDeclaration) n);
 		else if (n instanceof ArrayAccessExpr)
-			return v.visit((ArrayAccessExpr) n);
+			v.visit((ArrayAccessExpr) n);
 		else if (n instanceof ArrayCreationExpr)
-			return v.visit((ArrayCreationExpr) n);
+			v.visit((ArrayCreationExpr) n);
 		else if (n instanceof ArrayCreationLevel)
-			return v.visit((ArrayCreationLevel) n);
+			v.visit((ArrayCreationLevel) n);
 		else if (n instanceof ArrayInitializerExpr)
-			return v.visit((ArrayInitializerExpr) n);
+			v.visit((ArrayInitializerExpr) n);
 		else if (n instanceof ArrayType)
-			return v.visit((ArrayType) n);
+			v.visit((ArrayType) n);
 		else if (n instanceof AssertStmt)
-			return v.visit((AssertStmt) n);
+			v.visit((AssertStmt) n);
 		else if (n instanceof AssignExpr)
-			return v.visit((AssignExpr) n);
+			v.visit((AssignExpr) n);
 		else if (n instanceof BinaryExpr)
-			return v.visit((BinaryExpr) n);
+			v.visit((BinaryExpr) n);
 		else if (n instanceof BlockComment)
-			return v.visit((BlockComment) n);
+			v.visit((BlockComment) n);
 		else if (n instanceof BlockStmt)
-			return v.visit((BlockStmt) n);
+			v.visit((BlockStmt) n);
 		else if (n instanceof BooleanLiteralExpr)
-			return v.visit((BooleanLiteralExpr) n);
+			v.visit((BooleanLiteralExpr) n);
 		else if (n instanceof BreakStmt)
-			return v.visit((BreakStmt) n);
+			v.visit((BreakStmt) n);
 		else if (n instanceof CastExpr)
-			return v.visit((CastExpr) n);
+			v.visit((CastExpr) n);
 		else if (n instanceof CatchClause)
-			return v.visit((CatchClause) n);
+			v.visit((CatchClause) n);
 		else if (n instanceof CharLiteralExpr)
-			return v.visit((CharLiteralExpr) n);
+			v.visit((CharLiteralExpr) n);
 		else if (n instanceof ClassExpr)
-			return v.visit((ClassExpr) n);
+			v.visit((ClassExpr) n);
 		else if (n instanceof ClassOrInterfaceDeclaration)
-			return v.visit((ClassOrInterfaceDeclaration) n);
+			v.visit((ClassOrInterfaceDeclaration) n);
 		else if (n instanceof ClassOrInterfaceType)
-			return v.visit((ClassOrInterfaceType) n);
+			v.visit((ClassOrInterfaceType) n);
 		else if (n instanceof CompilationUnit)
-			return v.visit((CompilationUnit) n);
+			v.visit((CompilationUnit) n);
 		else if (n instanceof ConditionalExpr)
-			return v.visit((ConditionalExpr) n);
+			v.visit((ConditionalExpr) n);
 		else if (n instanceof ConstructorDeclaration)
-			return v.visit((ConstructorDeclaration) n);
+			v.visit((ConstructorDeclaration) n);
 		else if (n instanceof ContinueStmt)
-			return v.visit((ContinueStmt) n);
+			v.visit((ContinueStmt) n);
 		else if (n instanceof DoStmt)
-			return v.visit((DoStmt) n);
+			v.visit((DoStmt) n);
 		else if (n instanceof DoubleLiteralExpr)
-			return v.visit((DoubleLiteralExpr) n);
+			v.visit((DoubleLiteralExpr) n);
 		else if (n instanceof EmptyStmt)
-			return v.visit((EmptyStmt) n);
+			v.visit((EmptyStmt) n);
 		else if (n instanceof EnclosedExpr)
-			return v.visit((EnclosedExpr) n);
+			v.visit((EnclosedExpr) n);
 		else if (n instanceof EnumConstantDeclaration)
-			return v.visit((EnumConstantDeclaration) n);
+			v.visit((EnumConstantDeclaration) n);
 		else if (n instanceof EnumDeclaration)
-			return v.visit((EnumDeclaration) n);
+			v.visit((EnumDeclaration) n);
 		else if (n instanceof ExplicitConstructorInvocationStmt)
-			return v.visit((ExplicitConstructorInvocationStmt) n);
+			v.visit((ExplicitConstructorInvocationStmt) n);
 		else if (n instanceof ExpressionStmt)
-			return v.visit((ExpressionStmt) n);
+			v.visit((ExpressionStmt) n);
 		else if (n instanceof FieldAccessExpr)
-			return v.visit((FieldAccessExpr) n);
+			v.visit((FieldAccessExpr) n);
 		else if (n instanceof FieldDeclaration)
-			return v.visit((FieldDeclaration) n);
+			v.visit((FieldDeclaration) n);
 		else if (n instanceof ForStmt)
-			return v.visit((ForStmt) n);
+			v.visit((ForStmt) n);
 		else if (n instanceof ForEachStmt)
-			return v.visit((ForEachStmt) n);
+			v.visit((ForEachStmt) n);
 		else if (n instanceof IfStmt)
-			return v.visit((IfStmt) n);
+			v.visit((IfStmt) n);
 		else if (n instanceof ImportDeclaration)
-			return v.visit((ImportDeclaration) n);
+			v.visit((ImportDeclaration) n);
 		else if (n instanceof InitializerDeclaration)
-			return v.visit((InitializerDeclaration) n);
+			v.visit((InitializerDeclaration) n);
 		else if (n instanceof InstanceOfExpr)
-			return v.visit((InstanceOfExpr) n);
+			v.visit((InstanceOfExpr) n);
 		else if (n instanceof IntegerLiteralExpr)
-			return v.visit((IntegerLiteralExpr) n);
+			v.visit((IntegerLiteralExpr) n);
 		else if (n instanceof IntersectionType)
-			return v.visit((IntersectionType) n);
+			v.visit((IntersectionType) n);
 		else if (n instanceof JavadocComment)
-			return v.visit((JavadocComment) n);
+			v.visit((JavadocComment) n);
 		else if (n instanceof LabeledStmt)
-			return v.visit((LabeledStmt) n);
+			v.visit((LabeledStmt) n);
 		else if (n instanceof LambdaExpr)
-			return v.visit((LambdaExpr) n);
+			v.visit((LambdaExpr) n);
 		else if (n instanceof LineComment)
-			return v.visit((LineComment) n);
+			v.visit((LineComment) n);
 		else if (n instanceof LocalClassDeclarationStmt)
-			return v.visit((LocalClassDeclarationStmt) n);
+			v.visit((LocalClassDeclarationStmt) n);
 		else if (n instanceof LocalRecordDeclarationStmt)
-			return v.visit((LocalRecordDeclarationStmt) n);
+			v.visit((LocalRecordDeclarationStmt) n);
 		else if (n instanceof LongLiteralExpr)
-			return v.visit((LongLiteralExpr) n);
+			v.visit((LongLiteralExpr) n);
 		else if (n instanceof MarkerAnnotationExpr)
-			return v.visit((MarkerAnnotationExpr) n);
+			v.visit((MarkerAnnotationExpr) n);
 		else if (n instanceof MemberValuePair)
-			return v.visit((MemberValuePair) n);
+			v.visit((MemberValuePair) n);
 		else if (n instanceof MethodCallExpr)
-			return v.visit((MethodCallExpr) n);
+			v.visit((MethodCallExpr) n);
 		else if (n instanceof MethodDeclaration)
-			return v.visit((MethodDeclaration) n);
+			v.visit((MethodDeclaration) n);
 		else if (n instanceof MethodReferenceExpr)
-			return v.visit((MethodReferenceExpr) n);
+			v.visit((MethodReferenceExpr) n);
 		else if (n instanceof NameExpr)
-			return v.visit((NameExpr) n);
+			v.visit((NameExpr) n);
 		else if (n instanceof Name)
-			return v.visit((Name) n);
+			v.visit((Name) n);
 		else if (n instanceof NormalAnnotationExpr)
-			return v.visit((NormalAnnotationExpr) n);
+			v.visit((NormalAnnotationExpr) n);
 		else if (n instanceof NullLiteralExpr)
-			return v.visit((NullLiteralExpr) n);
+			v.visit((NullLiteralExpr) n);
 		else if (n instanceof ObjectCreationExpr)
-			return v.visit((ObjectCreationExpr) n);
+			v.visit((ObjectCreationExpr) n);
 		else if (n instanceof PackageDeclaration)
-			return v.visit((PackageDeclaration) n);
+			v.visit((PackageDeclaration) n);
 		else if (n instanceof Parameter)
-			return v.visit((Parameter) n);
+			v.visit((Parameter) n);
 		else if (n instanceof PrimitiveType)
-			return v.visit((PrimitiveType) n);
+			v.visit((PrimitiveType) n);
 		else if (n instanceof RecordDeclaration)
-			return v.visit((RecordDeclaration) n);
+			v.visit((RecordDeclaration) n);
 		else if (n instanceof CompactConstructorDeclaration)
-			return v.visit((CompactConstructorDeclaration) n);
+			v.visit((CompactConstructorDeclaration) n);
 		else if (n instanceof ReturnStmt)
-			return v.visit((ReturnStmt) n);
+			v.visit((ReturnStmt) n);
 		else if (n instanceof SimpleName)
-			return v.visit((SimpleName) n);
+			v.visit((SimpleName) n);
 		else if (n instanceof SingleMemberAnnotationExpr)
-			return v.visit((SingleMemberAnnotationExpr) n);
+			v.visit((SingleMemberAnnotationExpr) n);
 		else if (n instanceof StringLiteralExpr)
-			return v.visit((StringLiteralExpr) n);
+			v.visit((StringLiteralExpr) n);
 		else if (n instanceof SuperExpr)
-			return v.visit((SuperExpr) n);
+			v.visit((SuperExpr) n);
 		else if (n instanceof SwitchEntry)
-			return v.visit((SwitchEntry) n);
+			v.visit((SwitchEntry) n);
 		else if (n instanceof SwitchStmt)
-			return v.visit((SwitchStmt) n);
+			v.visit((SwitchStmt) n);
 		else if (n instanceof SynchronizedStmt)
-			return v.visit((SynchronizedStmt) n);
+			v.visit((SynchronizedStmt) n);
 		else if (n instanceof ThisExpr)
-			return v.visit((ThisExpr) n);
+			v.visit((ThisExpr) n);
 		else if (n instanceof ThrowStmt)
-			return v.visit((ThrowStmt) n);
+			v.visit((ThrowStmt) n);
 		else if (n instanceof TryStmt)
-			return v.visit((TryStmt) n);
+			v.visit((TryStmt) n);
 		else if (n instanceof TypeExpr)
-			return v.visit((TypeExpr) n);
+			v.visit((TypeExpr) n);
 		else if (n instanceof TypeParameter)
-			return v.visit((TypeParameter) n);
+			v.visit((TypeParameter) n);
 		else if (n instanceof UnaryExpr)
-			return v.visit((UnaryExpr) n);
+			v.visit((UnaryExpr) n);
 		else if (n instanceof UnionType)
-			return v.visit((UnionType) n);
+			v.visit((UnionType) n);
 		else if (n instanceof UnknownType)
-			return v.visit((UnknownType) n);
+			v.visit((UnknownType) n);
 		else if (n instanceof VariableDeclarationExpr)
-			return v.visit((VariableDeclarationExpr) n);
+			v.visit((VariableDeclarationExpr) n);
 		else if (n instanceof VariableDeclarator)
-			return v.visit((VariableDeclarator) n);
+			v.visit((VariableDeclarator) n);
 		else if (n instanceof VoidType)
-			return v.visit((VoidType) n);
+			v.visit((VoidType) n);
 		else if (n instanceof WhileStmt)
-			return v.visit((WhileStmt) n);
+			v.visit((WhileStmt) n);
 		else if (n instanceof WildcardType)
-			return v.visit((WildcardType) n);
+			v.visit((WildcardType) n);
 		else if (n instanceof ModuleDeclaration)
-			return v.visit((ModuleDeclaration) n);
+			v.visit((ModuleDeclaration) n);
 		else if (n instanceof ModuleRequiresDirective)
-			return v.visit((ModuleRequiresDirective) n);
+			v.visit((ModuleRequiresDirective) n);
 		else if (n instanceof ModuleExportsDirective)
-			return v.visit((ModuleExportsDirective) n);
+			v.visit((ModuleExportsDirective) n);
 		else if (n instanceof ModuleProvidesDirective)
-			return v.visit((ModuleProvidesDirective) n);
+			v.visit((ModuleProvidesDirective) n);
 		else if (n instanceof ModuleUsesDirective)
-			return v.visit((ModuleUsesDirective) n);
+			v.visit((ModuleUsesDirective) n);
 		else if (n instanceof ModuleOpensDirective)
-			return v.visit((ModuleOpensDirective) n);
+			v.visit((ModuleOpensDirective) n);
 		else if (n instanceof UnparsableStmt)
-			return v.visit((UnparsableStmt) n);
+			v.visit((UnparsableStmt) n);
 		else if (n instanceof ReceiverParameter)
-			return v.visit((ReceiverParameter) n);
+			v.visit((ReceiverParameter) n);
 		else if (n instanceof VarType)
-			return v.visit((VarType) n);
+			v.visit((VarType) n);
 		else if (n instanceof Modifier)
-			return v.visit((Modifier) n);
+			v.visit((Modifier) n);
 		else if (n instanceof SwitchExpr)
-			return v.visit((SwitchExpr) n);
+			v.visit((SwitchExpr) n);
 		else if (n instanceof TextBlockLiteralExpr)
-			return v.visit((TextBlockLiteralExpr) n);
+			v.visit((TextBlockLiteralExpr) n);
 		else if (n instanceof YieldStmt)
-			return v.visit((YieldStmt) n);
+			v.visit((YieldStmt) n);
 		else if (n instanceof TypePatternExpr)
-			return v.visit((TypePatternExpr) n);
+			v.visit((TypePatternExpr) n);
 		else if (n instanceof RecordPatternExpr)
-			return v.visit((RecordPatternExpr) n);
-		return true;
+			v.visit((RecordPatternExpr) n);
 	}
 
 	/**

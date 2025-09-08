@@ -138,6 +138,8 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	protected final Stack<Resource> m_parents = new Stack<>();
 
 	protected Resource m_root = null;
+	
+	protected boolean m_shouldStop = false;
 
 	/**
 	 * Creates a new visitor.
@@ -184,1426 +186,1425 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	}
 
 	@Override
-	public boolean leave(@SuppressWarnings("rawtypes") NodeList n)
+	public void leave(@SuppressWarnings("rawtypes") NodeList n)
 	{
 		// Assume this does not happen
-		//genericLeave(n);
-		return true;
+		//genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(AnnotationDeclaration n)
+	public void leave(AnnotationDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(AnnotationMemberDeclaration n)
+	public void leave(AnnotationMemberDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ArrayAccessExpr n)
+	public void leave(ArrayAccessExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ArrayCreationExpr n)
+	public void leave(ArrayCreationExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ArrayCreationLevel n)
+	public void leave(ArrayCreationLevel n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ArrayInitializerExpr n)
+	public void leave(ArrayInitializerExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ArrayType n)
+	public void leave(ArrayType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(AssertStmt n)
+	public void leave(AssertStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(AssignExpr n)
+	public void leave(AssignExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(BinaryExpr n)
+	public void leave(BinaryExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(BlockComment n)
+	public void leave(BlockComment n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(BlockStmt n)
+	public void leave(BlockStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(BooleanLiteralExpr n)
+	public void leave(BooleanLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(BreakStmt n)
+	public void leave(BreakStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(CastExpr n)
+	public void leave(CastExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(CatchClause n)
+	public void leave(CatchClause n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(CharLiteralExpr n)
+	public void leave(CharLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ClassExpr n)
+	public void leave(ClassExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ClassOrInterfaceDeclaration n)
+	public void leave(ClassOrInterfaceDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ClassOrInterfaceType n)
+	public void leave(ClassOrInterfaceType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(CompilationUnit n)
+	public void leave(CompilationUnit n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ConditionalExpr n)
+	public void leave(ConditionalExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ConstructorDeclaration n)
+	public void leave(ConstructorDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ContinueStmt n)
+	public void leave(ContinueStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(DoStmt n)
+	public void leave(DoStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(DoubleLiteralExpr n)
+	public void leave(DoubleLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(EmptyStmt n)
+	public void leave(EmptyStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(EnclosedExpr n)
+	public void leave(EnclosedExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(EnumConstantDeclaration n)
+	public void leave(EnumConstantDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(EnumDeclaration n)
+	public void leave(EnumDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ExplicitConstructorInvocationStmt n)
+	public void leave(ExplicitConstructorInvocationStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ExpressionStmt n)
+	public void leave(ExpressionStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(FieldAccessExpr n)
+	public void leave(FieldAccessExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(FieldDeclaration n)
+	public void leave(FieldDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ForStmt n)
+	public void leave(ForStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ForEachStmt n)
+	public void leave(ForEachStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(IfStmt n)
+	public void leave(IfStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ImportDeclaration n)
+	public void leave(ImportDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(InitializerDeclaration n)
+	public void leave(InitializerDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(InstanceOfExpr n)
+	public void leave(InstanceOfExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(IntegerLiteralExpr n)
+	public void leave(IntegerLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(IntersectionType n)
+	public void leave(IntersectionType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(JavadocComment n)
+	public void leave(JavadocComment n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(LabeledStmt n)
+	public void leave(LabeledStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(LambdaExpr n)
+	public void leave(LambdaExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(LineComment n)
+	public void leave(LineComment n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(LocalClassDeclarationStmt n)
+	public void leave(LocalClassDeclarationStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(LocalRecordDeclarationStmt n)
+	public void leave(LocalRecordDeclarationStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(LongLiteralExpr n)
+	public void leave(LongLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(MarkerAnnotationExpr n)
+	public void leave(MarkerAnnotationExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(MemberValuePair n)
+	public void leave(MemberValuePair n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(MethodCallExpr n)
+	public void leave(MethodCallExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(MethodDeclaration n)
+	public void leave(MethodDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(MethodReferenceExpr n)
+	public void leave(MethodReferenceExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(NameExpr n)
+	public void leave(NameExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(Name n)
+	public void leave(Name n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(NormalAnnotationExpr n)
+	public void leave(NormalAnnotationExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(NullLiteralExpr n)
+	public void leave(NullLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ObjectCreationExpr n)
+	public void leave(ObjectCreationExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(PackageDeclaration n)
+	public void leave(PackageDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(Parameter n)
+	public void leave(Parameter n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(PrimitiveType n)
+	public void leave(PrimitiveType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(RecordDeclaration n)
+	public void leave(RecordDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(CompactConstructorDeclaration n)
+	public void leave(CompactConstructorDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ReturnStmt n)
+	public void leave(ReturnStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(SimpleName n)
+	public void leave(SimpleName n)
 	{
 		// By design, we ignore SimpleName nodes; those that are relevant
 		// are handled in their parent nodes
-		//genericLeave(n);
-		return true;
+		//genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(SingleMemberAnnotationExpr n)
+	public void leave(SingleMemberAnnotationExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(StringLiteralExpr n)
+	public void leave(StringLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(SuperExpr n)
+	public void leave(SuperExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(SwitchEntry n)
+	public void leave(SwitchEntry n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(SwitchStmt n)
+	public void leave(SwitchStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(SynchronizedStmt n)
+	public void leave(SynchronizedStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ThisExpr n)
+	public void leave(ThisExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ThrowStmt n)
+	public void leave(ThrowStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(TryStmt n)
+	public void leave(TryStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(TypeExpr n)
+	public void leave(TypeExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(TypeParameter n)
+	public void leave(TypeParameter n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(UnaryExpr n)
+	public void leave(UnaryExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(UnionType n)
+	public void leave(UnionType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(UnknownType n)
+	public void leave(UnknownType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(VariableDeclarationExpr n)
+	public void leave(VariableDeclarationExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(VariableDeclarator n)
+	public void leave(VariableDeclarator n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(VoidType n)
+	public void leave(VoidType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(WhileStmt n)
+	public void leave(WhileStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(WildcardType n)
+	public void leave(WildcardType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ModuleDeclaration n)
+	public void leave(ModuleDeclaration n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ModuleRequiresDirective n)
+	public void leave(ModuleRequiresDirective n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ModuleExportsDirective n)
+	public void leave(ModuleExportsDirective n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ModuleProvidesDirective n)
+	public void leave(ModuleProvidesDirective n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ModuleUsesDirective n)
+	public void leave(ModuleUsesDirective n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ModuleOpensDirective n)
+	public void leave(ModuleOpensDirective n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(UnparsableStmt n)
+	public void leave(UnparsableStmt n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(ReceiverParameter n)
+	public void leave(ReceiverParameter n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(VarType n)
+	public void leave(VarType n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(Modifier n)
+	public void leave(Modifier n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(SwitchExpr switchExpr)
+	public void leave(SwitchExpr switchExpr)
 	{
-		genericLeave(switchExpr);
-		return true;
+		genericleave(switchExpr);
+		
 	}
 
 	@Override
-	public boolean leave(TextBlockLiteralExpr n)
+	public void leave(TextBlockLiteralExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(YieldStmt yieldStmt)
+	public void leave(YieldStmt yieldStmt)
 	{
-		genericLeave(yieldStmt);
-		return true;
+		genericleave(yieldStmt);
+		
 	}
 
 	@Override
-	public boolean leave(TypePatternExpr n)
+	public void leave(TypePatternExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean leave(RecordPatternExpr n)
+	public void leave(RecordPatternExpr n)
 	{
-		genericLeave(n);
-		return true;
+		genericleave(n);
+		
 	}
 
 	@Override
-	public boolean visit(@SuppressWarnings("rawtypes") NodeList n)
+	public void visit(@SuppressWarnings("rawtypes") NodeList n)
 	{
 		// Assume this does not happen
-		//genericVisit(n);
-		return true;
+		//genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(AnnotationDeclaration n)
+	public void visit(AnnotationDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(AnnotationMemberDeclaration n)
+	public void visit(AnnotationMemberDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ArrayAccessExpr n)
+	public void visit(ArrayAccessExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ArrayCreationExpr n)
+	public void visit(ArrayCreationExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ArrayCreationLevel n)
+	public void visit(ArrayCreationLevel n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ArrayInitializerExpr n)
+	public void visit(ArrayInitializerExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ArrayType n)
+	public void visit(ArrayType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(AssertStmt n)
+	public void visit(AssertStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(AssignExpr n)
+	public void visit(AssignExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(BinaryExpr n)
+	public void visit(BinaryExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(BlockComment n)
+	public void visit(BlockComment n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(BlockStmt n)
+	public void visit(BlockStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(BooleanLiteralExpr n)
+	public void visit(BooleanLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(BreakStmt n)
+	public void visit(BreakStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(CastExpr n)
+	public void visit(CastExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(CatchClause n)
+	public void visit(CatchClause n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(CharLiteralExpr n)
+	public void visit(CharLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ClassExpr n)
+	public void visit(ClassExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ClassOrInterfaceDeclaration n)
+	public void visit(ClassOrInterfaceDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ClassOrInterfaceType n)
+	public void visit(ClassOrInterfaceType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(CompilationUnit n)
+	public void visit(CompilationUnit n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ConditionalExpr n)
+	public void visit(ConditionalExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ConstructorDeclaration n)
+	public void visit(ConstructorDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ContinueStmt n)
+	public void visit(ContinueStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(DoStmt n)
+	public void visit(DoStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(DoubleLiteralExpr n)
+	public void visit(DoubleLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(EmptyStmt n)
+	public void visit(EmptyStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(EnclosedExpr n)
+	public void visit(EnclosedExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(EnumConstantDeclaration n)
+	public void visit(EnumConstantDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(EnumDeclaration n)
+	public void visit(EnumDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ExplicitConstructorInvocationStmt n)
+	public void visit(ExplicitConstructorInvocationStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ExpressionStmt n)
+	public void visit(ExpressionStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(FieldAccessExpr n)
+	public void visit(FieldAccessExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(FieldDeclaration n)
+	public void visit(FieldDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ForStmt n)
+	public void visit(ForStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ForEachStmt n)
+	public void visit(ForEachStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(IfStmt n)
+	public void visit(IfStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ImportDeclaration n)
+	public void visit(ImportDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(InitializerDeclaration n)
+	public void visit(InitializerDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(InstanceOfExpr n)
+	public void visit(InstanceOfExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(IntegerLiteralExpr n)
+	public void visit(IntegerLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(IntersectionType n)
+	public void visit(IntersectionType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(JavadocComment n)
+	public void visit(JavadocComment n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(LabeledStmt n)
+	public void visit(LabeledStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(LambdaExpr n)
+	public void visit(LambdaExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(LineComment n)
+	public void visit(LineComment n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(LocalClassDeclarationStmt n)
+	public void visit(LocalClassDeclarationStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(LocalRecordDeclarationStmt n)
+	public void visit(LocalRecordDeclarationStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(LongLiteralExpr n)
+	public void visit(LongLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(MarkerAnnotationExpr n)
+	public void visit(MarkerAnnotationExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(MemberValuePair n)
+	public void visit(MemberValuePair n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(MethodCallExpr n)
+	public void visit(MethodCallExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(MethodDeclaration n)
+	public void visit(MethodDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(MethodReferenceExpr n)
+	public void visit(MethodReferenceExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(NameExpr n)
+	public void visit(NameExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(Name n)
+	public void visit(Name n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(NormalAnnotationExpr n)
+	public void visit(NormalAnnotationExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(NullLiteralExpr n)
+	public void visit(NullLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ObjectCreationExpr n)
+	public void visit(ObjectCreationExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(PackageDeclaration n)
+	public void visit(PackageDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(Parameter n)
+	public void visit(Parameter n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(PrimitiveType n)
+	public void visit(PrimitiveType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(RecordDeclaration n)
+	public void visit(RecordDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(CompactConstructorDeclaration n)
+	public void visit(CompactConstructorDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ReturnStmt n)
+	public void visit(ReturnStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(SimpleName n)
+	public void visit(SimpleName n)
 	{
 		// By design, we ignore SimpleName nodes; those that are relevant
 		// are handled in their parent nodes
-		//genericVisit(n);
-		return true;
+		//genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(SingleMemberAnnotationExpr n)
+	public void visit(SingleMemberAnnotationExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(StringLiteralExpr n)
+	public void visit(StringLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(SuperExpr n)
+	public void visit(SuperExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(SwitchEntry n)
+	public void visit(SwitchEntry n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(SwitchStmt n)
+	public void visit(SwitchStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(SynchronizedStmt n)
+	public void visit(SynchronizedStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ThisExpr n)
+	public void visit(ThisExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ThrowStmt n)
+	public void visit(ThrowStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(TryStmt n)
+	public void visit(TryStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(TypeExpr n)
+	public void visit(TypeExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(TypeParameter n)
+	public void visit(TypeParameter n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(UnaryExpr n)
+	public void visit(UnaryExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(UnionType n)
+	public void visit(UnionType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(UnknownType n)
+	public void visit(UnknownType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(VariableDeclarationExpr n)
+	public void visit(VariableDeclarationExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(VariableDeclarator n)
+	public void visit(VariableDeclarator n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(VoidType n)
+	public void visit(VoidType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(WhileStmt n)
+	public void visit(WhileStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(WildcardType n)
+	public void visit(WildcardType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ModuleDeclaration n)
+	public void visit(ModuleDeclaration n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ModuleRequiresDirective n)
+	public void visit(ModuleRequiresDirective n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ModuleExportsDirective n)
+	public void visit(ModuleExportsDirective n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ModuleProvidesDirective n)
+	public void visit(ModuleProvidesDirective n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ModuleUsesDirective n)
+	public void visit(ModuleUsesDirective n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ModuleOpensDirective n)
+	public void visit(ModuleOpensDirective n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(UnparsableStmt n)
+	public void visit(UnparsableStmt n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(ReceiverParameter n)
+	public void visit(ReceiverParameter n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(VarType n)
+	public void visit(VarType n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(Modifier n)
+	public void visit(Modifier n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(SwitchExpr switchExpr)
+	public void visit(SwitchExpr switchExpr)
 	{
-		genericVisit(switchExpr);
-		return true;
+		genericvisit(switchExpr);
+		
 	}
 
 	@Override
-	public boolean visit(TextBlockLiteralExpr n)
+	public void visit(TextBlockLiteralExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(YieldStmt yieldStmt)
+	public void visit(YieldStmt yieldStmt)
 	{
-		genericVisit(yieldStmt);
-		return true;
+		genericvisit(yieldStmt);
+		
 	}
 
 	@Override
-	public boolean visit(TypePatternExpr n)
+	public void visit(TypePatternExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
+		
 	}
 
 	@Override
-	public boolean visit(RecordPatternExpr n)
+	public void visit(RecordPatternExpr n)
 	{
-		genericVisit(n);
-		return true;
+		genericvisit(n);
 	}
 
-	protected void genericVisit(Node n)
+	protected void genericvisit(Node n)
 	{
 		String iri = AstIds.iriFor("", n);
 		Resource rdf_node = m_model.createResource(iri);
@@ -1625,7 +1626,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		}
 	}
 
-	protected void genericLeave(Node n)
+	protected void genericleave(Node n)
 	{
 		m_parents.pop();
 	}
@@ -1635,13 +1636,29 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		return m_root;
 	}
 
-	public boolean visit(PushPopVisitableNode n)
+	public void visit(PushPopVisitableNode n)
 	{
-		return true;
 	}
 
-	public boolean leave(PushPopVisitableNode n)
+	public void leave(PushPopVisitableNode n)
 	{
-		return true;
+	}
+	
+	@Override
+	public boolean shouldStop()
+	{
+		return m_shouldStop;
+	}
+	
+	@Override
+	public void stop()
+  {
+		m_shouldStop = true;
+  }
+	
+	@Override
+	public void reset()
+	{
+		m_shouldStop = false;
 	}
 }

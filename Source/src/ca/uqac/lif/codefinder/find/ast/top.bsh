@@ -1,6 +1,6 @@
+package ca.uqac.lif.codefinder.find.ast;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.*;
-import ca.uqac.lif.codefinder.find.ast.*;
 
 return new AstAssertionFinder.AstAssertionFinderFactory() {
 

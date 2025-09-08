@@ -104,1418 +104,1136 @@ import com.github.javaparser.ast.type.WildcardType;
 
 public class PushPopVisitorAdapter implements PushPopVisitor
 {
-
-	@Override
-	public boolean leave(@SuppressWarnings("rawtypes") NodeList n)
+	protected boolean m_shouldStop = false;
+	
+	protected void visit(com.github.javaparser.ast.Node n)
 	{
-
-		return true;
+		// Default implementation does nothing
 	}
-
 	@Override
-	public boolean leave(AnnotationDeclaration n)
-	{
-
-		return true;
+	public void leave(@SuppressWarnings("rawtypes") NodeList n) {
+		
 	}
-
 	@Override
-	public boolean leave(AnnotationMemberDeclaration n)
-	{
-
-		return true;
+	public void leave(AnnotationDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(ArrayAccessExpr n)
-	{
-
-		return true;
+	public void leave(AnnotationMemberDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(ArrayCreationExpr n)
-	{
-
-		return true;
+	public void leave(ArrayAccessExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(ArrayCreationLevel n)
-	{
-
-		return true;
+	public void leave(ArrayCreationExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(ArrayInitializerExpr n)
-	{
-
-		return true;
+	public void leave(ArrayCreationLevel n) {
+		
 	}
-
 	@Override
-	public boolean leave(ArrayType n)
-	{
-
-		return true;
+	public void leave(ArrayInitializerExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(AssertStmt n)
-	{
-
-		return true;
+	public void leave(ArrayType n) {
+		
 	}
-
 	@Override
-	public boolean leave(AssignExpr n)
-	{
-
-		return true;
+	public void leave(AssertStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(BinaryExpr n)
-	{
-
-		return true;
+	public void leave(AssignExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(BlockComment n)
-	{
-
-		return true;
+	public void leave(BinaryExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(BlockStmt n)
-	{
-
-		return true;
+	public void leave(BlockComment n) {
+		
 	}
-
 	@Override
-	public boolean leave(BooleanLiteralExpr n)
-	{
-
-		return true;
+	public void leave(BlockStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(BreakStmt n)
-	{
-
-		return true;
+	public void leave(BooleanLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(CastExpr n)
-	{
-
-		return true;
+	public void leave(BreakStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(CatchClause n)
-	{
-
-		return true;
+	public void leave(CastExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(CharLiteralExpr n)
-	{
-
-		return true;
+	public void leave(CatchClause n) {
+		
 	}
-
 	@Override
-	public boolean leave(ClassExpr n)
-	{
-
-		return true;
+	public void leave(CharLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(ClassOrInterfaceDeclaration n)
-	{
-
-		return true;
+	public void leave(ClassExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(ClassOrInterfaceType n)
-	{
-
-		return true;
+	public void leave(ClassOrInterfaceDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(CompilationUnit n)
-	{
-
-		return true;
+	public void leave(ClassOrInterfaceType n) {
+		
 	}
-
 	@Override
-	public boolean leave(ConditionalExpr n)
-	{
-
-		return true;
+	public void leave(CompilationUnit n) {
+		
 	}
-
 	@Override
-	public boolean leave(ConstructorDeclaration n)
-	{
-
-		return true;
+	public void leave(ConditionalExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(ContinueStmt n)
-	{
-
-		return true;
+	public void leave(ConstructorDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(DoStmt n)
-	{
-
-		return true;
+	public void leave(ContinueStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(DoubleLiteralExpr n)
-	{
-
-		return true;
+	public void leave(DoStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(EmptyStmt n)
-	{
-
-		return true;
+	public void leave(DoubleLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(EnclosedExpr n)
-	{
-
-		return true;
+	public void leave(EmptyStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(EnumConstantDeclaration n)
-	{
-
-		return true;
+	public void leave(EnclosedExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(EnumDeclaration n)
-	{
-
-		return true;
+	public void leave(EnumConstantDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(ExplicitConstructorInvocationStmt n)
-	{
-
-		return true;
+	public void leave(EnumDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(ExpressionStmt n)
-	{
-
-		return true;
+	public void leave(ExplicitConstructorInvocationStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(FieldAccessExpr n)
-	{
-
-		return true;
+	public void leave(ExpressionStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(FieldDeclaration n)
-	{
-
-		return true;
+	public void leave(FieldAccessExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(ForStmt n)
-	{
-
-		return true;
+	public void leave(FieldDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(ForEachStmt n)
-	{
-
-		return true;
+	public void leave(ForStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(IfStmt n)
-	{
-
-		return true;
+	public void leave(ForEachStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(ImportDeclaration n)
-	{
-
-		return true;
+	public void leave(IfStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(InitializerDeclaration n)
-	{
-
-		return true;
+	public void leave(ImportDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(InstanceOfExpr n)
-	{
-
-		return true;
+	public void leave(InitializerDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(IntegerLiteralExpr n)
-	{
-
-		return true;
+	public void leave(InstanceOfExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(IntersectionType n)
-	{
-
-		return true;
+	public void leave(IntegerLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(JavadocComment n)
-	{
-
-		return true;
+	public void leave(IntersectionType n) {
+		
 	}
-
 	@Override
-	public boolean leave(LabeledStmt n)
-	{
-
-		return true;
+	public void leave(JavadocComment n) {
+		
 	}
-
 	@Override
-	public boolean leave(LambdaExpr n)
-	{
-
-		return true;
+	public void leave(LabeledStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(LineComment n)
-	{
-
-		return true;
+	public void leave(LambdaExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(LocalClassDeclarationStmt n)
-	{
-
-		return true;
+	public void leave(LineComment n) {
+		
 	}
-
 	@Override
-	public boolean leave(LocalRecordDeclarationStmt n)
-	{
-
-		return true;
+	public void leave(LocalClassDeclarationStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(LongLiteralExpr n)
-	{
-
-		return true;
+	public void leave(LocalRecordDeclarationStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(MarkerAnnotationExpr n)
-	{
-
-		return true;
+	public void leave(LongLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(MemberValuePair n)
-	{
-
-		return true;
+	public void leave(MarkerAnnotationExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(MethodCallExpr n)
-	{
-
-		return true;
+	public void leave(MemberValuePair n) {
+		
 	}
-
 	@Override
-	public boolean leave(MethodDeclaration n)
-	{
-
-		return true;
+	public void leave(MethodCallExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(MethodReferenceExpr n)
-	{
-
-		return true;
+	public void leave(MethodDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(NameExpr n)
-	{
-
-		return true;
+	public void leave(MethodReferenceExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(Name n)
-	{
-
-		return true;
+	public void leave(NameExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(NormalAnnotationExpr n)
-	{
-
-		return true;
+	public void leave(Name n) {
+		
 	}
-
 	@Override
-	public boolean leave(NullLiteralExpr n)
-	{
-
-		return true;
+	public void leave(NormalAnnotationExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(ObjectCreationExpr n)
-	{
-
-		return true;
+	public void leave(NullLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(PackageDeclaration n)
-	{
-
-		return true;
+	public void leave(ObjectCreationExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(Parameter n)
-	{
-
-		return true;
+	public void leave(PackageDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(PrimitiveType n)
-	{
-
-		return true;
+	public void leave(Parameter n) {
+		
 	}
-
 	@Override
-	public boolean leave(RecordDeclaration n)
-	{
-
-		return true;
+	public void leave(PrimitiveType n) {
+		
 	}
-
 	@Override
-	public boolean leave(CompactConstructorDeclaration n)
-	{
-
-		return true;
+	public void leave(RecordDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(ReturnStmt n)
-	{
-
-		return true;
+	public void leave(CompactConstructorDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(SimpleName n)
-	{
-
-		return true;
+	public void leave(ReturnStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(SingleMemberAnnotationExpr n)
-	{
-
-		return true;
+	public void leave(SimpleName n) {
+		
 	}
-
 	@Override
-	public boolean leave(StringLiteralExpr n)
-	{
-
-		return true;
+	public void leave(SingleMemberAnnotationExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(SuperExpr n)
-	{
-
-		return true;
+	public void leave(StringLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(SwitchEntry n)
-	{
-
-		return true;
+	public void leave(SuperExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(SwitchStmt n)
-	{
-
-		return true;
+	public void leave(SwitchEntry n) {
+		
 	}
-
 	@Override
-	public boolean leave(SynchronizedStmt n)
-	{
-
-		return true;
+	public void leave(SwitchStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(ThisExpr n)
-	{
-
-		return true;
+	public void leave(SynchronizedStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(ThrowStmt n)
-	{
-
-		return true;
+	public void leave(ThisExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(TryStmt n)
-	{
-
-		return true;
+	public void leave(ThrowStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(TypeExpr n)
-	{
-
-		return true;
+	public void leave(TryStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(TypeParameter n)
-	{
-
-		return true;
+	public void leave(TypeExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(UnaryExpr n)
-	{
-
-		return true;
+	public void leave(TypeParameter n) {
+		
 	}
-
 	@Override
-	public boolean leave(UnionType n)
-	{
-
-		return true;
+	public void leave(UnaryExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(UnknownType n)
-	{
-
-		return true;
+	public void leave(UnionType n) {
+		
 	}
-
 	@Override
-	public boolean leave(VariableDeclarationExpr n)
-	{
-
-		return true;
+	public void leave(UnknownType n) {
+		
 	}
-
 	@Override
-	public boolean leave(VariableDeclarator n)
-	{
-
-		return true;
+	public void leave(VariableDeclarationExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(VoidType n)
-	{
-
-		return true;
+	public void leave(VariableDeclarator n) {
+		
 	}
-
 	@Override
-	public boolean leave(WhileStmt n)
-	{
-
-		return true;
+	public void leave(VoidType n) {
+		
 	}
-
 	@Override
-	public boolean leave(WildcardType n)
-	{
-
-		return true;
+	public void leave(WhileStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(ModuleDeclaration n)
-	{
-
-		return true;
+	public void leave(WildcardType n) {
+		
 	}
-
 	@Override
-	public boolean leave(ModuleRequiresDirective n)
-	{
-
-		return true;
+	public void leave(ModuleDeclaration n) {
+		
 	}
-
 	@Override
-	public boolean leave(ModuleExportsDirective n)
-	{
-
-		return true;
+	public void leave(ModuleRequiresDirective n) {
+		
 	}
-
 	@Override
-	public boolean leave(ModuleProvidesDirective n)
-	{
-
-		return true;
+	public void leave(ModuleExportsDirective n) {
+		
 	}
-
 	@Override
-	public boolean leave(ModuleUsesDirective n)
-	{
-
-		return true;
+	public void leave(ModuleProvidesDirective n) {
+		
 	}
-
 	@Override
-	public boolean leave(ModuleOpensDirective n)
-	{
-
-		return true;
+	public void leave(ModuleUsesDirective n) {
+		
 	}
-
 	@Override
-	public boolean leave(UnparsableStmt n)
-	{
-
-		return true;
+	public void leave(ModuleOpensDirective n) {
+		
 	}
-
 	@Override
-	public boolean leave(ReceiverParameter n)
-	{
-
-		return true;
+	public void leave(UnparsableStmt n) {
+		
 	}
-
 	@Override
-	public boolean leave(VarType n)
-	{
-
-		return true;
+	public void leave(ReceiverParameter n) {
+		
 	}
-
 	@Override
-	public boolean leave(Modifier n)
-	{
-
-		return true;
+	public void leave(VarType n) {
+		
 	}
-
 	@Override
-	public boolean leave(SwitchExpr switchExpr)
-	{
-
-		return true;
+	public void leave(Modifier n) {
+		
 	}
-
 	@Override
-	public boolean leave(TextBlockLiteralExpr n)
-	{
-
-		return true;
+	public void leave(SwitchExpr switchExpr) {
+		leave(switchExpr);
 	}
-
 	@Override
-	public boolean leave(YieldStmt yieldStmt)
-	{
-
-		return true;
+	public void leave(TextBlockLiteralExpr n) {
+		
 	}
-
 	@Override
-	public boolean leave(TypePatternExpr n)
-	{
+	public void leave(YieldStmt yieldStmt) {
+		leave(yieldStmt);
+	}
+	@Override
+	public void leave(TypePatternExpr n) {
+		
+	}
+	@Override
+	public void leave(RecordPatternExpr n) {
+		
+	}
+	@Override
+	public void visit(@SuppressWarnings("rawtypes") NodeList n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean leave(RecordPatternExpr n)
-	{
+	public void visit(AnnotationDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(@SuppressWarnings("rawtypes") NodeList n)
-	{
+	public void visit(AnnotationMemberDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(AnnotationDeclaration n)
-	{
+	public void visit(ArrayAccessExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(AnnotationMemberDeclaration n)
-	{
+	public void visit(ArrayCreationExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ArrayAccessExpr n)
-	{
+	public void visit(ArrayCreationLevel n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ArrayCreationExpr n)
-	{
+	public void visit(ArrayInitializerExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ArrayCreationLevel n)
-	{
+	public void visit(ArrayType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ArrayInitializerExpr n)
-	{
+	public void visit(AssertStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ArrayType n)
-	{
+	public void visit(AssignExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(AssertStmt n)
-	{
+	public void visit(BinaryExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(AssignExpr n)
-	{
+	public void visit(BlockComment n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(BinaryExpr n)
-	{
+	public void visit(BlockStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(BlockComment n)
-	{
+	public void visit(BooleanLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(BlockStmt n)
-	{
+	public void visit(BreakStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(BooleanLiteralExpr n)
-	{
+	public void visit(CastExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(BreakStmt n)
-	{
+	public void visit(CatchClause n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(CastExpr n)
-	{
+	public void visit(CharLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(CatchClause n)
-	{
+	public void visit(ClassExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(CharLiteralExpr n)
-	{
+	public void visit(ClassOrInterfaceDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ClassExpr n)
-	{
+	public void visit(ClassOrInterfaceType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ClassOrInterfaceDeclaration n)
-	{
+	public void visit(CompilationUnit n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ClassOrInterfaceType n)
-	{
+	public void visit(ConditionalExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(CompilationUnit n)
-	{
+	public void visit(ConstructorDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ConditionalExpr n)
-	{
+	public void visit(ContinueStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ConstructorDeclaration n)
-	{
+	public void visit(DoStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ContinueStmt n)
-	{
+	public void visit(DoubleLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(DoStmt n)
-	{
+	public void visit(EmptyStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(DoubleLiteralExpr n)
-	{
+	public void visit(EnclosedExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(EmptyStmt n)
-	{
+	public void visit(EnumConstantDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(EnclosedExpr n)
-	{
+	public void visit(EnumDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(EnumConstantDeclaration n)
-	{
+	public void visit(ExplicitConstructorInvocationStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(EnumDeclaration n)
-	{
+	public void visit(ExpressionStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ExplicitConstructorInvocationStmt n)
-	{
+	public void visit(FieldAccessExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ExpressionStmt n)
-	{
+	public void visit(FieldDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(FieldAccessExpr n)
-	{
+	public void visit(ForStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(FieldDeclaration n)
-	{
+	public void visit(ForEachStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ForStmt n)
-	{
+	public void visit(IfStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ForEachStmt n)
-	{
+	public void visit(ImportDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(IfStmt n)
-	{
+	public void visit(InitializerDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ImportDeclaration n)
-	{
+	public void visit(InstanceOfExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(InitializerDeclaration n)
-	{
+	public void visit(IntegerLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(InstanceOfExpr n)
-	{
+	public void visit(IntersectionType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(IntegerLiteralExpr n)
-	{
+	public void visit(JavadocComment n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(IntersectionType n)
-	{
+	public void visit(LabeledStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(JavadocComment n)
-	{
+	public void visit(LambdaExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(LabeledStmt n)
-	{
+	public void visit(LineComment n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(LambdaExpr n)
-	{
+	public void visit(LocalClassDeclarationStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(LineComment n)
-	{
+	public void visit(LocalRecordDeclarationStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(LocalClassDeclarationStmt n)
-	{
+	public void visit(LongLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(LocalRecordDeclarationStmt n)
-	{
+	public void visit(MarkerAnnotationExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(LongLiteralExpr n)
-	{
+	public void visit(MemberValuePair n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(MarkerAnnotationExpr n)
-	{
+	public void visit(MethodCallExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(MemberValuePair n)
-	{
+	public void visit(MethodDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(MethodCallExpr n)
-	{
+	public void visit(MethodReferenceExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(MethodDeclaration n)
-	{
+	public void visit(NameExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(MethodReferenceExpr n)
-	{
+	public void visit(Name n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(NameExpr n)
-	{
+	public void visit(NormalAnnotationExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(Name n)
-	{
+	public void visit(NullLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(NormalAnnotationExpr n)
-	{
+	public void visit(ObjectCreationExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(NullLiteralExpr n)
-	{
+	public void visit(PackageDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ObjectCreationExpr n)
-	{
+	public void visit(Parameter n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(PackageDeclaration n)
-	{
+	public void visit(PrimitiveType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(Parameter n)
-	{
+	public void visit(RecordDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(PrimitiveType n)
-	{
+	public void visit(CompactConstructorDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(RecordDeclaration n)
-	{
+	public void visit(ReturnStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(CompactConstructorDeclaration n)
-	{
+	public void visit(SimpleName n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ReturnStmt n)
-	{
+	public void visit(SingleMemberAnnotationExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(SimpleName n)
-	{
+	public void visit(StringLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(SingleMemberAnnotationExpr n)
-	{
+	public void visit(SuperExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(StringLiteralExpr n)
-	{
+	public void visit(SwitchEntry n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(SuperExpr n)
-	{
+	public void visit(SwitchStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(SwitchEntry n)
-	{
+	public void visit(SynchronizedStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(SwitchStmt n)
-	{
+	public void visit(ThisExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(SynchronizedStmt n)
-	{
+	public void visit(ThrowStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ThisExpr n)
-	{
+	public void visit(TryStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ThrowStmt n)
-	{
+	public void visit(TypeExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(TryStmt n)
-	{
+	public void visit(TypeParameter n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(TypeExpr n)
-	{
+	public void visit(UnaryExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(TypeParameter n)
-	{
+	public void visit(UnionType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(UnaryExpr n)
-	{
+	public void visit(UnknownType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(UnionType n)
-	{
+	public void visit(VariableDeclarationExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(UnknownType n)
-	{
+	public void visit(VariableDeclarator n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(VariableDeclarationExpr n)
-	{
+	public void visit(VoidType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(VariableDeclarator n)
-	{
+	public void visit(WhileStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(VoidType n)
-	{
+	public void visit(WildcardType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(WhileStmt n)
-	{
+	public void visit(ModuleDeclaration n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(WildcardType n)
-	{
+	public void visit(ModuleRequiresDirective n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ModuleDeclaration n)
-	{
+	public void visit(ModuleExportsDirective n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ModuleRequiresDirective n)
-	{
+	public void visit(ModuleProvidesDirective n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ModuleExportsDirective n)
-	{
+	public void visit(ModuleUsesDirective n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ModuleProvidesDirective n)
-	{
+	public void visit(ModuleOpensDirective n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ModuleUsesDirective n)
-	{
+	public void visit(UnparsableStmt n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ModuleOpensDirective n)
-	{
+	public void visit(ReceiverParameter n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(UnparsableStmt n)
-	{
+	public void visit(VarType n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(ReceiverParameter n)
-	{
+	public void visit(Modifier n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(VarType n)
+	public void visit(SwitchExpr switchExpr)
 	{
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(Modifier n)
-	{
+	public void visit(TextBlockLiteralExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(SwitchExpr switchExpr)
+	public void visit(YieldStmt yieldStmt)
 	{
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(TextBlockLiteralExpr n)
-	{
+	public void visit(TypePatternExpr n)
+	{ 
 
-		return true;
+		
 	}
 
 	@Override
-	public boolean visit(YieldStmt yieldStmt)
-	{
+	public void visit(RecordPatternExpr n)
+	{ 
 
-		return true;
 	}
-
+	
 	@Override
-	public boolean visit(TypePatternExpr n)
+	public boolean shouldStop()
 	{
-
-		return true;
+		return m_shouldStop;
 	}
-
+	
 	@Override
-	public boolean visit(RecordPatternExpr n)
+	public void stop()
+  {
+		m_shouldStop = true;
+  }
+	
+	public void reset()
 	{
-
-		return true;
+		m_shouldStop = false;
 	}
 }

@@ -7,12 +7,12 @@ import ca.uqac.lif.codefinder.find.TokenFinderContext;
 
 public abstract class TypeAwareAssertionFinder extends AstAssertionFinder
 {
-	public TypeAwareAssertionFinder(String name)
+	public TypeAwareAssertionFinder(String name) 
 	{
 		super(name);
 	}
 
-	protected TypeAwareAssertionFinder(String name, TokenFinderContext context)
+	protected TypeAwareAssertionFinder(String name, TokenFinderContext context) 
 	{
 		super(name, context);
 	}
@@ -20,159 +20,159 @@ public abstract class TypeAwareAssertionFinder extends AstAssertionFinder
 	protected abstract boolean visitTypedNode(Node n);
 
 	@Override
-	public boolean visit(AssignExpr n)
+	public void visit(AssignExpr n)
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(BinaryExpr n)
+	public void visit(BinaryExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(BooleanLiteralExpr n)
+	public void visit(BooleanLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(CastExpr n)
+	public void visit(CastExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(CharLiteralExpr n)
+	public void visit(CharLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(ClassExpr n)
+	public void visit(ClassExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(ConditionalExpr n)
+	public void visit(ConditionalExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(DoubleLiteralExpr n)
+	public void visit(DoubleLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(EnclosedExpr n)
+	public void visit(EnclosedExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(FieldAccessExpr n)
+	public void visit(FieldAccessExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(InstanceOfExpr n)
+	public void visit(InstanceOfExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(IntegerLiteralExpr n)
+	public void visit(IntegerLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(LambdaExpr n)
+	public void visit(LambdaExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(LongLiteralExpr n)
+	public void visit(LongLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(MethodCallExpr n)
+	public void visit(MethodCallExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(MethodReferenceExpr n)
+	public void visit(MethodReferenceExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(NameExpr n)
+	public void visit(NameExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(NullLiteralExpr n)
+	public void visit(NullLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(ObjectCreationExpr n)
+	public void visit(ObjectCreationExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(StringLiteralExpr n)
+	public void visit(StringLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(SuperExpr n)
+	public void visit(SuperExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(ThisExpr n)
+	public void visit(ThisExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(TypeExpr n)
+	public void visit(TypeExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(UnaryExpr n)
+	public void visit(UnaryExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(SwitchExpr n)
+	public void visit(SwitchExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 	@Override
-	public boolean visit(TextBlockLiteralExpr n)
+	public void visit(TextBlockLiteralExpr n) 
 	{
-		return visitTypedNode(n);
+		visitTypedNode(n);
 	}
 
 }

@@ -29,9 +29,9 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	}
 
 	@Override
-	public boolean visit(MethodCallExpr n)
+	public void visit(MethodCallExpr n)
 	{
-		genericVisit(n);
+		genericvisit(n);
 		Resource method_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getName().asString());
 		m_model.add(method_node, NAME, name_node);
@@ -44,21 +44,20 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(a);
 			to_explore.accept(arg_visitor);
 		}
-		return false;
+		stop();
 	}
 	
 	@Override
-	public boolean leave(MethodCallExpr n)
+	public void leave(MethodCallExpr n)
 	{
-		genericLeave(n);
+		genericleave(n);
 		m_parents.pop(); // Since we added the "args" node in visit()
-		return true;
 	}
 	
 	@Override
-	public boolean visit(MethodDeclaration n)
+	public void visit(MethodDeclaration n)
 	{
-		genericVisit(n);
+		genericvisit(n);
 		Resource method_node = m_parents.peek();
 		List<Node> children = n.getChildNodes();
 		Literal name_node = m_model.createLiteral(children.get(0).toString());
@@ -75,45 +74,44 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			to_explore.accept(body_visitor);
 			//m_model.add(method_node, IN, body_visitor.getRoot());
 		}
-		return false;
+		stop();
 	}
 	
 	@Override
-	public boolean visit(IntegerLiteralExpr n)
+	public void visit(IntegerLiteralExpr n)
 	{
-		genericVisit(n);
+		genericvisit(n);
 		Resource int_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getValue());
 		m_model.add(int_node, VALUE, name_node);
-		return true;
 	}
 	
 	@Override
-	public boolean visit(BooleanLiteralExpr n)
+	public void visit(BooleanLiteralExpr n)
 	{
-		genericVisit(n);
+		genericvisit(n);
 		Resource bool_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(Boolean.toString(n.getValue()));
 		m_model.add(bool_node, VALUE, name_node);
-		return false;
+		stop();
 	}
 	
 	@Override
-	public boolean visit(StringLiteralExpr n)
+	public void visit(StringLiteralExpr n)
 	{
-		genericVisit(n);
+		genericvisit(n);
 		Resource str_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getValue());
 		m_model.add(str_node, VALUE, name_node);
-		return false;
+		stop();
 	}
 	
 	@Override
-	public boolean visit(NameExpr n)
+	public void visit(NameExpr n)
 	{
-		genericVisit(n);
+		genericvisit(n);
 		Literal name_node = m_model.createLiteral(n.getName().asString());
 		m_model.add(m_parents.peek(), NAME, name_node);
-		return false;
+		stop();
 	}
 }

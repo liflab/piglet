@@ -25,6 +25,7 @@ import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.ast.PushPopVisitor.StopVisitingException;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
@@ -48,12 +49,12 @@ public class EqualNonPrimitiveFinder extends AstAssertionFinder
 	}
 
 	@Override
-	public boolean visit(MethodCallExpr n)
+	public void visit(MethodCallExpr n)
 	{
 		super.visit(n);
 		if (!isAssertionEquals(n))
 		{
-			return true;
+			stop();
 		}
 		ResolveResult<ResolvedType> res1 = Types.typeOfWithTimeout(n.getArgument(0), m_context.getTypeSolver(), m_context.getResolutionTimeout());
 		if (res1.reason == Types.ResolveReason.UNSOLVED)
