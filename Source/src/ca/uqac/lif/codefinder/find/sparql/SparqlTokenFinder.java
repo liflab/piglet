@@ -1,12 +1,13 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinder;
-import ca.uqac.lif.codefinder.find.ast.AstTokenFinder;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 
 /**
@@ -18,6 +19,15 @@ import ca.uqac.lif.codefinder.thread.ThreadContext;
  */
 public class SparqlTokenFinder implements TokenFinder
 {
+	/** The name of the file to analyze */
+	protected final String m_filename;
+	
+	/** The name of this finder */
+	protected final String m_name;
+	
+	/** A Java parser instance */
+	protected final ThreadContext m_context;
+	
 	/**
 	 * The SPARQL query to execute.
 	 */
@@ -28,46 +38,57 @@ public class SparqlTokenFinder implements TokenFinder
 	 */
 	protected final Model m_model;
 	
-	public SparqlTokenFinder(String query, Model model)
+	/** The set of found tokens */
+	protected Set<FoundToken> m_found;
+	
+	public SparqlTokenFinder(String name, String filename, String query, Model model)
 	{
-		super();
-		m_model = model;
-		m_query = query;
+		this(name, filename, query, model, null);
 	}
 	
-	@Override
-	public AstTokenFinder newFinder(String filename, ThreadContext context)
+	protected SparqlTokenFinder(String name, String filename, String query, Model model, ThreadContext context)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		super();
+		m_filename = filename;
+		m_name = name;
+		m_model = model;
+		m_query = query;
+		m_context = context;
+		m_found = new HashSet<FoundToken>();
+	}
+	/**
+	 * Creates a new instance of the same type of finder, for a different file.
+	 * @param filename The name of the new file
+	 * @param context A thread context
+	 * @return A new instance of the same type of finder
+	 */
+	public SparqlTokenFinder newFinder(String filename, Model model, ThreadContext context)
+	{
+		return new SparqlTokenFinder(m_name, filename, m_query, model, context);
 	}
 
 	@Override
 	public String getName()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return m_name;
 	}
 
 	@Override
 	public int getFoundCount()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return m_found.size();
 	}
 
 	@Override
 	public Collection<Throwable> getErrors()
 	{
 		// TODO Auto-generated method stub
-		return null;
+		return new HashSet<Throwable>();
 	}
 
 	@Override
 	public Collection<FoundToken> getFoundTokens()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return m_found;
 	}
-
 }

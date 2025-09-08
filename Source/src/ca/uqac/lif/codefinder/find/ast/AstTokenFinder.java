@@ -68,8 +68,12 @@ public abstract class AstTokenFinder extends PushPopVisitorAdapter implements To
 		return m_name;
 	}
 	
-	/* Overrides TokenFind only to precise the return type */
-	@Override
+	/**
+	 * Creates a new instance of the same type of finder, for a different file.
+	 * @param filename The name of the new file
+	 * @param context A thread context
+	 * @return A new instance of the same type of finder
+	 */
 	public abstract AstTokenFinder newFinder(String filename, ThreadContext context);
 	
 	/**

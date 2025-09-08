@@ -40,6 +40,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
+import ca.uqac.lif.codefinder.find.ast.AstAssertionFinderRunnable;
 import ca.uqac.lif.codefinder.find.ast.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.ConditionalAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.EqualAssertionFinder;
@@ -55,7 +56,6 @@ import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
-import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
@@ -487,7 +487,7 @@ public class Main
 			int limit) throws IOException, FileSystemException
 	{
 		int count = 0;
-		Set<AssertionFinderRunnable> tasks = new HashSet<>();
+		Set<AstAssertionFinderRunnable> tasks = new HashSet<>();
 		List<Future<?>> futures = new ArrayList<>();
 		while (provider.hasNext() && (limit == -1 || count < limit))
 		{
@@ -496,14 +496,14 @@ public class Main
 			//InputStream stream = fs.getStream();
 			//String code = new String(FileUtils.toBytes(stream));
 			//stream.close();
-			AssertionFinderRunnable r = new AssertionFinderRunnable(f_source, finders,
+			AstAssertionFinderRunnable r = new AstAssertionFinderRunnable(f_source, finders,
 					quiet, status);
 			tasks.add(r);
 			futures.add(e.submit(r));
 		}
 		waitForEnd(futures);
 		e.shutdown(); // All tasks are finished, shutdown the executor
-		for (AssertionFinderRunnable r : tasks)
+		for (AstAssertionFinderRunnable r : tasks)
 		{
 			found.addAll(r.getFound());
 		}

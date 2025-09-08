@@ -174,5 +174,13 @@
       </files>
      <bundle>true</bundle>
     </dependency>
+    <dependency> 
+     <name>Beanshell</name>
+     <classname>bsh.Interpreter</classname>
+      <files>
+	      <jar>https://oss.sonatype.org/content/repositories/snapshots/org/beanshell/bsh/3.0.0-SNAPSHOT/bsh-3.0.0-20230205.094654-3.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
   </dependencies>
 </build>

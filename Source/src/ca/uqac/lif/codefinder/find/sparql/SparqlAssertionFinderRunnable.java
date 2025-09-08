@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.thread;
+package ca.uqac.lif.codefinder.find.sparql;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,9 +31,8 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
-import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
-import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.provider.FileSource;
+import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -41,7 +40,7 @@ import ca.uqac.lif.fs.FileUtils;
 /**
  * A runnable that processes a single Java file to find assertions.
  */
-public class AssertionFinderRunnable implements Runnable
+public class SparqlAssertionFinderRunnable implements Runnable
 {
 	/** The file name */
 	protected final String m_file;
@@ -50,7 +49,7 @@ public class AssertionFinderRunnable implements Runnable
 	protected final FileSource m_fSource;
 	
 	/** The set of finders to use */
-	protected final Set<AstAssertionFinder> m_finders;
+	protected final Set<SparqlTokenFinder> m_finders;
 	
 	/** The set of found tokens */
 	protected final Set<FoundToken> m_found;
@@ -70,7 +69,7 @@ public class AssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AssertionFinderRunnable(FileSource source, Set<AstAssertionFinder> finders, boolean quiet, StatusCallback status)
+	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinder> finders, boolean quiet, StatusCallback status)
 	{
 		super();
 		m_file = source.getFilename();
@@ -123,7 +122,7 @@ public class AssertionFinderRunnable implements Runnable
 	{
 		try
 		{
-			CompilationUnit u = context.parser.parse(code).getResult().get();
+			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			List<MethodDeclaration> methods = getTestCases(u);
 			/*if (methods.isEmpty() && !quiet)
 			{

@@ -2,11 +2,24 @@ package ca.uqac.lif.codefinder.find.sparql;
 
 import com.github.javaparser.ast.Node;
 
+/**
+ * Utility class to generate stable IRIs for AST nodes.
+ * The IRIs are based on a hash of the filename, the node's range, and its kind.
+ */
 class AstIds
 {
-	static final String NS = "urn:ast:";
+	/** Namespace for AST node IRIs */
+	public static final String NS = "urn:ast:";
 
-	static String iriFor(String filename, Node n)
+	/**
+	 * Generates a stable IRI for a given AST node.
+	 * The IRI is based on a hash of the filename, the node's range, and its kind.
+	 * 
+	 * @param filename The name of the file containing the AST node
+	 * @param n The AST node
+	 * @return A stable IRI for the AST node
+	 */
+	public static String iriFor(String filename, Node n)
 	{
 		String range = n.getRange()
 				.map(r -> r.begin.line + "." + r.begin.column + "-" + r.end.line + "." + r.end.column)
@@ -17,7 +30,13 @@ class AstIds
 		return NS + hash;
 	}
 
-	static String sha1Hex(String s)
+	/**
+	 * Computes the SHA-1 hash of a string and returns it as a hexadecimal string.
+	 * 
+	 * @param s The input string
+	 * @return The SHA-1 hash as a hexadecimal string
+	 */
+	public static String sha1Hex(String s)
 	{
 		try
 		{
