@@ -2,8 +2,6 @@ package ca.uqac.lif.codefinder.find;
 
 import java.util.Collection;
 
-import com.github.javaparser.ast.Node;
-
 public interface TokenFinder
 {
 	/**
@@ -44,11 +42,4 @@ public interface TokenFinder
 	 * @param filename The name of the file to analyze
 	 */
 	public abstract void setFilename(String filename);
-	
-	/**
-	 * Processes a node of the AST. This method is called by
-	 * the AST traversal algorithm.
-	 * @param n
-	 */
-	public abstract void process(Node n);
 }

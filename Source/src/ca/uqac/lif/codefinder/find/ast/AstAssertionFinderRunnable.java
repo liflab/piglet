@@ -31,9 +31,8 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
-import ca.uqac.lif.codefinder.find.TokenFinder;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
+import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
@@ -51,7 +50,7 @@ public class AstAssertionFinderRunnable implements Runnable
 	protected final FileSource m_fSource;
 	
 	/** The set of finders to use */
-	protected final Set<TokenFinderFactory> m_finders;
+	protected final Set<AstAssertionFinderFactory> m_finders;
 	
 	/** The set of found tokens */
 	protected final Set<FoundToken> m_found;
@@ -71,7 +70,7 @@ public class AstAssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AstAssertionFinderRunnable(FileSource source, Set<TokenFinderFactory> finders, boolean quiet, StatusCallback status)
+	public AstAssertionFinderRunnable(FileSource source, Set<AstAssertionFinderFactory> finders, boolean quiet, StatusCallback status)
 	{
 		super();
 		m_file = source.getFilename();
@@ -120,7 +119,7 @@ public class AstAssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(TokenFinderContext context, String file, String code, Set<TokenFinderFactory> finders, boolean quiet)
+	protected void processFile(TokenFinderContext context, String file, String code, Set<AstAssertionFinderFactory> finders, boolean quiet)
 	{
 		try
 		{
@@ -134,9 +133,9 @@ public class AstAssertionFinderRunnable implements Runnable
 			for (MethodDeclaration m : methods)
 			{
 				PushPopVisitableNode pm = new PushPopVisitableNode(m);
-				for (TokenFinderFactory factory : finders)
+				for (AstAssertionFinderFactory factory : finders)
 				{
-					TokenFinder new_f = factory.newFinder();
+					AstAssertionFinder new_f = factory.newFinder();
 					new_f.setFilename(file);
 					new_f.setContext(context);
 					pm.accept(new_f);

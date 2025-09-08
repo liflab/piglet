@@ -21,7 +21,6 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
@@ -77,7 +76,7 @@ public class EqualityWithMessageFinder extends AstAssertionFinder
 		return rr.value.orElse(null).describe().compareTo("java.lang.String") == 0;
 	}
 
-	public static class EqualityWithMessageFinderFactory extends TokenFinderFactory
+	public static class EqualityWithMessageFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public EqualityWithMessageFinder newFinder()

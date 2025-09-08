@@ -24,7 +24,6 @@ import com.github.javaparser.ast.stmt.WhileStmt;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * Finds assertions nested inside a for, while or do block.
@@ -111,7 +110,7 @@ public class IteratedAssertionFinder extends AstAssertionFinder
 		}	
 	}
 	
-	public static class IteratedAssertionFinderFactory extends TokenFinderFactory
+	public static class IteratedAssertionFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public IteratedAssertionFinder newFinder()

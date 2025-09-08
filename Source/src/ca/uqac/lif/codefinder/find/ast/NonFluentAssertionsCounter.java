@@ -20,7 +20,6 @@ package ca.uqac.lif.codefinder.find.ast;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * Counts non-fluent assertions (that is, assertions not using
@@ -70,7 +69,7 @@ public class NonFluentAssertionsCounter extends AssertionCounter
 				* name.compareTo("assertFalse") == 0;
 	}
 	
-	public static class NonFluentAssertionsCounterFactory extends TokenFinderFactory
+	public static class NonFluentAssertionsCounterFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public NonFluentAssertionsCounter newFinder()

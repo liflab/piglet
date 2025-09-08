@@ -23,7 +23,6 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveReason;
@@ -111,7 +110,7 @@ public class OptionalAssertionFinder extends TypeAwareAssertionFinder
 		return TypeChecks.isOptionalType(type1);
 	}	
 	
-	public static class OptionalAssertionFinderFactory extends TokenFinderFactory
+	public static class OptionalAssertionFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public OptionalAssertionFinder newFinder()

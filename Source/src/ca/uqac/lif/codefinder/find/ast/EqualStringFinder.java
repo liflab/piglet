@@ -21,7 +21,6 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.ast.EqualNonPrimitiveFinder.UnresolvedException;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveReason;
@@ -92,7 +91,7 @@ public class EqualStringFinder extends AstAssertionFinder
 		return false;
 	}
 	
-	public static class EqualStringFinderFactory extends TokenFinderFactory
+	public static class EqualStringFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public EqualStringFinder newFinder()

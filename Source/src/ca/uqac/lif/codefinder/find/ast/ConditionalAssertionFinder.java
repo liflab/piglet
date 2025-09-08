@@ -22,7 +22,6 @@ import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.SwitchStmt;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 
 /**
@@ -90,7 +89,7 @@ public class ConditionalAssertionFinder extends AstAssertionFinder
 		return true;
 	}
 	
-	public static class ConditionalAssertionFinderFactory extends TokenFinderFactory
+	public static class ConditionalAssertionFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public ConditionalAssertionFinder newFinder()

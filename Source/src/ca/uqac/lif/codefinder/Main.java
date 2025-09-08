@@ -33,6 +33,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
@@ -42,7 +44,8 @@ import bsh.EvalError;
 import bsh.Interpreter;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
+import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
+import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinderRunnable;
 import ca.uqac.lif.codefinder.find.ast.CompoundAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.ConditionalAssertionFinder;
@@ -53,6 +56,7 @@ import ca.uqac.lif.codefinder.find.ast.EqualityWithMessageFinder;
 import ca.uqac.lif.codefinder.find.ast.IteratedAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.NonFluentAssertionsCounter;
 import ca.uqac.lif.codefinder.find.ast.OptionalAssertionFinder;
+import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinder.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
@@ -138,8 +142,14 @@ public class Main
 	/** Thread-local context (parser, type solver, etc.) */
 	public static ThreadLocal<TokenFinderContext> CTX;
 
-	/** The set of assertion finders to use */
-	public static final Set<TokenFinderFactory> s_finders = new HashSet<>();
+	/** The set of assertion finders working on the AST */
+	public static final Set<AstAssertionFinderFactory> s_astFinders = new HashSet<>();
+
+	/** The set of assertion finders working through SPARQL queries */
+	public static final Set<SparqlTokenFinderFactory> s_sparqlFinders = new HashSet<>();
+	
+	/** Pattern to extract the name of an assertion from a comment */
+	protected static final Pattern s_namePat = Pattern.compile("/\\*\\s*name:(.*?)\\*/");
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -230,18 +240,18 @@ public class Main
 			}
 		});
 
-		// Instantiate assertion finders
-		if (s_finders.isEmpty())
+		// Instantiate default assertion finders
+		if (s_astFinders.isEmpty())
 		{
-			s_finders.add(new NonFluentAssertionsCounter.NonFluentAssertionsCounterFactory());
-			s_finders.add(new CompoundAssertionFinder.CompoundAssertionFinderFactory());
-			s_finders.add(new ConditionalAssertionFinder.ConditionalAssertionFinderFactory());
-			s_finders.add(new EqualAssertionFinder.EqualAssertionFinderFactory());
-			s_finders.add(new IteratedAssertionFinder.IteratedAssertionFinderFactory());
-			s_finders.add(new EqualNonPrimitiveFinder.EqualNonPrimitiveFinderFactory());
-			s_finders.add(new EqualStringFinder.EqualStringFinderFactory());
-			s_finders.add(new EqualityWithMessageFinder.EqualityWithMessageFinderFactory());
-			s_finders.add(new OptionalAssertionFinder.OptionalAssertionFinderFactory());
+			s_astFinders.add(new NonFluentAssertionsCounter.NonFluentAssertionsCounterFactory());
+			s_astFinders.add(new CompoundAssertionFinder.CompoundAssertionFinderFactory());
+			s_astFinders.add(new ConditionalAssertionFinder.ConditionalAssertionFinderFactory());
+			s_astFinders.add(new EqualAssertionFinder.EqualAssertionFinderFactory());
+			s_astFinders.add(new IteratedAssertionFinder.IteratedAssertionFinderFactory());
+			s_astFinders.add(new EqualNonPrimitiveFinder.EqualNonPrimitiveFinderFactory());
+			s_astFinders.add(new EqualStringFinder.EqualStringFinderFactory());
+			s_astFinders.add(new EqualityWithMessageFinder.EqualityWithMessageFinderFactory());
+			s_astFinders.add(new OptionalAssertionFinder.OptionalAssertionFinderFactory());
 		}
 
 		// Read file(s)
@@ -261,7 +271,7 @@ public class Main
 		status_thread.start();
 		try
 		{
-			processBatch(executor, fsp, s_finders, found, s_quiet, status, s_limit);
+			processBatch(executor, fsp, s_astFinders, found, s_quiet, status, s_limit);
 		}
 		catch (IOException e)
 		{
@@ -348,21 +358,9 @@ public class Main
 			s_stdout.println("Reading BeanShell script from " + bsh_file);
 			try
 			{
-				String bsh_code = readBeanshell(bsh_file);
-				Interpreter interpreter = new Interpreter();
-				// Use the same loader that sees your app’s classes
-				ClassLoader appCl = Main.class.getClassLoader();
-				interpreter.setClassLoader(appCl);
-				Thread.currentThread().setContextClassLoader(appCl);
-				interpreter.eval("import ca.uqac.lif.codefinder.find.ast.*");
-				interpreter.set("filename", "bar");
-				Object o = interpreter.eval(bsh_code);
-				if (o == null || !(o instanceof TokenFinderFactory))
-				{
-					s_stderr.println("BeanShell script did not return a TokenFinderFactory");
-					return RET_BSH;
-				}
-				s_finders.add((TokenFinderFactory) o);
+				AstAssertionFinderFactory factory = readBeanshell(bsh_file);
+
+				s_astFinders.add(factory);
 			}
 			catch (FileSystemException e)
 			{
@@ -474,12 +472,35 @@ public class Main
 		}
 	}
 
-	protected static String readBeanshell(String filename) throws FileSystemException
+	protected static AstAssertionFinderFactory readBeanshell(String filename) throws FileSystemException, EvalError
 	{
 		FilePath bsh_path = s_homePath.chdir(getPathOfFile(filename));
 		HardDisk hd = new HardDisk(bsh_path.toString()).open();
 		String bsh_code = FileUtils.readStringFrom(hd, getFilename(filename));
-		return bsh_code;
+		Interpreter interpreter = new Interpreter();
+		// Use the same loader that sees your app’s classes
+		ClassLoader appCl = Main.class.getClassLoader();
+		interpreter.setClassLoader(appCl);
+		Thread.currentThread().setContextClassLoader(appCl);
+		StringBuilder code = new StringBuilder();
+		Matcher mat = s_namePat.matcher(bsh_code);
+		String name = "Unnamed finder";
+		if (mat.find())
+		{
+			name = mat.group(1).trim();
+		}
+		String head = new String(FileUtils.toBytes(AstAssertionFinder.class.getResourceAsStream("top.bsh")));
+		head = head.replace("$NAME$", name);
+		code.append(head);
+		code.append(bsh_code);
+
+		code.append(new String(FileUtils.toBytes(AstAssertionFinder.class.getResourceAsStream("bottom.bsh"))));
+		Object o = interpreter.eval(code.toString());
+		if (o == null || !(o instanceof AstAssertionFinderFactory))
+		{
+			return null;
+		}
+		return (AstAssertionFinderFactory) o;
 	}
 
 	/**
@@ -537,7 +558,7 @@ public class Main
 	}
 
 	protected static void processBatch(ExecutorService e, FileProvider provider,
-			Set<TokenFinderFactory> finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
+			Set<AstAssertionFinderFactory> ast_finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
 			int limit) throws IOException, FileSystemException
 	{
 		int count = 0;
@@ -547,10 +568,7 @@ public class Main
 		{
 			count++;
 			FileSource f_source = provider.next();
-			//InputStream stream = fs.getStream();
-			//String code = new String(FileUtils.toBytes(stream));
-			//stream.close();
-			AstAssertionFinderRunnable r = new AstAssertionFinderRunnable(f_source, finders,
+			AstAssertionFinderRunnable r = new AstAssertionFinderRunnable(f_source, ast_finders,
 					quiet, status);
 			tasks.add(r);
 			futures.add(e.submit(r));

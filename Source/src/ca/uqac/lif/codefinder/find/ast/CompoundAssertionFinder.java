@@ -24,7 +24,6 @@ import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * Finds assertions containing Boolean connectives.
@@ -116,7 +115,7 @@ public class CompoundAssertionFinder extends AstAssertionFinder
 
 	}
 	
-	public static class CompoundAssertionFinderFactory extends TokenFinderFactory
+	public static class CompoundAssertionFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public CompoundAssertionFinder newFinder()

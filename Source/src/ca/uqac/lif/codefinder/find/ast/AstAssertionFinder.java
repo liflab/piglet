@@ -25,6 +25,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * An abstract base class for finders that look for assertions in Java code.
@@ -151,5 +152,11 @@ public abstract class AstAssertionFinder extends AstTokenFinder
 	public Set<Throwable> getErrors()
 	{
 		return m_errors;
+	}
+	
+	public static abstract class AstAssertionFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public abstract AstAssertionFinder newFinder();
 	}
 }

@@ -25,7 +25,6 @@ import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.util.TypeChecks;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
@@ -228,7 +227,7 @@ public class EqualNonPrimitiveFinder extends AstAssertionFinder
 		}
 	}
 
-	public static class EqualNonPrimitiveFinderFactory extends TokenFinderFactory
+	public static class EqualNonPrimitiveFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public EqualNonPrimitiveFinder newFinder()

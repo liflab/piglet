@@ -8,6 +8,7 @@ import org.apache.jena.rdf.model.Model;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinder;
 
 /**
@@ -88,4 +89,11 @@ public class SparqlTokenFinder implements TokenFinder
 	{
 		m_filename = filename;
 	}
+	
+	public static abstract class SparqlTokenFinderFactory extends TokenFinderFactory
+	{
+		@Override
+		public abstract SparqlTokenFinder newFinder();
+	}
+	
 }

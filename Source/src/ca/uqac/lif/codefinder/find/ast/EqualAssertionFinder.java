@@ -20,7 +20,6 @@ package ca.uqac.lif.codefinder.find.ast;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 
 /**
@@ -79,7 +78,7 @@ public class EqualAssertionFinder extends AstAssertionFinder
 		return me.getName().asString().compareTo("equals") == 0;
 	}
 
-	public static class EqualAssertionFinderFactory extends TokenFinderFactory
+	public static class EqualAssertionFinderFactory extends AstAssertionFinderFactory
 	{
 		@Override
 		public EqualAssertionFinder newFinder()
