@@ -38,6 +38,8 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
+import bsh.EvalError;
+import bsh.Interpreter;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinderRunnable;
@@ -62,6 +64,7 @@ import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
+import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.util.CliParser;
 import ca.uqac.lif.util.CliParser.Argument;
@@ -84,6 +87,9 @@ public class Main
 
 	/** Return code indicating an I/O error */
 	public static final int RET_IO = 2;
+
+	/** Return code indicating a BeanShell error */
+	public static final int RET_BSH = 3;
 
 	/** Standard output */
 	protected static final AnsiPrinter s_stdout = new AnsiPrinter(System.out);
@@ -125,12 +131,15 @@ public class Main
 
 	/** Limit to the number of files to process (for testing purposes) */
 	protected static int s_limit = -1;
-	
+
 	/** Timeout for type resolution operations (in milliseconds) */
 	protected static long s_resolutionTimeout = 100;
 
 	/** Thread-local context (parser, type solver, etc.) */
 	public static ThreadLocal<ThreadContext> CTX;
+
+	/** The set of assertion finders to use */
+	public static final Set<AstAssertionFinder> s_finders = new HashSet<AstAssertionFinder>();
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -173,7 +182,7 @@ public class Main
 		/* Setup command line options */
 		CliParser cli = setupCli();
 		s_map = cli.parse(args);
-		int ret = processCommandLine(cli);
+		int ret = processCli(cli);
 		if (ret != RET_NOTHING)
 		{
 			return ret;
@@ -203,45 +212,47 @@ public class Main
 
 		CTX = ThreadLocal.withInitial(() -> {
 			try {
-		    CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
-		    
-		    // Wire parser to THIS thread’s solver
-		    ParserConfiguration threadPc = new ParserConfiguration()
-		        .setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
-		        .setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));
+				CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
 
-		    return new ThreadContext(
-		        ts,
-		        new JavaParser(threadPc),
-		        com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
-		        s_resolutionTimeout
-		    );
-		  } catch (Exception e) {
-		    throw new RuntimeException("Failed to init per-thread context", e);
-		  }
+				// Wire parser to THIS thread’s solver
+				ParserConfiguration threadPc = new ParserConfiguration()
+						.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
+						.setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));
+
+				return new ThreadContext(
+						ts,
+						new JavaParser(threadPc),
+						com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
+						s_resolutionTimeout
+						);
+			} catch (Exception e) {
+				throw new RuntimeException("Failed to init per-thread context", e);
+			}
 		});
 
 		// Instantiate assertion finders
-		Set<AstAssertionFinder> finders = new HashSet<AstAssertionFinder>();
-		finders.add(new NonFluentAssertionsCounter(null));
-		finders.add(new CompoundAssertionFinder(null));
-		finders.add(new ConditionalAssertionFinder(null));
-		finders.add(new EqualAssertionFinder(null));
-		finders.add(new IteratedAssertionFinder(null));
-		finders.add(new EqualNonPrimitiveFinder(null));
-		finders.add(new EqualStringFinder(null));
-		finders.add(new EqualityWithMessageFinder(null));
-		finders.add(new OptionalAssertionFinder(null));
+		if (s_finders.isEmpty())
+		{
+			s_finders.add(new NonFluentAssertionsCounter(null));
+			s_finders.add(new CompoundAssertionFinder(null));
+			s_finders.add(new ConditionalAssertionFinder(null));
+			s_finders.add(new EqualAssertionFinder(null));
+			s_finders.add(new IteratedAssertionFinder(null));
+			s_finders.add(new EqualNonPrimitiveFinder(null));
+			s_finders.add(new EqualStringFinder(null));
+			s_finders.add(new EqualityWithMessageFinder(null));
+			s_finders.add(new OptionalAssertionFinder(null));
+		}
 
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? s_limit : total));
 		Thread status_thread = new Thread(status);
 		AtomicInteger THREAD_ID = new AtomicInteger(1);
 		ThreadFactory tf = r -> {
-		  Thread t = new Thread(r);
-		  t.setName("anl-" + THREAD_ID.incrementAndGet());
-		  t.setDaemon(false);
-		  return t;
+			Thread t = new Thread(r);
+			t.setName("anl-" + THREAD_ID.incrementAndGet());
+			t.setDaemon(false);
+			return t;
 		};
 		ExecutorService executor = Executors.newFixedThreadPool(s_threads, tf);
 		long start_time = System.currentTimeMillis();
@@ -250,7 +261,7 @@ public class Main
 		status_thread.start();
 		try
 		{
-			processBatch(executor, fsp, finders, found, s_quiet, status, s_limit);
+			processBatch(executor, fsp, s_finders, found, s_quiet, status, s_limit);
 		}
 		catch (IOException e)
 		{
@@ -319,7 +330,7 @@ public class Main
 	 *          The command line parser
 	 * @return A return code if the program should exit, or -1 to continue
 	 */
-	protected static int processCommandLine(CliParser cli)
+	protected static int processCli(CliParser cli)
 	{
 		ArgumentMap map = s_map;
 		int ret = -1;
@@ -329,6 +340,33 @@ public class Main
 			if (ret != RET_NOTHING)
 			{
 				return ret;
+			}
+		}
+		if (map.containsKey("bsh"))
+		{
+			String bsh_file = map.getOptionValue("bsh");
+			s_stdout.println("Reading BeanShell script from " + bsh_file);
+			Interpreter interpreter = new Interpreter();
+			try
+			{
+				String bsh_code = readBeanshell(bsh_file);
+				Object o = interpreter.eval(bsh_code);
+				if (o == null || !(o instanceof AstAssertionFinder))
+				{
+					s_stderr.println("BeanShell script did not return an AstAssertionFinder");
+					return RET_BSH;
+				}
+				s_finders.add((AstAssertionFinder) o);
+			}
+			catch (FileSystemException e)
+			{
+				s_stderr.println("File system error while reading BeanShell script");
+				return RET_FS;
+			}
+			catch (EvalError e)
+			{
+				s_stderr.println("Error while evaluating BeanShell script: " + e.getMessage());
+				return RET_BSH;
 			}
 		}
 		if (map.containsKey("resolution-timeout"))
@@ -422,12 +460,21 @@ public class Main
 			String[] args = contents.toString().split(" ");
 			CliParser parser = setupCli();
 			s_map = parser.parse(args);
-			return processCommandLine(parser);
+			return processCli(parser);
 		}
 		catch (FileSystemException e)
 		{
 			return RET_FS;
 		}
+	}
+
+	protected static String readBeanshell(String filename) throws FileSystemException
+	{
+		FilePath bsh_path = s_homePath.chdir(getPathOfFile(filename));
+		FilePath reverse_path = bsh_path.chdir(getPathOfFile(filename));
+		HardDisk hd = new HardDisk(reverse_path.toString()).open();
+		String bsh_code = FileUtils.readStringFrom(hd, getFilename(filename));
+		return bsh_code;
 	}
 
 	/**
@@ -466,6 +513,8 @@ public class Main
 				.withDescription("Sample code snippets with probability p"));
 		cli.addArgument(new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
 				.withDescription("Set timeout for type resolution operations (in ms, default: 100)"));
+		cli.addArgument(new Argument().withShortName("b").withLongName("bsh").withArgument("file")
+				.withDescription("Read visitor from BeanShell script file"));
 		return cli;
 	}
 
@@ -639,7 +688,7 @@ public class Main
 			}
 		}
 	}
-	
+
 	/**
 	 * Formats a duration in milliseconds into a human-readable string.
 	 * @param duration The duration in milliseconds
@@ -662,7 +711,7 @@ public class Main
 			return minutes + " min " + seconds + " s";
 		}
 	}
-	
+
 	/**
 	 * Formats a duration in milliseconds into a string of the form HH:MM:SS.
 	 * @param duration The duration in milliseconds

@@ -1,19 +1,13 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashSet;
 
 import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
 
 import com.github.javaparser.JavaParser;
@@ -30,7 +24,7 @@ public class JenaTest
 {
 	protected static final String NS = "http://liflab.uqac.ca/";
 
-	private static String prefixes = StrUtils.strjoinNL
+	public static final String prefixes = StrUtils.strjoinNL
 			("PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
 					"PREFIX lif:  <http://liflab.uqac.ca/>",
 					""

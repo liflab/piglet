@@ -25,12 +25,17 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
+
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.thread.ThreadContext;
 import ca.uqac.lif.codefinder.util.StatusCallback;
@@ -60,6 +65,9 @@ public class SparqlAssertionFinderRunnable implements Runnable
 	/** A callback to report status */
 	protected final StatusCallback m_callback;
 	
+	/** The SPARQL query to execute */
+	protected final String m_query;
+	
 	/**
 	 * Creates a new runnable.
 	 * @param context The thread context
@@ -69,7 +77,7 @@ public class SparqlAssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinder> finders, boolean quiet, StatusCallback status)
+	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinder> finders, boolean quiet, StatusCallback status, String query)
 	{
 		super();
 		m_file = source.getFilename();
@@ -78,6 +86,7 @@ public class SparqlAssertionFinderRunnable implements Runnable
 		m_quiet = quiet;
 		m_callback = status;
 		m_found = new HashSet<FoundToken>();
+		m_query = query;
 	}
 	
 	@Override
@@ -118,27 +127,23 @@ public class SparqlAssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(ThreadContext context, String file, String code, Set<AstAssertionFinder> finders, boolean quiet)
+	protected void processFile(ThreadContext context, String file, String code, Set<SparqlTokenFinder> finders, boolean quiet)
 	{
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
-			List<MethodDeclaration> methods = getTestCases(u);
-			/*if (methods.isEmpty() && !quiet)
-			{
-				// No test cases in this file
-				System.err.println("WARNING: No test cases found in " + file);
-			}*/
-			for (MethodDeclaration m : methods)
-			{
-				PushPopVisitableNode pm = new PushPopVisitableNode(m);
-				for (AstAssertionFinder f : finders)
-				{
-					AstAssertionFinder new_f = f.newFinder(file, context);
-					pm.accept(new_f);
-					m_found.addAll(new_f.getFoundTokens());
-				}
-			}
+			PushPopVisitableNode pm = new PushPopVisitableNode(u);
+			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm);	    
+			JavaAstNodeIndex globalAstIndex = r.getIndex();
+			
+			// Register property function
+			PropertyFunctionRegistry.get()
+		  .put("lif" + "resolvedType",
+		       (uri) -> new ResolveType(globalAstIndex));
+			
+			ResultSet resultSet1 = QueryExecution.model(r.getModel())
+					.query(JenaTest.prefixes + m_query).select();
+			// TODO: parse result
 		}
 		catch (NoSuchElementException e)
 		{
