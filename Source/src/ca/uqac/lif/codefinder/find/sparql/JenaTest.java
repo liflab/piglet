@@ -1,5 +1,6 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashSet;
 
 import org.apache.jena.atlas.lib.StrUtils;
@@ -8,6 +9,8 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
 
 import com.github.javaparser.JavaParser;
@@ -68,7 +71,14 @@ public class JenaTest
 		
 		TokenFinderContext ctx = CTX.get();
 		
-    ParseResult<CompilationUnit> cu = ctx.getParser().parse("class A { void f() { g(3); assertTrue(x); } }");
+    ParseResult<CompilationUnit> cu = ctx.getParser().parse("class MyClass {\n"
+    		+ "  @Test\n"
+    		+ "  public void test1() {\n"
+    		+ "    C c = Factory.get();\n"
+    		+ "    if (obj != null)\n"
+    		+ "      assertEquals(\"foo\", obj.x);\n"
+    		+ "  }\n"
+    		+ "}");
     if (!cu.isSuccessful())
 		{
 			System.out.println("Parse error");
@@ -85,9 +95,9 @@ public class JenaTest
 	  .put(NS + "resolvedType",
 	       (uri) -> new ResolveType(globalAstIndex));
 		
-		/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		RDFDataMgr.write(baos, r.getModel(), Lang.RDFXML);
-		System.out.println(baos.toString());*/
+		System.out.println(baos.toString());
 
 		ResultSet resultSet1 = QueryExecution.model(r.getModel())
 				.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();

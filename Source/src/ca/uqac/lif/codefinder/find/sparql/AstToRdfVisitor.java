@@ -128,6 +128,14 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	public static final Property VALUE = ResourceFactory.createProperty(ModelBuilder.NS, "value");
 
 	public static final Property RETURNS = ResourceFactory.createProperty(ModelBuilder.NS, "returns");
+	
+	public static final Property ANNOTATIONS = ResourceFactory.createProperty(ModelBuilder.NS, "annotations");
+	
+	public static final Property MODIFIERS = ResourceFactory.createProperty(ModelBuilder.NS, "modifiers");
+	
+	public static final Property VARIABLES = ResourceFactory.createProperty(ModelBuilder.NS, "variables");
+	
+	public static final Property TYPE = ResourceFactory.createProperty(ModelBuilder.NS, "type");
 
 	/** An index of AST nodes to RDF resources */
 	protected final JavaAstNodeIndex m_index;
