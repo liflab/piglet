@@ -20,14 +20,9 @@ package ca.uqac.lif.codefinder.find.sparql;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -37,7 +32,9 @@ import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
+import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinder.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
+import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -45,28 +42,10 @@ import ca.uqac.lif.fs.FileUtils;
 /**
  * A runnable that processes a single Java file to find assertions.
  */
-public class SparqlAssertionFinderRunnable implements Runnable
-{
-	/** The file name */
-	protected final String m_file;
-	
-	/** The file source from which to read */
-	protected final FileSource m_fSource;
-	
+public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
+{	
 	/** The set of finders to use */
-	protected final Set<SparqlTokenFinder> m_finders;
-	
-	/** The set of found tokens */
-	protected final Set<FoundToken> m_found;
-	
-	/** Whether to suppress warnings */
-	protected final boolean m_quiet;
-	
-	/** A callback to report status */
-	protected final StatusCallback m_callback;
-	
-	/** The SPARQL query to execute */
-	protected final String m_query;
+	protected final Set<SparqlTokenFinderFactory> m_finders;
 	
 	/**
 	 * Creates a new runnable.
@@ -77,16 +56,10 @@ public class SparqlAssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinder> finders, boolean quiet, StatusCallback status, String query)
+	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinderFactory> finders, boolean quiet, StatusCallback status)
 	{
-		super();
-		m_file = source.getFilename();
-		m_fSource = source;
+		super(source.getFilename(), source, quiet, status);
 		m_finders = finders;
-		m_quiet = quiet;
-		m_callback = status;
-		m_found = new HashSet<FoundToken>();
-		m_query = query;
 	}
 	
 	@Override
@@ -127,7 +100,7 @@ public class SparqlAssertionFinderRunnable implements Runnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(TokenFinderContext context, String file, String code, Set<SparqlTokenFinder> finders, boolean quiet)
+	protected void processFile(TokenFinderContext context, String file, String code, Set<SparqlTokenFinderFactory> finders, boolean quiet)
 	{
 		try
 		{
@@ -135,15 +108,16 @@ public class SparqlAssertionFinderRunnable implements Runnable
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
 			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm);	    
 			JavaAstNodeIndex globalAstIndex = r.getIndex();
-			
-			// Register property function
-			PropertyFunctionRegistry.get()
-		  .put("lif" + "resolvedType",
-		       (uri) -> new ResolveType(globalAstIndex));
-			
-			ResultSet resultSet1 = QueryExecution.model(r.getModel())
-					.query(JenaTest.prefixes + m_query).select();
-			// TODO: parse result
+			for (SparqlTokenFinderFactory fac : finders)
+			{
+				SparqlTokenFinder f = fac.newFinder();
+				f.setModel(r.getModel());
+				f.setIndex(globalAstIndex);
+				f.setFilename(file);
+				f.setContext(context);
+				f.process();
+				m_found.addAll(f.getFoundTokens());
+			}
 		}
 		catch (NoSuchElementException e)
 		{

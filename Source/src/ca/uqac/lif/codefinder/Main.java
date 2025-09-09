@@ -17,6 +17,9 @@
  */
 package ca.uqac.lif.codefinder;
 
+import static ca.uqac.lif.codefinder.util.Paths.getFilename;
+import static ca.uqac.lif.codefinder.util.Paths.getPathOfFile;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -47,6 +50,7 @@ import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinderRunnable;
+import ca.uqac.lif.codefinder.find.sparql.SparqlAssertionFinderRunnable;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinder.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
@@ -54,10 +58,12 @@ import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
+import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FilePath;
+import ca.uqac.lif.fs.FileSystem;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
@@ -262,7 +268,7 @@ public class Main
 		status_thread.start();
 		try
 		{
-			processBatch(executor, fsp, s_astFinders, found, s_quiet, status, s_limit);
+			processBatch(executor, fsp, s_astFinders, s_sparqlFinders, found, s_quiet, status, s_limit);
 		}
 		catch (IOException e)
 		{
@@ -343,40 +349,81 @@ public class Main
 				return ret;
 			}
 		}
-		if (map.containsKey("bsh"))
+		if (map.containsKey("query"))
 		{
-			String bsh_file = map.getOptionValue("bsh");
+			String bsh_file = map.getOptionValue("query");
 			try
 			{
 				HardDisk hd = new HardDisk(s_homePath.toString()).open();
 				if (hd.isDirectory(bsh_file))
 				{
-					s_stdout.println("Reading BeanShell scripts from folder " + bsh_file);
-					hd.chdir(bsh_file);
-					List<String> files = FileUtils.ls(hd, "", "^.*bsh$");
-					for (String f : files)
+					s_stdout.println("Reading queries from folder " + bsh_file);
+					hd.pushd(bsh_file);
 					{
-						try
+						// First the BeanShell scripts
+						List<String> files = FileUtils.ls(hd, "", "^.*bsh$");
+						for (String f : files)
 						{
-							AstAssertionFinderFactory factory = readBeanshell(bsh_file + "/" + f);
-							s_astFinders.add(factory);
-						}
-						catch (FileSystemException e)
-						{
-							s_stderr.println("File system error while reading BeanShell script");
-							return RET_FS;
-						}
-						catch (EvalError e)
-						{
-							s_stderr.println("Error while evaluating BeanShell script: " + e.getMessage());
-							return RET_BSH;
+							try
+							{
+								AstAssertionFinderFactory factory = readBeanshell(hd, bsh_file + "/" + f);
+								s_astFinders.add(factory);
+							}
+							catch (FileSystemException e)
+							{
+								s_stderr.println("File system error while reading BeanShell script");
+								return RET_FS;
+							}
+							catch (EvalError e)
+							{
+								s_stderr.println("Error while evaluating BeanShell script: " + e.getMessage());
+								return RET_BSH;
+							}
 						}
 					}
+					{
+						// Then the SPARQL scripts
+						List<String> files = FileUtils.ls(hd, "", "^.*sparql$");
+						for (String f : files)
+						{
+							try
+							{
+								SparqlTokenFinderFactory factory = readSparql(hd, bsh_file + "/" + f);
+								s_sparqlFinders.add(factory);
+							}
+							catch (FileSystemException e)
+							{
+								s_stderr.println("File system error while reading SPARQL script");
+								return RET_FS;
+							}
+							catch (IOException e)
+							{
+								s_stderr.println("I/O error while reading SPARQL script: " + e.getMessage());
+								return RET_IO;
+							}
+						}
+					}
+					hd.popd();
 				}
 				else
 				{
-						AstAssertionFinderFactory factory = readBeanshell(bsh_file);
+					if (bsh_file.endsWith(".sparql"))
+					{
+						s_stdout.println("Reading SPARQL query from file " + bsh_file);
+						hd.pushd(getPathOfFile(bsh_file).toString());
+						SparqlTokenFinderFactory factory = readSparql(hd, bsh_file);
+						hd.popd();
+						s_sparqlFinders.add(factory);
+						return RET_NOTHING;
+					}
+					else if (bsh_file.endsWith(".bsh"))
+					{
+						s_stdout.println("Reading BeanShell script from file " + bsh_file);
+						hd.pushd(getPathOfFile(bsh_file).toString());
+						AstAssertionFinderFactory factory = readBeanshell(hd, bsh_file);
+						hd.popd();
 						s_astFinders.add(factory);
+					}					
 				}
 			}
 			catch (FileSystemException e)
@@ -388,6 +435,11 @@ public class Main
 			{
 				s_stderr.println("Error while evaluating BeanShell script: " + e.getMessage());
 				return RET_BSH;
+			}
+			catch (IOException e)
+			{
+				s_stderr.println("I/O error while reading SPARQL script: " + e.getMessage());
+				return RET_IO;
 			}
 		}
 		if (map.containsKey("resolution-timeout"))
@@ -489,11 +541,42 @@ public class Main
 		}
 	}
 
-	protected static AstAssertionFinderFactory readBeanshell(String filename) throws FileSystemException, EvalError
+	protected static SparqlTokenFinderFactory readSparql(FileSystem hd, String filename) throws FileSystemException, IOException
 	{
-		FilePath bsh_path = s_homePath.chdir(getPathOfFile(filename));
-		HardDisk hd = new HardDisk(bsh_path.toString()).open();
+		//hd.pushd(getPathOfFile(filename).toString());
+		StringBuilder sparql_code = new StringBuilder();
+		String name = null;
+		Scanner scanner = new Scanner(hd.readFrom(getFilename(filename)));
+		while (scanner.hasNextLine())
+		{
+			String line = scanner.nextLine().trim();
+			if (line.isEmpty())
+				continue;
+			if (line.startsWith("#"))
+			{
+				if (name == null)
+				{
+					Matcher mat = s_namePat.matcher(line);
+					if (mat.find())
+					{
+						name = mat.group(1).trim();
+					}
+				}
+				continue;
+			}
+			sparql_code.append(line).append("\n");
+		}
+		scanner.close();
+		hd.popd();
+		return new SparqlTokenFinderFactory(name == null ? "Unnamed SPARQL finder" : name, sparql_code.toString());
+	}
+
+	protected static AstAssertionFinderFactory readBeanshell(HardDisk hd, String filename) throws FileSystemException, EvalError
+	{
+		//FilePath bsh_path = s_homePath.chdir(getPathOfFile(filename));
+		//hd.pushd(getPathOfFile(filename).toString());
 		String bsh_code = FileUtils.readStringFrom(hd, getFilename(filename));
+		//hd.popd();
 		bsh_code.replaceAll("^\\s*void visit\\(", "public void visit(");
 		bsh_code.replaceAll("^\\s*void leave\\(", "public void leave(");
 		Interpreter interpreter = new Interpreter();
@@ -503,7 +586,7 @@ public class Main
 		Thread.currentThread().setContextClassLoader(appCl);
 		StringBuilder code = new StringBuilder();
 		Matcher mat = s_namePat.matcher(bsh_code);
-		String name = "Unnamed finder";
+		String name = "Unnamed AST finder";
 		if (mat.find())
 		{
 			name = mat.group(1).trim();
@@ -558,8 +641,8 @@ public class Main
 				.withDescription("Sample code snippets with probability p"));
 		cli.addArgument(new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
 				.withDescription("Set timeout for type resolution operations (in ms, default: 100)"));
-		cli.addArgument(new Argument().withShortName("b").withLongName("bsh").withArgument("file")
-				.withDescription("Read visitor from BeanShell script file"));
+		cli.addArgument(new Argument().withShortName("y").withLongName("query").withArgument("x")
+				.withDescription("Read queries from x (file or folder)"));
 		return cli;
 	}
 
@@ -577,24 +660,30 @@ public class Main
 	}
 
 	protected static void processBatch(ExecutorService e, FileProvider provider,
-			Set<AstAssertionFinderFactory> ast_finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
+			Set<AstAssertionFinderFactory> ast_finders, Set<SparqlTokenFinderFactory> sparql_finders, Set<FoundToken> found, boolean quiet, StatusCallback status,
 			int limit) throws IOException, FileSystemException
 	{
 		int count = 0;
-		Set<AstAssertionFinderRunnable> tasks = new HashSet<>();
+		Set<AssertionFinderRunnable> tasks = new HashSet<>();
 		List<Future<?>> futures = new ArrayList<>();
 		while (provider.hasNext() && (limit == -1 || count < limit))
 		{
 			count++;
 			FileSource f_source = provider.next();
-			AstAssertionFinderRunnable r = new AstAssertionFinderRunnable(f_source, ast_finders,
-					quiet, status);
-			tasks.add(r);
-			futures.add(e.submit(r));
+			{
+				AstAssertionFinderRunnable r = new AstAssertionFinderRunnable(f_source, ast_finders, quiet, status);
+				tasks.add(r);
+				futures.add(e.submit(r));
+			}
+			{
+				SparqlAssertionFinderRunnable r = new SparqlAssertionFinderRunnable(f_source, sparql_finders, quiet, status);
+				tasks.add(r);
+				futures.add(e.submit(r));
+			}
 		}
 		waitForEnd(futures);
 		e.shutdown(); // All tasks are finished, shutdown the executor
-		for (AstAssertionFinderRunnable r : tasks)
+		for (AssertionFinderRunnable r : tasks)
 		{
 			found.addAll(r.getFound());
 		}
@@ -648,55 +737,7 @@ public class Main
 		list.add(t);
 	}
 
-	public static FilePath getPathOfFile(String path)
-	{
-		int last_slash = path.lastIndexOf('/');
-		if (last_slash == -1)
-		{
-			last_slash = path.lastIndexOf('\\');
-		}
-		FilePath path_f = null;
-		if (last_slash != -1)
-		{
-			path_f = new FilePath(path.substring(0, last_slash));
-		}
-		else
-		{
-			path_f = new FilePath(".");
-		}
-		if (path_f.toString().isEmpty())
-		{
-			path_f = new FilePath(".");
-		}
-		return path_f;
-	}
 
-	public static String getFilename(String path)
-	{
-		int last_slash = path.lastIndexOf('/');
-		if (last_slash == -1)
-		{
-			last_slash = path.lastIndexOf('\\');
-		}
-		String name = null;
-		if (last_slash != -1)
-		{
-			name = path.substring(last_slash + 1);
-		}
-		else
-		{
-			name = path;
-		}
-		return name;
-	}
-
-	protected static String escape(String s)
-	{
-		s = s.replace("&", "&amp;");
-		s = s.replace("<", "&lt;");
-		s = s.replace(">", "&gt;");
-		return s;
-	}
 
 	protected static class EndRunnable implements Runnable
 	{

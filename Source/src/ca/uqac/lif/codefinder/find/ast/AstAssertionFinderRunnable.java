@@ -19,21 +19,18 @@ package ca.uqac.lif.codefinder.find.ast;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.Main;
-import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
+import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -41,26 +38,12 @@ import ca.uqac.lif.fs.FileUtils;
 /**
  * A runnable that processes a single Java file to find assertions.
  */
-public class AstAssertionFinderRunnable implements Runnable
+public class AstAssertionFinderRunnable extends AssertionFinderRunnable
 {
-	/** The file name */
-	protected final String m_file;
-	
-	/** The file source from which to read */
-	protected final FileSource m_fSource;
 	
 	/** The set of finders to use */
 	protected final Set<AstAssertionFinderFactory> m_finders;
-	
-	/** The set of found tokens */
-	protected final Set<FoundToken> m_found;
-	
-	/** Whether to suppress warnings */
-	protected final boolean m_quiet;
-	
-	/** A callback to report status */
-	protected final StatusCallback m_callback;
-	
+		
 	/**
 	 * Creates a new runnable.
 	 * @param context The thread context
@@ -72,13 +55,8 @@ public class AstAssertionFinderRunnable implements Runnable
 	 */
 	public AstAssertionFinderRunnable(FileSource source, Set<AstAssertionFinderFactory> finders, boolean quiet, StatusCallback status)
 	{
-		super();
-		m_file = source.getFilename();
-		m_fSource = source;
+		super(source.getFilename(), source, quiet, status);
 		m_finders = finders;
-		m_quiet = quiet;
-		m_callback = status;
-		m_found = new HashSet<FoundToken>();
 	}
 	
 	@Override
@@ -151,46 +129,5 @@ public class AstAssertionFinderRunnable implements Runnable
 				System.err.println("Could not parse " + file);
 			}
 		}
-	}
-	
-	public Set<FoundToken> getFound()
-	{
-		return m_found;
-	}
-	
-	/**
-	 * Gets the list of test cases in a compilation unit.
-	 * @param u The compilation unit
-	 * @return The list of test cases
-	 */
-	protected static List<MethodDeclaration> getTestCases(CompilationUnit u)
-	{
-		List<MethodDeclaration> list = new ArrayList<MethodDeclaration>();
-		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
-		for (MethodDeclaration m : methods)
-		{
-			if (isTest(m))
-			{
-				list.add(m);
-			}
-		}
-		return list;
-	}
-
-	/**
-	 * Determines whether a method is a test case.
-	 * @param m The method
-	 * @return <tt>true</tt> if the method is a test case, <tt>false</tt> otherwise
-	 */
-	protected static boolean isTest(MethodDeclaration m)
-	{
-		for (AnnotationExpr a : m.getAnnotations())
-		{
-			if (a.getName().asString().compareTo("Test") == 0)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 }

@@ -71,10 +71,11 @@ public class FileSource
 	 */
 	public InputStream getStream() throws FileSystemException
 	{
-		if (m_stream == null)
+		/*if (m_stream == null)
 		{
 			m_stream = m_fileSystem.readFrom(m_name);
-		}
-		return m_stream;
+		}*/
+		return m_fileSystem.readFrom(m_name);
+		//return m_stream;
 	}
 }

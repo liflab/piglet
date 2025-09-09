@@ -28,8 +28,8 @@ import java.util.Set;
 import org.codelibs.jhighlight.renderer.Renderer;
 import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
 
-import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.util.Paths;
 import ca.uqac.lif.fs.FilePath;
 
 public class HtmlReporter implements Reporter
@@ -101,9 +101,9 @@ public class HtmlReporter implements Reporter
 		for (FoundToken t : found)
 		{
 			String clear_fn = t.getFilename().substring(1);
-			FilePath folder = root.chdir(Main.getPathOfFile(clear_fn));
+			FilePath folder = root.chdir(Paths.getPathOfFile(clear_fn));
 			m_out.print("<dt><a href=\"");
-			m_out.print(folder + FilePath.SLASH + Main.getFilename(clear_fn));
+			m_out.print(folder + FilePath.SLASH + Paths.getFilename(clear_fn));
 			m_out.print("\">");
 			m_out.print(clear_fn);
 			m_out.print("</a> ");
