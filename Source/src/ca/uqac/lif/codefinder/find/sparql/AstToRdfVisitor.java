@@ -120,22 +120,8 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	public static final Property IN = ResourceFactory.createProperty(ModelBuilder.NS, "in");
 
 	public static final Property NODETYPE = ResourceFactory.createProperty(ModelBuilder.NS, "nodetype");
-
-	public static final Property NAME = ResourceFactory.createProperty(ModelBuilder.NS, "name");
-
-	public static final Property ARGUMENTS = ResourceFactory.createProperty(ModelBuilder.NS, "args");
-
-	public static final Property VALUE = ResourceFactory.createProperty(ModelBuilder.NS, "value");
-
-	public static final Property RETURNS = ResourceFactory.createProperty(ModelBuilder.NS, "returns");
 	
-	public static final Property ANNOTATIONS = ResourceFactory.createProperty(ModelBuilder.NS, "annotations");
-	
-	public static final Property MODIFIERS = ResourceFactory.createProperty(ModelBuilder.NS, "modifiers");
-	
-	public static final Property VARIABLES = ResourceFactory.createProperty(ModelBuilder.NS, "variables");
-	
-	public static final Property TYPE = ResourceFactory.createProperty(ModelBuilder.NS, "type");
+	public static final Property JAVADOC = ResourceFactory.createProperty(ModelBuilder.NS, "operator");
 
 	/** An index of AST nodes to RDF resources */
 	protected final JavaAstNodeIndex m_index;
@@ -421,8 +407,8 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	@Override
 	public void leave(ExpressionStmt n)
 	{
-		genericleave(n);
-		
+		// Do not create nodes for ExpressionStmt, they are just containers
+		//genericleave(n);
 	}
 
 	@Override
@@ -914,455 +900,455 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	@Override
 	public void visit(AnnotationDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(AnnotationMemberDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ArrayAccessExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ArrayCreationExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ArrayCreationLevel n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ArrayInitializerExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ArrayType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(AssertStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(AssignExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(BinaryExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(BlockComment n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(BlockStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(BooleanLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(BreakStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(CastExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(CatchClause n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(CharLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ClassExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ClassOrInterfaceType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(CompilationUnit n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ConditionalExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ConstructorDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ContinueStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(DoStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(DoubleLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(EmptyStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(EnclosedExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(EnumConstantDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(EnumDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ExplicitConstructorInvocationStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ExpressionStmt n)
 	{
-		genericvisit(n);
-		
+		// Do not create nodes for ExpressionStmt, they are just containers
+		//genericvisit(n);
 	}
 
 	@Override
 	public void visit(FieldAccessExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(FieldDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ForStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ForEachStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(IfStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ImportDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(InitializerDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(InstanceOfExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(IntegerLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(IntersectionType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(JavadocComment n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(LabeledStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(LambdaExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(LineComment n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(LocalClassDeclarationStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(LocalRecordDeclarationStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(LongLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(MarkerAnnotationExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(MemberValuePair n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(MethodCallExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(MethodDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(MethodReferenceExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(NameExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(Name n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(NormalAnnotationExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(NullLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ObjectCreationExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(PackageDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(Parameter n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(PrimitiveType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(RecordDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(CompactConstructorDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ReturnStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
@@ -1378,241 +1364,241 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	@Override
 	public void visit(SingleMemberAnnotationExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(StringLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(SuperExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(SwitchEntry n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(SwitchStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(SynchronizedStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ThisExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ThrowStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(TryStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(TypeExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(TypeParameter n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(UnaryExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(UnionType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(UnknownType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(VariableDeclarationExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(VariableDeclarator n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(VoidType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(WhileStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(WildcardType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ModuleDeclaration n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ModuleRequiresDirective n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ModuleExportsDirective n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ModuleProvidesDirective n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ModuleUsesDirective n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ModuleOpensDirective n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(UnparsableStmt n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(ReceiverParameter n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(VarType n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(Modifier n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(SwitchExpr switchExpr)
 	{
-		genericvisit(switchExpr);
+		genericVisit(switchExpr);
 		
 	}
 
 	@Override
 	public void visit(TextBlockLiteralExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(YieldStmt yieldStmt)
 	{
-		genericvisit(yieldStmt);
+		genericVisit(yieldStmt);
 		
 	}
 
 	@Override
 	public void visit(TypePatternExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 		
 	}
 
 	@Override
 	public void visit(RecordPatternExpr n)
 	{
-		genericvisit(n);
+		genericVisit(n);
 	}
 
-	protected void genericvisit(Node n)
+	protected void genericVisit(Node n)
 	{
 		String iri = AstIds.iriFor("", n);
 		Resource rdf_node = m_model.createResource(iri);

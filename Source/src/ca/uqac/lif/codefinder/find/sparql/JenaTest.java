@@ -99,8 +99,8 @@ public class JenaTest
 		RDFDataMgr.write(baos, r.getModel(), Lang.RDFXML);
 		System.out.println(baos.toString());
 
-		ResultSet resultSet1 = QueryExecution.model(r.getModel())
+		/*ResultSet resultSet1 = QueryExecution.model(r.getModel())
 				.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
-    ResultSetFormatter.out(resultSet1);
+    ResultSetFormatter.out(resultSet1);*/
 	}
 }
