@@ -21,10 +21,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
 
 import com.github.javaparser.ast.Node;
@@ -45,29 +47,35 @@ public class SparqlTokenFinder implements TokenFinder
 {
 	/** The name of the file to analyze */
 	protected String m_filename;
-	
+
 	/** The name of this finder */
 	protected final String m_name;
-	
+
 	/** A Java parser instance */
 	protected TokenFinderContext m_context;
-	
+
 	/** An index of AST nodes */
 	protected JavaAstNodeIndex m_index;
-	
+
+	public static final String prefixes = StrUtils.strjoinNL
+			("PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+					"PREFIX l:  <http://liflab.uqac.ca/>",
+					""
+					);
+
 	/**
 	 * The SPARQL query to execute.
 	 */
 	protected final String m_query;
-	
+
 	/**
 	 * The RDF model to query.
 	 */
 	protected Model m_model;
-	
+
 	/** The set of found tokens */
 	protected Set<FoundToken> m_found;
-		
+
 	public SparqlTokenFinder(String name, String query, Model model)
 	{
 		super();
@@ -78,12 +86,12 @@ public class SparqlTokenFinder implements TokenFinder
 		m_context = null;
 		m_found = new HashSet<FoundToken>();
 	}
-	
+
 	public SparqlTokenFinder(String name, String query)
 	{
 		this(name, query, null);
 	}
-	
+
 	public void setModel(Model model)
 	{
 		m_model = model;
@@ -124,50 +132,47 @@ public class SparqlTokenFinder implements TokenFinder
 	{
 		m_filename = filename;
 	}
-	
+
 	public void setIndex(JavaAstNodeIndex index)
 	{
 		m_index = index;
 	}
-	
+
 	public void process()
 	{
 		// Register property function
-		PropertyFunctionRegistry.get()
-	  .put("lif" + "resolvedType",
-	       (uri) -> new ResolveType(m_index));
-		
+		/*PropertyFunctionRegistry.get()
+		.put("l" + "resolvedType",
+				(uri) -> new ResolveType(m_index));*/
 		ResultSet resultSet1 = QueryExecution.model(m_model)
-				.query(JenaTest.prefixes + m_query).select();
-		for (; resultSet1.hasNext(); )
+				.query(prefixes + m_query).select();
+		while (resultSet1.hasNext())
 		{
-			org.apache.jena.query.QuerySolution soln = resultSet1.nextSolution();
-			if (soln.contains("node"))
+			QuerySolution soln = resultSet1.next();
+			Resource n = soln.getResource("n");
+			String iri = n.getURI();
+			if (iri == null)
 			{
-				RDFNode n = soln.get("node");
-				if (n.isResource())
-				{
-					String id = n.asResource().getURI();
-					Node ast_node = m_index.get(id);
-					FoundToken t = new FoundToken(m_name, m_filename, ast_node.getRange().get().begin.line, ast_node.getRange().get().end.line, ast_node.toString());
-					m_found.add(t);
-				}
+				continue;
 			}
+			Node ast_node = m_index.get(iri);
+			FoundToken t = new FoundToken(m_name, m_filename, ast_node.getRange().get().begin.line, ast_node.getRange().get().end.line, ast_node.toString());
+			m_found.add(t);
 		}
 	}
-	
+
 	public static class SparqlTokenFinderFactory extends TokenFinderFactory
 	{
 		/**
 		 * The name of this finder
 		 */
 		protected final String m_name;
-		
+
 		/**
 		 * The SPARQL query to execute.
 		 */
 		protected final String m_query;
-		
+
 		public SparqlTokenFinderFactory(String name, String query)
 		{
 			super();

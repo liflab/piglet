@@ -112,6 +112,38 @@ public class QueryTest
 		assertFalse(rs.hasNext());
 	}
 	
+	@Test
+	public void test3() throws FileSystemException
+	{
+		ModelBuilderResult res = readCode("MyClass1.java.src");
+		String q = prefixes + """
+				SELECT ?n WHERE {
+				?c lif:nodetype "CompilationUnit" .
+				?c lif:in+ ?n .
+				?n lif:nodetype "MethodDeclaration"
+				}
+				""";
+		ResultSet rs = QueryExecution.model(res.getModel())
+				.query(q).select();
+		assertTrue(rs.hasNext());
+	}
+	
+	@Test
+	public void test4() throws FileSystemException
+	{
+		ModelBuilderResult res = readCode("MyClass2.java.src");
+		String q = prefixes + """
+				SELECT ?n WHERE {
+				?c lif:nodetype "CompilationUnit" .
+				?c lif:in+ ?n .
+				?n lif:nodetype "MethodCallExpr"
+				}
+				""";
+		ResultSet rs = QueryExecution.model(res.getModel())
+				.query(q).select();
+		assertTrue(rs.hasNext());
+	}
+	
 	/**
 	 * Prints the RDF model to standard output in RDF/XML format.
 	 * @param r The model to print

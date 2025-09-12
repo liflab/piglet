@@ -236,21 +236,7 @@ public class Main
 				throw new RuntimeException("Failed to init per-thread context", e);
 			}
 		});
-
-		// Instantiate default assertion finders
-		/*if (s_astFinders.isEmpty())
-		{
-			s_astFinders.add(new NonFluentAssertionsCounter.NonFluentAssertionsCounterFactory());
-			s_astFinders.add(new CompoundAssertionFinder.CompoundAssertionFinderFactory());
-			s_astFinders.add(new ConditionalAssertionFinder.ConditionalAssertionFinderFactory());
-			s_astFinders.add(new EqualAssertionFinder.EqualAssertionFinderFactory());
-			s_astFinders.add(new IteratedAssertionFinder.IteratedAssertionFinderFactory());
-			s_astFinders.add(new EqualNonPrimitiveFinder.EqualNonPrimitiveFinderFactory());
-			s_astFinders.add(new EqualStringFinder.EqualStringFinderFactory());
-			s_astFinders.add(new EqualityWithMessageFinder.EqualityWithMessageFinderFactory());
-			s_astFinders.add(new OptionalAssertionFinder.OptionalAssertionFinderFactory());
-		}*/
-
+		
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? s_limit : total));
 		Thread status_thread = new Thread(status);
@@ -543,7 +529,6 @@ public class Main
 
 	protected static SparqlTokenFinderFactory readSparql(FileSystem hd, String filename) throws FileSystemException, IOException
 	{
-		//hd.pushd(getPathOfFile(filename).toString());
 		StringBuilder sparql_code = new StringBuilder();
 		String name = null;
 		Scanner scanner = new Scanner(hd.readFrom(getFilename(filename)));
@@ -567,7 +552,6 @@ public class Main
 			sparql_code.append(line).append("\n");
 		}
 		scanner.close();
-		hd.popd();
 		return new SparqlTokenFinderFactory(name == null ? "Unnamed SPARQL finder" : name, sparql_code.toString());
 	}
 
