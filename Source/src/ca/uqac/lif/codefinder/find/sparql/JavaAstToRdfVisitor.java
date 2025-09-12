@@ -1,3 +1,20 @@
+/*
+    Analysis of assertions in Java programs
+    Copyright (C) 2025 Sylvain Hallé, Sarika Machhindra Kadam
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package ca.uqac.lif.codefinder.find.sparql;
 
 import java.util.List;
@@ -38,35 +55,35 @@ import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 public class JavaAstToRdfVisitor extends AstToRdfVisitor
 {
 	public static final Property NAME = ResourceFactory.createProperty(ModelBuilder.NS, "name");
-	
+
 	public static final Property PARAMETERS = ResourceFactory.createProperty(ModelBuilder.NS, "params");
 
 	public static final Property VALUE = ResourceFactory.createProperty(ModelBuilder.NS, "value");
 
 	public static final Property RETURNS = ResourceFactory.createProperty(ModelBuilder.NS, "returns");
-	
+
 	public static final Property ANNOTATIONS = ResourceFactory.createProperty(ModelBuilder.NS, "annotations");
-	
+
 	public static final Property MODIFIERS = ResourceFactory.createProperty(ModelBuilder.NS, "modifiers");
-	
+
 	public static final Property VARIABLES = ResourceFactory.createProperty(ModelBuilder.NS, "variables");
-	
+
 	public static final Property TYPE = ResourceFactory.createProperty(ModelBuilder.NS, "type");
-	
+
 	public static final Property CONDITION = ResourceFactory.createProperty(ModelBuilder.NS, "condition");
-	
+
 	public static final Property INITIALIZER = ResourceFactory.createProperty(ModelBuilder.NS, "initializer");
-	
+
 	public static final Property SCOPE = ResourceFactory.createProperty(ModelBuilder.NS, "scope");
-	
+
 	public static final Property NEXT = ResourceFactory.createProperty(ModelBuilder.NS, "next");
-	
+
 	public static final Property ARG_1 = ResourceFactory.createProperty(ModelBuilder.NS, "arg1");
-	
+
 	public static final Property ARG_2 = ResourceFactory.createProperty(ModelBuilder.NS, "arg2");
-	
+
 	public static final Property OPERATOR = ResourceFactory.createProperty(ModelBuilder.NS, "operator");
-	
+
 	public JavaAstToRdfVisitor()
 	{
 		super();
@@ -76,7 +93,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	{
 		super(m_model, m_index, method_node);
 	}
-	
+
 	@Override
 	public void visit(BlockStmt n)
 	{
@@ -143,21 +160,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		handleJavadoc(n);
 		stop();
 	}
-	
-	protected void handleJavadoc(Node n)
-	{
-		if (!(n instanceof NodeWithJavadoc<?>))
-		{
-			return;
-		}
-		if (n.getComment().isPresent())
-		{
-			String comment = n.getComment().get().getContent();
-			Literal comment_node = m_model.createLiteral(comment);
-			m_model.add(m_parents.peek(), JAVADOC, comment_node);
-		}
-	}
-	
+
 	@Override
 	public void visit(FieldAccessExpr n)
 	{
@@ -245,7 +248,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		}
 		stop();
 	}
-	
+
 	@Override
 	public void visit(BinaryExpr n)
 	{
@@ -271,7 +274,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		}
 		stop();
 	}
-	
+
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n)
 	{
@@ -292,6 +295,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		m_model.add(method_node, NAME, name_node);
 		handleAnnotations(n);
 		handleModifiers(n);
+		handleJavadoc(n);
 		{
 			// Method parameters
 			NodeList<com.github.javaparser.ast.body.Parameter> params = n.getParameters();
@@ -330,35 +334,6 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		}
 		stop();
 	}
-	
-	protected void handleAnnotations(NodeWithAnnotations<?> n)
-	{
-		List<AnnotationExpr> annotations = n.getAnnotations();
-		if (annotations.size() > 0)
-		{
-			Resource ann_node = m_model.createResource();
-			m_model.add(m_parents.peek(), ANNOTATIONS, ann_node);
-			annotations.forEach(a -> {
-				Literal ann_name = m_model.createLiteral(a.getName().asString());
-				m_model.add(ann_node, NAME, ann_name);
-			});
-		}
-	}
-	
-	protected void handleModifiers(NodeWithModifiers<?> n)
-	{
-		
-			NodeList<Modifier> modifiers = n.getModifiers();
-			if (modifiers.size() > 0)
-			{
-				Resource mod_node = m_model.createResource();
-				m_model.add(m_parents.peek(), MODIFIERS, mod_node);
-				modifiers.forEach(m -> {
-					Literal mod_name = m_model.createLiteral(m.getKeyword().asString());
-					m_model.add(mod_node, NAME, mod_name);
-				});
-			}
-	}
 
 	@Override
 	public void visit(IntegerLiteralExpr n)
@@ -391,7 +366,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		m_model.add(str_node, TYPE, m_model.createLiteral("String"));
 		stop();
 	}
-	
+
 	@Override
 	public void visit(NullLiteralExpr n)
 	{
@@ -409,5 +384,59 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		Literal name_node = m_model.createLiteral(n.getName().asString());
 		m_model.add(m_parents.peek(), NAME, name_node);
 		stop();
+	}
+
+	/**
+	 * Handles the Javadoc comment associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	protected void handleJavadoc(Node n)
+	{
+		if (!(n instanceof NodeWithJavadoc<?>))
+		{
+			return;
+		}
+		if (n.getComment().isPresent())
+		{
+			String comment = n.getComment().get().getContent();
+			Literal comment_node = m_model.createLiteral(comment);
+			m_model.add(m_parents.peek(), JAVADOC, comment_node);
+		}
+	}
+
+	/**
+	 * Handles the annotations associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	protected void handleAnnotations(NodeWithAnnotations<?> n)
+	{
+		List<AnnotationExpr> annotations = n.getAnnotations();
+		if (annotations.size() > 0)
+		{
+			Resource ann_node = m_model.createResource();
+			m_model.add(m_parents.peek(), ANNOTATIONS, ann_node);
+			annotations.forEach(a -> {
+				Literal ann_name = m_model.createLiteral(a.getName().asString());
+				m_model.add(ann_node, NAME, ann_name);
+			});
+		}
+	}
+
+	/**
+	 * Handles the modifiers associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	protected void handleModifiers(NodeWithModifiers<?> n)
+	{
+		NodeList<Modifier> modifiers = n.getModifiers();
+		if (modifiers.size() > 0)
+		{
+			Resource mod_node = m_model.createResource();
+			m_model.add(m_parents.peek(), MODIFIERS, mod_node);
+			modifiers.forEach(m -> {
+				Literal mod_name = m_model.createLiteral(m.getKeyword().asString());
+				m_model.add(mod_node, NAME, mod_name);
+			});
+		}
 	}
 }

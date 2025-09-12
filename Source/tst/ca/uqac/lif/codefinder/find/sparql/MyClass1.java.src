@@ -1,0 +1,5 @@
+public class MyClass1 {
+  /** Some comment **/
+  public void methodA() {
+  }
+}

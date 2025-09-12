@@ -27,6 +27,7 @@ import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,10 +50,11 @@ public final class Solvers
 	 *          set of directories containing Java sources
 	 * @param jarPaths
 	 *          set of jar files (absolute or relative)
+	 * @throws FileSystemException 
+	 * @throws IOException 
 	 */
 	@SuppressWarnings("deprecation")
-	public static CombinedTypeSolver buildSolver(Set<String> sourceRoots, String root_package, Set<String> jarPaths)
-			throws Exception
+	public static CombinedTypeSolver buildSolver(Set<String> sourceRoots, String root_package, Set<String> jarPaths) throws FileSystemException, IOException
 	{
 		CombinedTypeSolver ts = new CombinedTypeSolver();
 
