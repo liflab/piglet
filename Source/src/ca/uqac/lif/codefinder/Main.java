@@ -215,7 +215,7 @@ public class Main
 		int total = fsp.filesProvided();
 		Map<String, List<FoundToken>> categorized = new TreeMap<>();
 		Set<FoundToken> found = new HashSet<>();
-		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, s_summary)));
+		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, found.size(), s_summary)));
 
 		CTX = ThreadLocal.withInitial(() -> {
 			try {
@@ -730,14 +730,17 @@ public class Main
 	protected static class EndRunnable implements Runnable
 	{
 		private final Map<String, List<FoundToken>> m_found;
+		
+		private final int m_total;
 
 		private final boolean m_summary;
 
-		public EndRunnable(Map<String, List<FoundToken>> found, boolean summary)
+		public EndRunnable(Map<String, List<FoundToken>> found, int total, boolean summary)
 		{
 			super();
 			m_found = found;
 			m_summary = summary;
+			m_total = total;
 		}
 
 		@Override
@@ -751,7 +754,7 @@ public class Main
 			CliReporter cli_reporter = new CliReporter(s_stdout, m_summary);
 			try
 			{
-				cli_reporter.report(null, m_found.size(), m_found, new HashSet<String>());
+				cli_reporter.report(null, m_total, m_found, new HashSet<String>());
 			}
 			catch (IOException e)
 			{
