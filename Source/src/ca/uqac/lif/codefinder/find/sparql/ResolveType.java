@@ -28,7 +28,7 @@ public class ResolveType extends JavaAstNodeFunction
 		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n, m_ts, 100);
 		if (rr.reason == Types.ResolveReason.RESOLVED)
 		{
-			System.out.println("Resolved type of " + n + " to " + rr.value.get().describe());
+			//System.out.println("Resolved type of " + n + " to " + rr.value.get().describe());
 			return rr.value.get().describe();
 		}
 		return "?";

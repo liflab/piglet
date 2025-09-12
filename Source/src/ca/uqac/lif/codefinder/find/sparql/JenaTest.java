@@ -18,6 +18,8 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.HashSet;
 
 import org.apache.jena.atlas.lib.StrUtils;
@@ -89,14 +91,17 @@ public class JenaTest
 		
 		TokenFinderContext ctx = CTX.get();
 		
-    ParseResult<CompilationUnit> cu = ctx.getParser().parse("class MyClass {\n"
+    /*ParseResult<CompilationUnit> cu = ctx.getParser().parse("class MyClass {\n"
     		+ "  @Test\n"
     		+ "  public void test1() {\n"
     		+ "    C c = Factory.get();\n"
     		+ "    if (obj != null)\n"
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
-    		+ "}");
+    		+ "}");*/
+		FileInputStream fis = new FileInputStream("/home/sylvain/AssertionStudy/Repositories/hadoop/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/test/java/org/apache/hadoop/yarn/server/resourcemanager/reservation/TestReservationInputValidator.java");
+		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
+		fis.close();
     if (!cu.isSuccessful())
 		{
 			System.out.println("Parse error");
@@ -113,12 +118,23 @@ public class JenaTest
 	  .put(NS + "resolvedType",
 	       (uri) -> new ResolveType(globalAstIndex, ctx.getTypeSolver()));
 		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		RDFDataMgr.write(baos, r.getModel(), Lang.RDFXML);
-		System.out.println(baos.toString());
+		/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		FileOutputStream fos = new FileOutputStream("/tmp/model.rdf");
+		RDFDataMgr.write(fos, r.getModel(), Lang.RDFXML);
+		fos.close();*/
+		//System.out.println(baos.toString());
 
-		/*ResultSet resultSet1 = QueryExecution.model(r.getModel())
-				.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
-    ResultSetFormatter.out(resultSet1);*/
+		ResultSet resultSet1 = QueryExecution.model(r.getModel())
+				//.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
+				.query(prefixes + "SELECT ?n (GROUP_CONCAT(DISTINCT ?t;separator=\",\") AS ?types)\n"
+						+ "           (GROUP_CONCAT(DISTINCT ?nm;separator=\",\") AS ?names)\n"
+						+ "WHERE {\n"
+						+ "  ?n lif:nodetype ?t ;\n"
+						+ "     lif:name     ?nm .\n"
+						+ "}\n"
+						+ "GROUP BY ?n\n"
+						+ "HAVING (COUNT(DISTINCT ?t) > 1 || COUNT(DISTINCT ?nm) > 1)\n"
+						+ "LIMIT 20").select();
+    ResultSetFormatter.out(resultSet1);
 	}
 }

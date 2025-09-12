@@ -143,7 +143,7 @@ Compiling and Installing
 First make sure you have the following installed:
 
 - The Java Development Kit (JDK) to compile. The project is developed to comply
-  with Java version 11; it is probably safe to use any later version.
+  with Java version **17**; it is probably safe to use any later version.
 - [Ant](http://ant.apache.org) to automate the compilation and build process
 
 Download the sources for CodeFinder from

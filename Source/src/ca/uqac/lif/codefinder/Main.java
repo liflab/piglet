@@ -238,7 +238,7 @@ public class Main
 		});
 		
 		// Read file(s)
-		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? s_limit : total));
+		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? Math.min(total, s_limit) : total));
 		Thread status_thread = new Thread(status);
 		AtomicInteger THREAD_ID = new AtomicInteger(1);
 		ThreadFactory tf = r -> {
@@ -337,6 +337,8 @@ public class Main
 		}
 		if (map.containsKey("query"))
 		{
+			s_astFinders.clear();
+			s_sparqlFinders.clear(); // Override whatever the profile says
 			String bsh_file = map.getOptionValue("query");
 			try
 			{
@@ -400,7 +402,6 @@ public class Main
 						SparqlTokenFinderFactory factory = readSparql(hd, bsh_file);
 						hd.popd();
 						s_sparqlFinders.add(factory);
-						return RET_NOTHING;
 					}
 					else if (bsh_file.endsWith(".bsh"))
 					{
@@ -654,11 +655,13 @@ public class Main
 		{
 			count++;
 			FileSource f_source = provider.next();
+			if (!ast_finders.isEmpty())
 			{
 				AstAssertionFinderRunnable r = new AstAssertionFinderRunnable(f_source, ast_finders, quiet, status);
 				tasks.add(r);
 				futures.add(e.submit(r));
 			}
+			if (!sparql_finders.isEmpty())
 			{
 				SparqlAssertionFinderRunnable r = new SparqlAssertionFinderRunnable(f_source, sparql_finders, quiet, status);
 				tasks.add(r);

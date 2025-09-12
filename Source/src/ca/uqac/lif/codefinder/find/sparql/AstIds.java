@@ -26,7 +26,7 @@ class AstIds
 				.orElse("no-range");
 		String kind = n.getClass().getSimpleName();
 		String payload = filename + "#" + range + "#" + kind;
-		String hash = sha1Hex(payload).substring(0, 3);
+		String hash = sha1Hex(payload).substring(0, 16);
 		return NS + hash;
 	}
 

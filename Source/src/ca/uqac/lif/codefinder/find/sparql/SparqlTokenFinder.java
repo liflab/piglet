@@ -165,6 +165,10 @@ public class SparqlTokenFinder implements TokenFinder
 				continue;
 			}
 			Node ast_node = m_index.get(iri);
+			if (ast_node == null)
+			{
+				continue;
+			}
 			FoundToken t = new FoundToken(m_name, m_filename, ast_node.getRange().get().begin.line, ast_node.getRange().get().end.line, ast_node.toString());
 			m_found.add(t);
 		}
