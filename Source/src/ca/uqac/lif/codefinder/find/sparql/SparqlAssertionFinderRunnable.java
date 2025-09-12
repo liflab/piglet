@@ -27,6 +27,7 @@ import java.util.Set;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.Expression;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
@@ -107,7 +108,7 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
 			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm);	    
-			JavaAstNodeIndex globalAstIndex = r.getIndex();
+			LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
 			for (SparqlTokenFinderFactory fac : finders)
 			{
 				SparqlTokenFinder f = fac.newFinder();

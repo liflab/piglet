@@ -27,6 +27,7 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
 import org.junit.Test;
 
 import com.github.javaparser.JavaParser;
@@ -96,7 +97,7 @@ public class QueryTest
 				.query(q).select();
 		assertTrue(rs.hasNext());
 	}
-	
+
 	@Test
 	public void test2() throws FileSystemException
 	{
@@ -111,7 +112,7 @@ public class QueryTest
 				.query(q).select();
 		assertFalse(rs.hasNext());
 	}
-	
+
 	@Test
 	public void test3() throws FileSystemException
 	{
@@ -127,7 +128,7 @@ public class QueryTest
 				.query(q).select();
 		assertTrue(rs.hasNext());
 	}
-	
+
 	@Test
 	public void test4() throws FileSystemException
 	{
@@ -143,7 +144,25 @@ public class QueryTest
 				.query(q).select();
 		assertTrue(rs.hasNext());
 	}
-	
+
+	@Test
+	public void test5() throws FileSystemException
+	{
+		ModelBuilderResult res = readCode("MyClass2.java.src");
+		String q = prefixes + """
+				SELECT ?n WHERE {
+				?n lif:resolvedtype "int"
+				}
+				""";
+		// Register property function
+		PropertyFunctionRegistry.get()
+		.put("http://liflab.uqac.ca/resolvedtype",
+				(uri) -> new ResolveType(res.getIndex(), ts));
+		ResultSet rs = QueryExecution.model(res.getModel())
+				.query(q).select();
+		assertTrue(rs.hasNext());
+	}
+
 	/**
 	 * Prints the RDF model to standard output in RDF/XML format.
 	 * @param r The model to print

@@ -27,9 +27,12 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
+import org.apache.jena.sparql.util.Context;
 
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.Expression;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
@@ -55,7 +58,7 @@ public class SparqlTokenFinder implements TokenFinder
 	protected TokenFinderContext m_context;
 
 	/** An index of AST nodes */
-	protected JavaAstNodeIndex m_index;
+	protected LazyNodeIndex<Expression,String> m_index;
 
 	public static final String prefixes = StrUtils.strjoinNL
 			("PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
@@ -133,19 +136,25 @@ public class SparqlTokenFinder implements TokenFinder
 		m_filename = filename;
 	}
 
-	public void setIndex(JavaAstNodeIndex index)
+	public void setIndex(LazyNodeIndex<Expression,String> index)
 	{
 		m_index = index;
 	}
 
 	public void process()
 	{
+
+		String PF = "http://liflab.uqac.ca/resolvedtype";
+		QueryExecution qe = QueryExecution.model(m_model).query(prefixes + m_query).build();
+		Context ctx = qe.getContext();
+		PropertyFunctionRegistry local = PropertyFunctionRegistry.get(ctx);
+		local.put(PF, uri -> new ResolveType(m_index, m_context.getTypeSolver()));
+		ctx.set(ARQConstants.registryPropertyFunctions, local);
 		// Register property function
-		/*PropertyFunctionRegistry.get()
-		.put("l" + "resolvedType",
-				(uri) -> new ResolveType(m_index));*/
-		ResultSet resultSet1 = QueryExecution.model(m_model)
-				.query(prefixes + m_query).select();
+		PropertyFunctionRegistry.get()
+		.put("http://liflab.uqac.ca/resolvedtype",
+				(uri) -> new ResolveType(m_index, m_context.getTypeSolver()));
+		ResultSet resultSet1 = qe.execSelect();
 		while (resultSet1.hasNext())
 		{
 			QuerySolution soln = resultSet1.next();

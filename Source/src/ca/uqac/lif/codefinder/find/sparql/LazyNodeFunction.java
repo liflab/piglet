@@ -1,3 +1,20 @@
+/*
+    Analysis of assertions in Java programs
+    Copyright (C) 2025 Sylvain Hallé, Sarika Machhindra Kadam
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package ca.uqac.lif.codefinder.find.sparql;
 
 import java.util.ArrayList;
@@ -25,41 +42,60 @@ public abstract class LazyNodeFunction<T,U> extends PFuncSimple
 	}
 	
   @Override
-  public QueryIterator execEvaluated(Binding binding, Node s, Node p, Node o, ExecutionContext cxt) {
-    // If ?x is unbound (optimizer may call PF before other triples), generate candidates
-    if (Var.isVar(s)) {
-      Var sVar = Var.alloc(s);
-      boolean oIsVar = Var.isVar(o);
-      Var oVar = oIsVar ? Var.alloc(o) : null;
+  public QueryIterator execEvaluated(Binding input,
+                                     Node subject,
+                                     Node predicate,
+                                     Node object,
+                                     ExecutionContext execCxt) {
+    // Subject may be a Var or a concrete IRI
+    final Var sVar = subject.isVariable() ? Var.alloc(subject) : null;
+    final Var oVar = object.isVariable() ? Var.alloc(object) : null;
 
-      List<Binding> out = new ArrayList<>();
-      for (String iri : idx.allIris()) {                 // iterate your known AST nodes
-        Node subj = NodeFactory.createURI(iri);
-        U value = calculate(iri);
-        if (value == null) continue;
-        Node type = NodeFactory.createURI(value.toString());                    // lazily compute/cache inside idx
+    final List<Binding> out = new ArrayList<>();
 
-        if (!oIsVar && !o.equals(type)) continue;        // respect a bound object
+    // Helper: attempt a single (iri, maybeObjectVar)/(iri, constantObject) case
+    java.util.function.BiConsumer<String, Binding> handleOne = (iri, in) -> {
+      U value = calculate(iri);
+      if (value == null) return; // unknown subject or failed compute
 
-        BindingBuilder bb = BindingFactory.builder(binding);
-        bb.add(sVar, subj);
-        if (oIsVar) bb.add(oVar, type);
+      // What to do with the object position?
+      if (oVar != null) {
+        // Object is a variable: bind it to a literal of the computed value
+        Node valNode = NodeFactory.createLiteral(value.toString());
+        // Respect existing binding compatibility
+        if (in.contains(oVar) && !in.get(oVar).equals(valNode)) return;
+        BindingBuilder bb = BindingFactory.builder(in);
+        bb.add(oVar, valNode);
         out.add(bb.build());
+      } else {
+        // Object is a constant: compare
+        if (!object.isLiteral()) return; // only literal supported here
+        String want = object.getLiteralLexicalForm();
+        if (!want.equals(value.toString())) return; // no match ⇒ no binding
+        // Match: keep binding as-is
+        out.add(in);
       }
-      return QueryIterPlainWrapper.create(out.iterator(), cxt);
-    }
+    };
 
-    // Subject bound
-    if (!s.isURI()) return IterLib.noResults(cxt);       // adapt if you use blank nodes
-    U value = calculate(s.getURI());
-    if (value == null) return IterLib.noResults(cxt);
-    Node type = NodeFactory.createURI(value.toString());
-
-    if (Var.isVar(o)) {
-      return IterLib.result(BindingFactory.binding(binding, Var.alloc(o), type), cxt);
+    if (sVar != null) {
+      // Subject is a variable: iterate all known IRIs
+      for (String iri : idx.allIris()) {
+        // Respect existing binding compatibility
+        if (input.contains(sVar) && !input.get(sVar).toString().equals(iri)) continue;
+        BindingBuilder bb = BindingFactory.builder(input);
+        Node iriNode = NodeFactory.createURI(iri);
+        bb.add(sVar, iriNode);
+        handleOne.accept(iri, bb.build());
+      }
     } else {
-      return o.equals(type) ? IterLib.result(binding, cxt) : IterLib.noResults(cxt);
+      // Subject is concrete
+      if (!subject.isURI()) return IterLib.noResults(execCxt);
+      String iri = subject.getURI();
+      handleOne.accept(iri, input);
     }
+
+    if (out.isEmpty()) return IterLib.noResults(execCxt);
+    return QueryIterPlainWrapper.create(out.iterator(), execCxt);
   }
   
   protected U calculate(String iri)

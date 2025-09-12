@@ -1,17 +1,36 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
-import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.resolution.TypeSolver;
+import com.github.javaparser.resolution.types.ResolvedType;
 
+import ca.uqac.lif.codefinder.util.Types;
+import ca.uqac.lif.codefinder.util.Types.ResolveResult;
+
+/**
+ * A function that resolves the type of an expression.
+ * The function takes as argument an expression and returns a string
+ * representation of its type.
+ */
 public class ResolveType extends JavaAstNodeFunction
 {
-	public ResolveType(LazyNodeIndex<Node, String> idx)
+	private final TypeSolver m_ts;
+	
+	public ResolveType(LazyNodeIndex<Expression, String> idx, TypeSolver ts)
 	{
 		super(idx);
+		m_ts = ts;
 	}
 
 	@Override
-	protected String calculateValue(Node n)
+	protected String calculateValue(Expression n)
 	{
-		return "java.lang.int"; // Placeholder
+		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n, m_ts, 100);
+		if (rr.reason == Types.ResolveReason.RESOLVED)
+		{
+			System.out.println("Resolved type of " + n + " to " + rr.value.get().describe());
+			return rr.value.get().describe();
+		}
+		return "?";
 	}
 }

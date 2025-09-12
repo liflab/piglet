@@ -89,7 +89,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		super();
 	}
 
-	public JavaAstToRdfVisitor(Model m_model, JavaAstNodeIndex m_index, Resource method_node)
+	public JavaAstToRdfVisitor(Model m_model, LazyNodeIndex<Expression,String> m_index, Resource method_node)
 	{
 		super(m_model, m_index, method_node);
 	}
