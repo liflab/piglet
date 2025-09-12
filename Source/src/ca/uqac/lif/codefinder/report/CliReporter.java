@@ -44,7 +44,7 @@ public class CliReporter implements Reporter
 	}
 	
 	@Override
-	public void report(FilePath root, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
+	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
 	{
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{
@@ -52,7 +52,13 @@ public class CliReporter implements Reporter
 			m_out.setForegroundColor(Color.DARK_GRAY);
 			m_out.print(": ");
 			m_out.setForegroundColor(Color.YELLOW);
-			m_out.println(e.getValue().size());
+			m_out.print(AnsiPrinter.padToLength(Integer.toString(e.getValue().size()), 4));
+			float percentage = 	100f * e.getValue().size() / total;
+			m_out.setForegroundColor(Color.BROWN);
+			m_out.print(" (");
+			m_out.print(String.format("%.1f", percentage));
+			m_out.print("%)");
+			m_out.println();
 			m_out.resetColors();
 			if (!m_summary)
 			{

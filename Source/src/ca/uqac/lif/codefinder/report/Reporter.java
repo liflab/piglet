@@ -34,10 +34,11 @@ public interface Reporter
 	/**
 	 * Generates a report of the found tokens.
 	 * @param root The root directory where the search was performed
+	 * @param total The total number of tokens searched for
 	 * @param found A map associating file paths to lists of found tokens
 	 * @param unresolved A set of unresolved symbols, or <tt>null</tt> if
 	 * nothing to show
 	 * @throws IOException If an error occurs while writing the report
 	 */
-	public void report(FilePath root, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException;
+	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException;
 }

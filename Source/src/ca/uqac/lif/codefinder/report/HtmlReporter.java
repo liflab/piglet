@@ -44,7 +44,7 @@ public class HtmlReporter implements Reporter
 	}
 	
 	@Override
-	public void report(FilePath root, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
+	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
 	{ 
 		m_out.println("<!DOCTYPE html>");
 		m_out.println("<html>");

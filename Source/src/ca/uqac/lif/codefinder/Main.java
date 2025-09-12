@@ -288,6 +288,7 @@ public class Main
 		status.cleanup();
 		s_stdout.println((s_limit >= 0 ? s_limit : total) + " file(s) analyzed");
 		s_stdout.println(found.size() + " assertion(s) found");
+		s_stdout.clearLine();
 		s_stdout.println("Analysis time: " + formatDuration(duration));
 		s_stdout.println();
 
@@ -301,7 +302,7 @@ public class Main
 			hd = new HardDisk(output_path.toString()).open();
 			HtmlReporter reporter = new HtmlReporter(
 					new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
-			reporter.report(reverse_path, categorized, new HashSet<String>());
+			reporter.report(reverse_path, found.size(), categorized, new HashSet<String>());
 			hd.close();
 		}
 		catch (IOException e)
@@ -750,7 +751,7 @@ public class Main
 			CliReporter cli_reporter = new CliReporter(s_stdout, m_summary);
 			try
 			{
-				cli_reporter.report(null, m_found, new HashSet<String>());
+				cli_reporter.report(null, m_found.size(), m_found, new HashSet<String>());
 			}
 			catch (IOException e)
 			{
