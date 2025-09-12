@@ -41,6 +41,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.NullLiteralExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithJavadoc;
@@ -274,6 +275,26 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		}
 		stop();
 	}
+	
+	@Override
+	public void visit(UnaryExpr n)
+	{
+		genericVisit(n);
+		Resource bin_node = m_parents.peek();
+		Literal name_node = m_model.createLiteral(n.getOperator().asString());
+		m_model.add(bin_node, OPERATOR, name_node);
+		{
+			// Left operand
+			Expression left = n.getExpression();
+			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			PushPopVisitableNode to_explore = new PushPopVisitableNode(left);
+			to_explore.accept(left_visitor);
+			m_model.add(bin_node, ARG_1, left_visitor.getRoot());
+		}
+		stop();
+	}
+	
+	
 
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n)
