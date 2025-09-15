@@ -109,7 +109,7 @@ public class JenaTest
 		}
     PushPopVisitableNode n = new PushPopVisitableNode(cu.getResult().get());
     // Build RDF model
-    ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(n);
+    ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(n, 0);
     
     LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
 		

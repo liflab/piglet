@@ -135,20 +135,24 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	protected Resource m_root = null;
 	
 	protected boolean m_shouldStop = false;
+	
+	protected final int m_follow;
 
 	/**
 	 * Creates a new visitor.
 	 */
-	public AstToRdfVisitor()
+	public AstToRdfVisitor(int follow)
 	{
 		super();
+		m_follow = follow;
 		m_index = new JavaAstNodeIndex();
 		m_model = ModelFactory.createDefaultModel();
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, Resource parent)
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, Resource parent, int follow)
 	{
 		super();
+		m_follow = follow;
 		m_index = index;
 		m_model = m;
 		if (parent != null)
@@ -157,9 +161,9 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		}
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index)
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, int follow)
 	{
-		this(m, index, null);
+		this(m, index, null, follow);
 	}
 
 	/**

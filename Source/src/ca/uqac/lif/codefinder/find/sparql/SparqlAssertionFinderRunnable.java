@@ -48,6 +48,9 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 	/** The set of finders to use */
 	protected final Set<SparqlTokenFinderFactory> m_finders;
 	
+	/** Whether to follow method calls when building the model */
+	protected final int m_follow;
+	
 	/**
 	 * Creates a new runnable.
 	 * @param context The thread context
@@ -56,11 +59,13 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
+	 * @param follow Whether to follow method calls when building the model
 	 */
-	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinderFactory> finders, boolean quiet, StatusCallback status)
+	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinderFactory> finders, boolean quiet, StatusCallback status, int follow)
 	{
 		super(source.getFilename(), source, quiet, status);
 		m_finders = finders;
+		m_follow = follow;
 	}
 	
 	@Override
@@ -85,7 +90,7 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		processFile(context, m_file, code, m_finders, m_quiet);
+		processFile(context, m_file, code, m_finders, m_quiet, m_follow);
 		if (m_callback != null)
 		{
 			m_callback.done();
@@ -100,14 +105,15 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 	 * @param finders The set of finders to use
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
+	 * @param follow Whether to follow method calls when building the model
 	 */
-	protected void processFile(TokenFinderContext context, String file, String code, Set<SparqlTokenFinderFactory> finders, boolean quiet)
+	protected void processFile(TokenFinderContext context, String file, String code, Set<SparqlTokenFinderFactory> finders, boolean quiet, int follow)
 	{
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
-			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm);	    
+			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow);	    
 			LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
 			for (SparqlTokenFinderFactory fac : finders)
 			{

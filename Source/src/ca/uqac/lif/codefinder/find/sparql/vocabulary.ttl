@@ -1,0 +1,29 @@
+@prefix :      <http://lif.uqac.ca/codefinder#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+
+############################
+# Core classes
+############################
+
+:Package        a rdfs:Class .
+:Type           a rdfs:Class .
+:PrimitiveType  a rdfs:Class ; rdfs:subClassOf :Type .
+:ReferenceType  a rdfs:Class ; rdfs:subClassOf :Type .
+:Class          a rdfs:Class ; rdfs:subClassOf :ReferenceType .
+:Interface      a rdfs:Class ; rdfs:subClassOf :ReferenceType .
+:Enum           a rdfs:Class ; rdfs:subClassOf :ReferenceType .
+
+:Member         a rdfs:Class .
+:Field          a rdfs:Class ; rdfs:subClassOf :Member .
+:Method         a rdfs:Class ; rdfs:subClassOf :Member .
+:TestMethod     a rdfs:Class ; rdfs:subClassOf :Method .
+
+:Parameter      a rdfs:Class .
+:Block          a rdfs:Class .
+:Statement      a rdfs:Class .
+:Expression     a rdfs:Class .
+:LiteralExpr    a rdfs:Class ; rdfs:subClassOf :Expression .
+:MethodCallExpr a rdfs:Class ; rdfs:subClassOf :Expression .

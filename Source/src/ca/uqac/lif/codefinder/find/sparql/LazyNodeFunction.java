@@ -61,7 +61,7 @@ public abstract class LazyNodeFunction<T,U> extends PFuncSimple
       // What to do with the object position?
       if (oVar != null) {
         // Object is a variable: bind it to a literal of the computed value
-        Node valNode = NodeFactory.createLiteral(value.toString());
+        Node valNode = NodeFactory.createLiteralString(value.toString());
         // Respect existing binding compatibility
         if (in.contains(oVar) && !in.get(oVar).equals(valNode)) return;
         BindingBuilder bb = BindingFactory.builder(in);

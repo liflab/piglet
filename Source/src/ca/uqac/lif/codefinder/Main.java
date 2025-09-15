@@ -132,6 +132,9 @@ public class Main
 
 	/** Limit to the number of files to process (for testing purposes) */
 	protected static int s_limit = -1;
+	
+	/** Depth to which method calls should be followed */
+	protected static int s_follow = 0;
 
 	/** Timeout for type resolution operations (in milliseconds) */
 	protected static long s_resolutionTimeout = 100;
@@ -461,6 +464,10 @@ public class Main
 		}
 		if (map.containsKey("output"))
 		{
+			s_follow = Integer.parseInt(map.getOptionValue("output").trim());
+		}
+		if (map.containsKey("follow"))
+		{
 			s_outputFile = map.getOptionValue("output");
 		}
 		if (map.containsKey("source"))
@@ -629,6 +636,8 @@ public class Main
 				.withDescription("Set timeout for type resolution operations (in ms, default: 100)"));
 		cli.addArgument(new Argument().withShortName("y").withLongName("query").withArgument("x")
 				.withDescription("Read queries from x (file or folder)"));
+		cli.addArgument(new Argument().withShortName("f").withLongName("follow").withArgument("d")
+				.withDescription("Follow method calls up to depth d (default: 0)"));
 		return cli;
 	}
 
@@ -664,7 +673,7 @@ public class Main
 			}
 			if (!sparql_finders.isEmpty())
 			{
-				SparqlAssertionFinderRunnable r = new SparqlAssertionFinderRunnable(f_source, sparql_finders, quiet, status);
+				SparqlAssertionFinderRunnable r = new SparqlAssertionFinderRunnable(f_source, sparql_finders, quiet, status, s_follow);
 				tasks.add(r);
 				futures.add(e.submit(r));
 			}

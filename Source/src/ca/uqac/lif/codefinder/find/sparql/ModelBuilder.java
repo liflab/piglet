@@ -26,11 +26,11 @@ import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 public class ModelBuilder
 {
 	/** Namespace for the vocabulary */
-	public static final String NS = "http://liflab.uqac.ca/";
+	public static final String NS = "http://liflab.uqac.ca/codefinder#";
 
-	public static ModelBuilderResult buildModel(PushPopVisitableNode n)
+	public static ModelBuilderResult buildModel(PushPopVisitableNode n, int follow)
 	{
-		JavaAstToRdfVisitor visitor = new JavaAstToRdfVisitor();
+		JavaAstToRdfVisitor visitor = new JavaAstToRdfVisitor(follow);
 		n.accept(visitor);
 		return new ModelBuilderResult(visitor.getModel(), visitor.getIndex());
 	}

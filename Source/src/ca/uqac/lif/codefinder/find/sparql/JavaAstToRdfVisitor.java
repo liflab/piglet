@@ -29,6 +29,7 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AnnotationExpr;
@@ -85,14 +86,14 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 
 	public static final Property OPERATOR = ResourceFactory.createProperty(ModelBuilder.NS, "operator");
 
-	public JavaAstToRdfVisitor()
+	public JavaAstToRdfVisitor(int follow)
 	{
-		super();
+		super(follow);
 	}
 
-	public JavaAstToRdfVisitor(Model m_model, LazyNodeIndex<Expression,String> m_index, Resource method_node)
+	public JavaAstToRdfVisitor(Model m_model, LazyNodeIndex<Expression,String> m_index, Resource method_node, int follow)
 	{
-		super(m_model, m_index, method_node);
+		super(m_model, m_index, method_node, follow);
 	}
 
 	@Override
@@ -110,7 +111,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		for (Statement s : statements)
 		{
 
-			JavaAstToRdfVisitor stmt_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			JavaAstToRdfVisitor stmt_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(s);
 			to_explore.accept(stmt_visitor);
 			Resource stmt_node = stmt_visitor.getRoot();
@@ -142,7 +143,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			for (int i = 0; i < n.getArguments().size(); i++)
 			{
 				Expression a = n.getArgument(i);
-				JavaAstToRdfVisitor arg_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+				JavaAstToRdfVisitor arg_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 				PushPopVisitableNode to_explore = new PushPopVisitableNode(a);
 				to_explore.accept(arg_visitor);
 				m_model.add(arg_node, ResourceFactory.createProperty(ModelBuilder.NS, "arg" + (i + 1)), arg_visitor.getRoot());
@@ -200,7 +201,40 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			if (v.getInitializer().isPresent())
 			{
 				Expression e = v.getInitializer().get();
-				JavaAstToRdfVisitor init_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+				JavaAstToRdfVisitor init_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+				PushPopVisitableNode to_explore = new PushPopVisitableNode(e);
+				to_explore.accept(init_visitor);
+				m_model.add(vars, INITIALIZER, init_visitor.getRoot());
+			}
+		});
+		stop();
+	}
+	
+	@Override
+	public void visit(FieldDeclaration n)
+	{
+		genericVisit(n);
+		Resource field_node = m_parents.peek();
+		handleAnnotations(n);
+		handleModifiers(n);
+		NodeList<VariableDeclarator> n_vars = n.getVariables();
+		if (n_vars.size() == 0)
+		{
+			stop();
+			return;
+		}
+		Resource vars = m_model.createResource();
+		m_model.add(field_node, VARIABLES, vars);
+		n_vars.forEach(v -> {
+			Type t = v.getType();
+			Literal type_name = m_model.createLiteral(t.asString());
+			m_model.add(vars, TYPE, type_name);
+			Literal name_node = m_model.createLiteral(v.getNameAsString());
+			m_model.add(vars, NAME, name_node);
+			if (v.getInitializer().isPresent())
+			{
+				Expression e = v.getInitializer().get();
+				JavaAstToRdfVisitor init_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 				PushPopVisitableNode to_explore = new PushPopVisitableNode(e);
 				to_explore.accept(init_visitor);
 				m_model.add(vars, INITIALIZER, init_visitor.getRoot());
@@ -217,7 +251,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		// Condition
 		{
 			Expression e = n.getCondition();
-			JavaAstToRdfVisitor cond_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			JavaAstToRdfVisitor cond_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(e);
 			to_explore.accept(cond_visitor);
 			m_model.add(if_node, CONDITION, cond_visitor.getRoot());
@@ -228,7 +262,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			Resource then_node = m_model.createResource();
 			m_model.add(if_node, IN, then_node);
 			m_model.add(then_node, NODETYPE, m_model.createLiteral("ThenExpr"));
-			JavaAstToRdfVisitor then_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			JavaAstToRdfVisitor then_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(b);
 			to_explore.accept(then_visitor);
 			m_model.add(then_node, IN, then_visitor.getRoot());
@@ -241,7 +275,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				Resource else_node = m_model.createResource();
 				m_model.add(if_node, IN, else_node);
 				m_model.add(else_node, NODETYPE, m_model.createLiteral("ElseExpr"));
-				JavaAstToRdfVisitor else_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+				JavaAstToRdfVisitor else_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 				PushPopVisitableNode to_explore = new PushPopVisitableNode(b);
 				to_explore.accept(else_visitor);
 				m_model.add(else_node, IN, else_visitor.getRoot());
@@ -260,7 +294,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		{
 			// Left operand
 			Expression left = n.getLeft();
-			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(left);
 			to_explore.accept(left_visitor);
 			m_model.add(bin_node, ARG_1, left_visitor.getRoot());
@@ -268,7 +302,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		{
 			// Right operand
 			Expression right = n.getRight();
-			JavaAstToRdfVisitor right_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			JavaAstToRdfVisitor right_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(right);
 			to_explore.accept(right_visitor);
 			m_model.add(bin_node, ARG_2, right_visitor.getRoot());
@@ -286,7 +320,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		{
 			// Left operand
 			Expression left = n.getExpression();
-			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(left);
 			to_explore.accept(left_visitor);
 			m_model.add(bin_node, ARG_1, left_visitor.getRoot());
@@ -327,7 +361,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				m_parents.push(param_node);
 				for (com.github.javaparser.ast.body.Parameter p : params)
 				{
-					JavaAstToRdfVisitor param_visitor = new JavaAstToRdfVisitor(m_model, m_index, param_node);
+					JavaAstToRdfVisitor param_visitor = new JavaAstToRdfVisitor(m_model, m_index, param_node, m_follow);
 					PushPopVisitableNode to_explore = new PushPopVisitableNode(p);
 					to_explore.accept(param_visitor);
 				}
@@ -348,7 +382,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				stop();
 				return;
 			}
-			JavaAstToRdfVisitor body_visitor = new JavaAstToRdfVisitor(m_model, m_index, null);
+			JavaAstToRdfVisitor body_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(b);
 			to_explore.accept(body_visitor);
 			m_model.add(method_node, IN, body_visitor.getRoot());
