@@ -51,7 +51,12 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.resolution.model.SymbolReference;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 
 public class JavaAstToRdfVisitor extends AstToRdfVisitor
@@ -85,15 +90,17 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	public static final Property ARG_2 = ResourceFactory.createProperty(ModelBuilder.NS, "arg2");
 
 	public static final Property OPERATOR = ResourceFactory.createProperty(ModelBuilder.NS, "operator");
+	
+	public static final Property DECLARATION = ResourceFactory.createProperty(ModelBuilder.NS, "declaration");
 
-	public JavaAstToRdfVisitor(int follow)
+	public JavaAstToRdfVisitor(int follow, TokenFinderContext context)
 	{
-		super(follow);
+		super(follow, context);
 	}
 
-	public JavaAstToRdfVisitor(Model m_model, LazyNodeIndex<Expression,String> m_index, Resource method_node, int follow)
+	public JavaAstToRdfVisitor(Model m_model, LazyNodeIndex<Expression,String> m_index, Resource method_node, int follow, TokenFinderContext context)
 	{
-		super(m_model, m_index, method_node, follow);
+		super(m_model, m_index, method_node, follow, context);
 	}
 
 	@Override
@@ -111,7 +118,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		for (Statement s : statements)
 		{
 
-			JavaAstToRdfVisitor stmt_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+			JavaAstToRdfVisitor stmt_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(s);
 			to_explore.accept(stmt_visitor);
 			Resource stmt_node = stmt_visitor.getRoot();
@@ -143,7 +150,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			for (int i = 0; i < n.getArguments().size(); i++)
 			{
 				Expression a = n.getArgument(i);
-				JavaAstToRdfVisitor arg_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+				JavaAstToRdfVisitor arg_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 				PushPopVisitableNode to_explore = new PushPopVisitableNode(a);
 				to_explore.accept(arg_visitor);
 				m_model.add(arg_node, ResourceFactory.createProperty(ModelBuilder.NS, "arg" + (i + 1)), arg_visitor.getRoot());
@@ -157,6 +164,29 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				Expression e = n.getScope().get();
 				Literal scope_node = m_model.createLiteral(e.toString());
 				m_model.add(method_node, SCOPE, scope_node);
+			}
+		}
+		if (m_follow > 0)
+		{
+			try
+			{
+			SymbolReference<ResolvedMethodDeclaration> rmd = JavaParserFacade.get(m_context.getTypeSolver()).solve(n);
+			if (rmd.isSolved())
+			{
+				ResolvedMethodDeclaration md = rmd.getCorrespondingDeclaration();
+				if (md.toAst().isPresent())
+				{
+					Node root = md.toAst().get();
+					PushPopVisitableNode to_explore = new PushPopVisitableNode(root);
+					JavaAstToRdfVisitor method_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow - 1, m_context);
+					to_explore.accept(method_visitor);
+					m_model.add(method_node, DECLARATION, method_visitor.getRoot());
+				}
+			}
+			}
+			catch (UnsolvedSymbolException e)
+			{
+				// Ignored
 			}
 		}
 		handleJavadoc(n);
@@ -201,7 +231,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			if (v.getInitializer().isPresent())
 			{
 				Expression e = v.getInitializer().get();
-				JavaAstToRdfVisitor init_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+				JavaAstToRdfVisitor init_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 				PushPopVisitableNode to_explore = new PushPopVisitableNode(e);
 				to_explore.accept(init_visitor);
 				m_model.add(vars, INITIALIZER, init_visitor.getRoot());
@@ -209,7 +239,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		});
 		stop();
 	}
-	
+
 	@Override
 	public void visit(FieldDeclaration n)
 	{
@@ -234,7 +264,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			if (v.getInitializer().isPresent())
 			{
 				Expression e = v.getInitializer().get();
-				JavaAstToRdfVisitor init_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+				JavaAstToRdfVisitor init_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 				PushPopVisitableNode to_explore = new PushPopVisitableNode(e);
 				to_explore.accept(init_visitor);
 				m_model.add(vars, INITIALIZER, init_visitor.getRoot());
@@ -251,7 +281,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		// Condition
 		{
 			Expression e = n.getCondition();
-			JavaAstToRdfVisitor cond_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+			JavaAstToRdfVisitor cond_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(e);
 			to_explore.accept(cond_visitor);
 			m_model.add(if_node, CONDITION, cond_visitor.getRoot());
@@ -262,7 +292,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			Resource then_node = m_model.createResource();
 			m_model.add(if_node, IN, then_node);
 			m_model.add(then_node, NODETYPE, m_model.createLiteral("ThenExpr"));
-			JavaAstToRdfVisitor then_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+			JavaAstToRdfVisitor then_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(b);
 			to_explore.accept(then_visitor);
 			m_model.add(then_node, IN, then_visitor.getRoot());
@@ -275,7 +305,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				Resource else_node = m_model.createResource();
 				m_model.add(if_node, IN, else_node);
 				m_model.add(else_node, NODETYPE, m_model.createLiteral("ElseExpr"));
-				JavaAstToRdfVisitor else_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+				JavaAstToRdfVisitor else_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 				PushPopVisitableNode to_explore = new PushPopVisitableNode(b);
 				to_explore.accept(else_visitor);
 				m_model.add(else_node, IN, else_visitor.getRoot());
@@ -294,7 +324,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		{
 			// Left operand
 			Expression left = n.getLeft();
-			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(left);
 			to_explore.accept(left_visitor);
 			m_model.add(bin_node, ARG_1, left_visitor.getRoot());
@@ -302,14 +332,14 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		{
 			// Right operand
 			Expression right = n.getRight();
-			JavaAstToRdfVisitor right_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+			JavaAstToRdfVisitor right_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(right);
 			to_explore.accept(right_visitor);
 			m_model.add(bin_node, ARG_2, right_visitor.getRoot());
 		}
 		stop();
 	}
-	
+
 	@Override
 	public void visit(UnaryExpr n)
 	{
@@ -320,15 +350,15 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		{
 			// Left operand
 			Expression left = n.getExpression();
-			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+			JavaAstToRdfVisitor left_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(left);
 			to_explore.accept(left_visitor);
 			m_model.add(bin_node, ARG_1, left_visitor.getRoot());
 		}
 		stop();
 	}
-	
-	
+
+
 
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n)
@@ -361,7 +391,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				m_parents.push(param_node);
 				for (com.github.javaparser.ast.body.Parameter p : params)
 				{
-					JavaAstToRdfVisitor param_visitor = new JavaAstToRdfVisitor(m_model, m_index, param_node, m_follow);
+					JavaAstToRdfVisitor param_visitor = new JavaAstToRdfVisitor(m_model, m_index, param_node, m_follow, m_context);
 					PushPopVisitableNode to_explore = new PushPopVisitableNode(p);
 					to_explore.accept(param_visitor);
 				}
@@ -382,7 +412,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				stop();
 				return;
 			}
-			JavaAstToRdfVisitor body_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow);
+			JavaAstToRdfVisitor body_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
 			PushPopVisitableNode to_explore = new PushPopVisitableNode(b);
 			to_explore.accept(body_visitor);
 			m_model.add(method_node, IN, body_visitor.getRoot());

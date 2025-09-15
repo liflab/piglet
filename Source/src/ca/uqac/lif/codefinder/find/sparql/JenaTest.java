@@ -20,6 +20,7 @@ package ca.uqac.lif.codefinder.find.sparql;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 
 import org.apache.jena.atlas.lib.StrUtils;
@@ -69,6 +70,8 @@ public class JenaTest
 
 	public static void main(String[] args) throws Exception
 	{
+		s_sourcePaths.add("srcpath");
+		s_root = "mypackage";
 		CTX = ThreadLocal.withInitial(() -> {
 			try {
 		    CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
@@ -99,7 +102,7 @@ public class JenaTest
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
     		+ "}");*/
-		FileInputStream fis = new FileInputStream("/home/sylvain/AssertionStudy/Repositories/hadoop/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/test/java/org/apache/hadoop/yarn/server/resourcemanager/reservation/TestReservationInputValidator.java");
+		FileInputStream fis = new FileInputStream("Test.java");
 		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
 		fis.close();
     if (!cu.isSuccessful())
@@ -109,7 +112,7 @@ public class JenaTest
 		}
     PushPopVisitableNode n = new PushPopVisitableNode(cu.getResult().get());
     // Build RDF model
-    ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(n, 0);
+    ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(n, 2, ctx);
     
     LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
 		
@@ -118,12 +121,12 @@ public class JenaTest
 	  .put(NS + "resolvedType",
 	       (uri) -> new ResolveType(globalAstIndex, ctx.getTypeSolver()));
 		
-		/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		FileOutputStream fos = new FileOutputStream("/tmp/model.rdf");
-		RDFDataMgr.write(fos, r.getModel(), Lang.RDFXML);
-		fos.close();*/
-		//System.out.println(baos.toString());
+		FileOutputStream fos = new FileOutputStream("/tmp/model.dot");
+		RdfRenderer renderer = new RdfRenderer(r.getModel());
+		renderer.toDot(new PrintStream(fos));
+		fos.close();;
 
+		/*
 		ResultSet resultSet1 = QueryExecution.model(r.getModel())
 				//.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
 				.query(prefixes + "SELECT ?n (GROUP_CONCAT(DISTINCT ?t;separator=\",\") AS ?types)\n"
@@ -136,5 +139,6 @@ public class JenaTest
 						+ "HAVING (COUNT(DISTINCT ?t) > 1 || COUNT(DISTINCT ?nm) > 1)\n"
 						+ "LIMIT 20").select();
     ResultSetFormatter.out(resultSet1);
+    */
 	}
 }

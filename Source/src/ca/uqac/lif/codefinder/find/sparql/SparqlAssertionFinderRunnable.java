@@ -113,7 +113,7 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
-			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow);	    
+			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context);	    
 			LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
 			for (SparqlTokenFinderFactory fac : finders)
 			{

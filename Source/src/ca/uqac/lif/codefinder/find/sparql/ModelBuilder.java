@@ -21,6 +21,7 @@ import org.apache.jena.rdf.model.Model;
 
 import com.github.javaparser.ast.expr.Expression;
 
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 
 public class ModelBuilder
@@ -28,9 +29,9 @@ public class ModelBuilder
 	/** Namespace for the vocabulary */
 	public static final String NS = "http://liflab.uqac.ca/codefinder#";
 
-	public static ModelBuilderResult buildModel(PushPopVisitableNode n, int follow)
+	public static ModelBuilderResult buildModel(PushPopVisitableNode n, int follow, TokenFinderContext context)
 	{
-		JavaAstToRdfVisitor visitor = new JavaAstToRdfVisitor(follow);
+		JavaAstToRdfVisitor visitor = new JavaAstToRdfVisitor(follow, context);
 		n.accept(visitor);
 		return new ModelBuilderResult(visitor.getModel(), visitor.getIndex());
 	}

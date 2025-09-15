@@ -113,6 +113,7 @@ import com.github.javaparser.ast.type.VarType;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.type.WildcardType;
 
+import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitor;
 
@@ -137,21 +138,25 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	protected boolean m_shouldStop = false;
 	
 	protected final int m_follow;
+	
+	protected final TokenFinderContext m_context;
 
 	/**
 	 * Creates a new visitor.
 	 */
-	public AstToRdfVisitor(int follow)
+	public AstToRdfVisitor(int follow, TokenFinderContext context)
 	{
 		super();
 		m_follow = follow;
 		m_index = new JavaAstNodeIndex();
 		m_model = ModelFactory.createDefaultModel();
+		m_context = context;
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, Resource parent, int follow)
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, Resource parent, int follow, TokenFinderContext context)
 	{
 		super();
+		m_context = context;
 		m_follow = follow;
 		m_index = index;
 		m_model = m;
@@ -161,9 +166,9 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		}
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, int follow)
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, int follow, TokenFinderContext context)
 	{
-		this(m, index, null, follow);
+		this(m, index, null, follow, context);
 	}
 
 	/**
