@@ -143,7 +143,6 @@ public class SparqlTokenFinder implements TokenFinder
 
 	public void process()
 	{
-
 		String PF = "http://liflab.uqac.ca/resolvedtype";
 		QueryExecution qe = QueryExecution.model(m_model).query(prefixes + m_query).build();
 		Context ctx = qe.getContext();

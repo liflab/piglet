@@ -198,7 +198,6 @@ public class Main
 			return ret;
 		}
 
-
 		/* Setup the file provider */
 		List<String> folders = s_map.getOthers(); // The files to read from
 		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
@@ -218,7 +217,8 @@ public class Main
 		int total = fsp.filesProvided();
 		Map<String, List<FoundToken>> categorized = new TreeMap<>();
 		Set<FoundToken> found = new HashSet<>();
-		Runtime.getRuntime().addShutdownHook(new Thread(new EndRunnable(categorized, found.size(), s_summary)));
+		EndRunnable end_callback = new EndRunnable(categorized, found.size(), s_summary);
+		Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
 
 		CTX = ThreadLocal.withInitial(() -> {
 			try {
@@ -287,6 +287,7 @@ public class Main
 			Thread.currentThread().interrupt();
 		}
 		end_time = System.currentTimeMillis();
+		end_callback.setTotal(found.size());
 		long duration = end_time - start_time;
 		status.cleanup();
 		s_stdout.println((s_limit >= 0 ? s_limit : total) + " file(s) analyzed");
@@ -740,7 +741,7 @@ public class Main
 	{
 		private final Map<String, List<FoundToken>> m_found;
 		
-		private final int m_total;
+		private int m_total;
 
 		private final boolean m_summary;
 
@@ -749,6 +750,11 @@ public class Main
 			super();
 			m_found = found;
 			m_summary = summary;
+			m_total = total;
+		}
+		
+		public void setTotal(int total)
+		{
 			m_total = total;
 		}
 
