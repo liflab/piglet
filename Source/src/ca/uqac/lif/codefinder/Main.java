@@ -464,11 +464,11 @@ public class Main
 		}
 		if (map.containsKey("output"))
 		{
-			s_follow = Integer.parseInt(map.getOptionValue("output").trim());
+			s_outputFile = map.getOptionValue("output");
 		}
 		if (map.containsKey("follow"))
 		{
-			s_outputFile = map.getOptionValue("output");
+			s_follow = Integer.parseInt(map.getOptionValue("output").trim());
 		}
 		if (map.containsKey("source"))
 		{
