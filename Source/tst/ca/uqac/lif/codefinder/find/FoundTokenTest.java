@@ -34,7 +34,7 @@ public class FoundTokenTest
 	{
 		FoundToken ft = new FoundToken("assert", "MyFile.java", 10, 20, "assert x > 0;");
 		XmlPrinter xp = new XmlPrinter();
-		Object out = ft.print(xp);
+		Object out = xp.print(ft);
 		assertTrue(out instanceof XmlElement);
 		XmlElement xe = (XmlElement) out;
 		XmlReader xr = new XmlReader();
@@ -42,6 +42,5 @@ public class FoundTokenTest
 		assertTrue(o2 instanceof FoundToken);
 		FoundToken ft2 = (FoundToken) o2;
 		assertEquals(ft.getSnippet(), ft2.getSnippet());
-		
 	}
 }

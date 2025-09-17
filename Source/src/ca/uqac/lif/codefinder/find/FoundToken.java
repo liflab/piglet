@@ -51,6 +51,18 @@ public class FoundToken implements Comparable<FoundToken>, Printable, Readable
 	protected final String m_name;
 	
 	/**
+	 * Default constructor (for serialization purposes).
+	 */
+	protected FoundToken()
+	{
+		m_name = "";
+		m_filename = "";
+		m_startLine = 0;
+		m_endLine = 0;
+		m_snippet = "";
+	}
+	
+	/**
 	 * Constructs a FoundToken with a code snippet.
 	 * @param filename The name of the file
 	 * @param start_line The starting line number
