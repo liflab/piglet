@@ -59,7 +59,7 @@ public class QueryTest
 	/** Common prefixes for SPARQL queries */
 	private static final String prefixes = 
 			"PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-					"PREFIX lif:  <" + ModelBuilder.NS + ">\n" +
+					"PREFIX :  <" + ModelBuilder.NS + ">\n" +
 					"\n";
 
 	/**
@@ -89,8 +89,8 @@ public class QueryTest
 		ModelBuilderResult res = readCode("MyClass1.java.src");
 		String q = prefixes + """
 				SELECT ?n WHERE {
-				?n lif:nodetype "MethodDeclaration" .
-				?n lif:javadoc ?x
+				?n :nodetype "MethodDeclaration" .
+				?n :javadoc ?x
 				}
 				""";
 		ResultSet rs = QueryExecution.model(res.getModel())
@@ -104,8 +104,8 @@ public class QueryTest
 		ModelBuilderResult res = readCode("MyClass2.java.src");
 		String q = prefixes + """
 				SELECT ?n WHERE {
-				?n lif:nodetype "MethodDeclaration" .
-				?n lif:javadoc ?x
+				?n :nodetype "MethodDeclaration" .
+				?n :javadoc ?x
 				}
 				""";
 		ResultSet rs = QueryExecution.model(res.getModel())
@@ -119,9 +119,9 @@ public class QueryTest
 		ModelBuilderResult res = readCode("MyClass1.java.src");
 		String q = prefixes + """
 				SELECT ?n WHERE {
-				?c lif:nodetype "CompilationUnit" .
-				?c lif:in+ ?n .
-				?n lif:nodetype "MethodDeclaration"
+				?c :nodetype "CompilationUnit" .
+				?c :in+ ?n .
+				?n :nodetype "MethodDeclaration"
 				}
 				""";
 		ResultSet rs = QueryExecution.model(res.getModel())
@@ -135,9 +135,9 @@ public class QueryTest
 		ModelBuilderResult res = readCode("MyClass2.java.src");
 		String q = prefixes + """
 				SELECT ?n WHERE {
-				?c lif:nodetype "CompilationUnit" .
-				?c lif:in+ ?n .
-				?n lif:nodetype "MethodCallExpr"
+				?c :nodetype "CompilationUnit" .
+				?c :in+ ?n .
+				?n :nodetype "MethodCallExpr"
 				}
 				""";
 		ResultSet rs = QueryExecution.model(res.getModel())
@@ -151,12 +151,12 @@ public class QueryTest
 		ModelBuilderResult res = readCode("MyClass2.java.src");
 		String q = prefixes + """
 				SELECT ?n WHERE {
-				?n lif:resolvedtype "int"
+				?n :resolvedtype "int"
 				}
 				""";
 		// Register property function
 		PropertyFunctionRegistry.get()
-		.put("http://liflab.uqac.ca/resolvedtype",
+		.put(":resolvedtype",
 				(uri) -> new ResolveType(res.getIndex(), ts));
 		ResultSet rs = QueryExecution.model(res.getModel())
 				.query(q).select();
@@ -185,7 +185,7 @@ public class QueryTest
 		String code = new String(FileUtils.toBytes(QueryTest.class.getResourceAsStream(path)));
 		ParseResult<CompilationUnit> res = parser.parse(code);
 		PushPopVisitableNode ppn = new PushPopVisitableNode(res.getResult().get());
-		ModelBuilderResult r = ModelBuilder.buildModel(ppn);
+		ModelBuilderResult r = ModelBuilder.buildModel(ppn, 0, null);
 		return r;
 	}
 }

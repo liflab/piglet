@@ -182,5 +182,14 @@
       </files>
      <bundle>true</bundle>
     </dependency>
+    <dependency> 
+     <name>Azrael</name>
+     <classname>ca.uqac.lif.azrael.Printable</classname>
+      <files>
+	      <jar>https://github.com/sylvainhalle/Azrael/releases/download/v2.2/azrael-core-2.2.jar</jar>
+	      <jar>https://github.com/sylvainhalle/Azrael/releases/download/v2.2/azrael-xml-2.2.jar</jar>
+      </files>
+     <bundle>true</bundle>
+    </dependency>
   </dependencies>
 </build>

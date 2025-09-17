@@ -138,6 +138,9 @@ public class Main
 
 	/** Timeout for type resolution operations (in milliseconds) */
 	protected static long s_resolutionTimeout = 100;
+	
+	/** Whether to cache analysis results */
+	protected static boolean s_cache = true;
 
 	/** Thread-local context (parser, type solver, etc.) */
 	public static ThreadLocal<TokenFinderContext> CTX;
@@ -340,6 +343,7 @@ public class Main
 				return ret;
 			}
 		}
+		s_cache = !map.containsKey("no-cache");
 		if (map.containsKey("query"))
 		{
 			s_astFinders.clear();
@@ -415,7 +419,7 @@ public class Main
 						AstAssertionFinderFactory factory = readBeanshell(hd, bsh_file);
 						hd.popd();
 						s_astFinders.add(factory);
-					}					
+					}				
 				}
 			}
 			catch (FileSystemException e)
@@ -567,14 +571,11 @@ public class Main
 
 	protected static AstAssertionFinderFactory readBeanshell(HardDisk hd, String filename) throws FileSystemException, EvalError
 	{
-		//FilePath bsh_path = s_homePath.chdir(getPathOfFile(filename));
-		//hd.pushd(getPathOfFile(filename).toString());
 		String bsh_code = FileUtils.readStringFrom(hd, getFilename(filename));
-		//hd.popd();
 		bsh_code.replaceAll("^\\s*void visit\\(", "public void visit(");
 		bsh_code.replaceAll("^\\s*void leave\\(", "public void leave(");
 		Interpreter interpreter = new Interpreter();
-		// Use the same loader that sees your app’s classes
+		// Use the same loader that sees your app's classes
 		ClassLoader appCl = Main.class.getClassLoader();
 		interpreter.setClassLoader(appCl);
 		Thread.currentThread().setContextClassLoader(appCl);
@@ -639,6 +640,8 @@ public class Main
 				.withDescription("Read queries from x (file or folder)"));
 		cli.addArgument(new Argument().withShortName("f").withLongName("follow").withArgument("d")
 				.withDescription("Follow method calls up to depth d (default: 0)"));
+		cli.addArgument(new Argument().withLongName("no-cache")
+				.withDescription("Do not reuse cached analysis results"));
 		return cli;
 	}
 

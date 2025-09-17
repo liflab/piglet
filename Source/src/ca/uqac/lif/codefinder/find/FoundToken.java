@@ -17,11 +17,21 @@
  */
 package ca.uqac.lif.codefinder.find;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import ca.uqac.lif.azrael.ObjectPrinter;
+import ca.uqac.lif.azrael.ObjectReader;
+import ca.uqac.lif.azrael.PrintException;
+import ca.uqac.lif.azrael.Printable;
+import ca.uqac.lif.azrael.ReadException;
+import ca.uqac.lif.azrael.Readable;
+
 /**
  * Represents a token found in a source file, such as an assertion or code fragment.
  * Stores the filename, start and end line numbers, and an optional code snippet.
  */
-public class FoundToken implements Comparable<FoundToken>
+public class FoundToken implements Comparable<FoundToken>, Printable, Readable
 {
 	/** The name of the file where the token was found. */
 	protected final String m_filename;
@@ -127,5 +137,38 @@ public class FoundToken implements Comparable<FoundToken>
 			return m_startLine - o.m_startLine;
 		}
 		return m_filename.compareTo(o.m_filename);
+	}
+
+	@Override
+	public FoundToken read(ObjectReader<?> reader, Object o) throws ReadException
+	{
+		Object map_o = reader.read(o);
+		if (!(map_o instanceof Map))
+		{
+			throw new ReadException("Expected a map, got " + o.getClass().getName());
+		}
+		@SuppressWarnings("unchecked")
+		Map<String,Object> map = (Map<String,Object>) map_o;
+		String name = (String) map.get("name");
+		String filename = (String) map.get("filename");
+		int start_line = ((Number) map.get("start_line")).intValue();
+		int end_line = ((Number) map.get("end_line")).intValue();
+		String snippet = map.getOrDefault("snippet", "").toString();
+		return new FoundToken(name, filename, start_line, end_line, snippet);
+	}
+
+	@Override
+	public Object print(ObjectPrinter<?> printer) throws PrintException
+	{
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("name", m_name);
+		map.put("filename", m_filename);
+		map.put("start_line", m_startLine);
+		map.put("end_line", m_endLine);
+		if (m_snippet != null && !m_snippet.isEmpty())
+		{
+			map.put("snippet", m_snippet);
+		}
+		return printer.print(map);
 	}
 }
