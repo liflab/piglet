@@ -430,6 +430,8 @@ public class Main
 			HtmlReporter reporter = new HtmlReporter(
 					new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
 			reporter.report(reverse_path, found.size(), categorized, new HashSet<String>());
+			hd.close();
+			hd = new HardDisk(s_cacheFolder).open();
 			serializeResults(hd, categorized);
 			hd.close();
 		}
@@ -464,7 +466,7 @@ public class Main
 			List<FoundToken> list = e.getValue();
 			XmlPrinter xp = new XmlPrinter();
 			String s = xp.print(list).toString();
-			FileUtils.writeStringTo(fs, s, name + ".xml");
+			FileUtils.writeStringTo(fs, s, s_projectName + name + ".xml");
 		}
 	}
 
@@ -495,6 +497,14 @@ public class Main
 			}
 		}
 		s_cache = !map.containsKey("no-cache");
+		if (map.containsKey("project"))
+		{
+			s_projectName = map.getOptionValue("project");
+		}
+		else if (s_projectName.isEmpty())
+		{
+			s_stdout.println("Project name not specified, using '" + s_projectName + "' (use --project to specify)");
+		}
 		if (map.containsKey("query"))
 		{
 			s_astFinders.clear();
