@@ -20,7 +20,6 @@ package ca.uqac.lif.codefinder.find.visitor;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * An abstract base class for finders that look for assertions in Java code.
@@ -98,9 +97,4 @@ public abstract class VisitorAssertionFinder extends VisitorTokenFinder
 		return isAssertionEquals(m) || isAssertionNotEquals(m) || isAssertThat(m);
 	}
 	
-	public static abstract class AstAssertionFinderFactory extends TokenFinderFactory
-	{
-		@Override
-		public abstract VisitorAssertionFinder newFinder();
-	}
 }

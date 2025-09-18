@@ -17,8 +17,6 @@
  */
 package ca.uqac.lif.codefinder.find.sparql;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,17 +27,13 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.Expression;
 
-import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinderRunnable;
-import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinder.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
-import ca.uqac.lif.fs.FileSystemException;
-import ca.uqac.lif.fs.FileUtils;
 
 /**
  * A runnable that processes a single Java file to find assertions.
@@ -59,39 +53,16 @@ public class SparqlTokenFinderRunnable extends TokenFinderRunnable
 	 * @param status A callback to report status
 	 * @param follow Whether to follow method calls when building the model
 	 */
-	public SparqlTokenFinderRunnable(FileSource source, Set<? extends TokenFinderFactory> finders, boolean quiet, StatusCallback status, int follow)
+	public SparqlTokenFinderRunnable(String project, FileSource source, Set<? extends TokenFinderFactory> finders, boolean quiet, StatusCallback status, int follow)
 	{
-		super(source.getFilename(), source, quiet, status, finders);
+		super(project, source.getFilename(), source, quiet, status, finders);
 		m_follow = follow;
 	}
 
 	@Override
-	public void run()
+	protected void doRun(TokenFinderContext context, String code)
 	{
-		TokenFinderContext context = Main.CTX.get();
-		InputStream is;
-		String code = "";
-		try
-		{
-			is = m_fSource.getStream();
-			code = new String(FileUtils.toBytes(is));
-			is.close();
-		}
-		catch (FileSystemException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		processFile(context, m_file, code, m_finders, m_quiet, m_follow);
-		if (m_callback != null)
-		{
-			m_callback.done();
-		}
 	}
 
 	/**

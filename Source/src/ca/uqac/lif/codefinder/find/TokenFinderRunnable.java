@@ -17,6 +17,8 @@
  */
 package ca.uqac.lif.codefinder.find;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,13 +28,19 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 
+import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
+import ca.uqac.lif.fs.FileSystemException;
+import ca.uqac.lif.fs.FileUtils;
 
 public abstract class TokenFinderRunnable implements Runnable
 {
 	/** The file name */
 	protected final String m_file;
+	
+	/** The project name */
+	protected final String m_project;
 	
 	/** The file source from which to read */
 	protected final FileSource m_fSource;
@@ -51,14 +59,17 @@ public abstract class TokenFinderRunnable implements Runnable
 	
 	/**
 	 * Creates a new runnable.
+	 * @param project The project name
+	 * @param file The file name
 	 * @param source The file source from which to read
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public TokenFinderRunnable(String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
+	public TokenFinderRunnable(String project, String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
 	{
 		super();
+		m_project = project;
 		m_file = file;
 		m_fSource = source;
 		m_found = new HashSet<FoundToken>();
@@ -108,11 +119,35 @@ public abstract class TokenFinderRunnable implements Runnable
 		return false;
 	}
 	
-	protected boolean mustRun()
+	@Override
+	public final void run()
 	{
-		
-		return true;
+		TokenFinderContext context = Main.CTX.get();
+		InputStream is;
+		String code = "";
+		try
+		{
+			is = m_fSource.getStream();
+			code = new String(FileUtils.toBytes(is));
+			is.close();
+		}
+		catch (FileSystemException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		doRun(context, code);
+		if (m_callback != null)
+		{
+			m_callback.done();
+		}
 	}
 	
+	protected abstract void doRun(TokenFinderContext context, String code);
 
 }

@@ -56,6 +56,15 @@ public class FileSource
 	}
 	
 	/**
+	 * Returns the file system the file belongs to.
+	 * @return The file system
+	 */
+	public FileSystem getFileSystem()
+	{
+		return m_fileSystem;
+	}
+	
+	/**
 	 * Returns the name of the file.
 	 * @return The file name
 	 */

@@ -17,20 +17,14 @@
  */
 package ca.uqac.lif.codefinder.find.sparql;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.HashSet;
 
 import org.apache.jena.atlas.lib.StrUtils;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
 
 import com.github.javaparser.JavaParser;

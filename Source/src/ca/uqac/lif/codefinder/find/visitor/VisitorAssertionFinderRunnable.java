@@ -17,8 +17,6 @@
  */
 package ca.uqac.lif.codefinder.find.visitor;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -26,15 +24,11 @@ import java.util.Set;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
-import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinderRunnable;
-import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinder.AstAssertionFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
-import ca.uqac.lif.fs.FileSystemException;
-import ca.uqac.lif.fs.FileUtils;
 
 /**
  * A runnable that processes a single Java file to find assertions.
@@ -43,44 +37,54 @@ public class VisitorAssertionFinderRunnable extends TokenFinderRunnable
 {		
 	/**
 	 * Creates a new runnable.
-	 * @param context The thread context
+	 * @param project The project name
 	 * @param source The file source from which to read
 	 * @param finders The set of finders to use
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public VisitorAssertionFinderRunnable(FileSource source, Set<AstAssertionFinderFactory> finders, boolean quiet, StatusCallback status)
+	public VisitorAssertionFinderRunnable(String project, FileSource source, Set<VisitorAssertionFinderFactory> finders, boolean quiet, StatusCallback status)
 	{
-		super(source.getFilename(), source, quiet, status, finders);
+		super(project, source.getFilename(), source, quiet, status, finders);
 	}
 	
 	@Override
-	public void run()
+	protected void doRun(TokenFinderContext context, String code)
 	{
-		TokenFinderContext context = Main.CTX.get();
-		InputStream is;
-		String code = "";
 		try
 		{
-			is = m_fSource.getStream();
-			code = new String(FileUtils.toBytes(is));
-			is.close();
+			CompilationUnit u = context.getParser().parse(code).getResult().get();
+			List<MethodDeclaration> methods = getTestCases(u);
+			/*if (methods.isEmpty() && !quiet)
+			{
+				// No test cases in this file
+				System.err.println("WARNING: No test cases found in " + file);
+			}*/
+			for (MethodDeclaration m : methods)
+			{
+				PushPopVisitableNode pm = new PushPopVisitableNode(m);
+				for (TokenFinderFactory t_factory : m_finders)
+				{
+					if (!(t_factory instanceof VisitorAssertionFinderFactory))
+					{
+						continue;
+					}
+					VisitorAssertionFinder new_f = (VisitorAssertionFinder) t_factory.newFinder();
+					new_f.setFilename(m_file);
+					new_f.setContext(context);
+					pm.accept(new_f);
+					m_found.addAll(new_f.getFoundTokens());
+				}
+			}
 		}
-		catch (FileSystemException e)
+		catch (NoSuchElementException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		processFile(context, m_file, code, m_finders, m_quiet);
-		if (m_callback != null)
-		{
-			m_callback.done();
+			// Ignore this file
+			if (!m_quiet)
+			{
+				System.err.println("Could not parse " + m_file);
+			}
 		}
 	}
 	
@@ -95,43 +99,6 @@ public class VisitorAssertionFinderRunnable extends TokenFinderRunnable
 	 */
 	protected void processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet)
 	{
-		if (!mustRun())
-		{
-			return;
-		}
-		try
-		{
-			CompilationUnit u = context.getParser().parse(code).getResult().get();
-			List<MethodDeclaration> methods = getTestCases(u);
-			/*if (methods.isEmpty() && !quiet)
-			{
-				// No test cases in this file
-				System.err.println("WARNING: No test cases found in " + file);
-			}*/
-			for (MethodDeclaration m : methods)
-			{
-				PushPopVisitableNode pm = new PushPopVisitableNode(m);
-				for (TokenFinderFactory t_factory : finders)
-				{
-					if (!(t_factory instanceof AstAssertionFinderFactory))
-					{
-						continue;
-					}
-					VisitorAssertionFinder new_f = (VisitorAssertionFinder) t_factory.newFinder();
-					new_f.setFilename(file);
-					new_f.setContext(context);
-					pm.accept(new_f);
-					m_found.addAll(new_f.getFoundTokens());
-				}
-			}
-		}
-		catch (NoSuchElementException e)
-		{
-			// Ignore this file
-			if (!quiet)
-			{
-				System.err.println("Could not parse " + file);
-			}
-		}
+		
 	}
 }

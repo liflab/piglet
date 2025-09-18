@@ -1,7 +1,7 @@
-package ca.uqac.lif.codefinder.find.ast;
+package ca.uqac.lif.codefinder.find.visitor;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.*;
 
-return new AstAssertionFinder.AstAssertionFinderFactory() {
+return new VisitorAssertionFinderFactory("$NAME$") {
 
-public AstAssertionFinder newFinder() { return new AstAssertionFinder("$NAME$") {
+public VisitorAssertionFinder newFinder() { return new VisitorAssertionFinder("$NAME$") {

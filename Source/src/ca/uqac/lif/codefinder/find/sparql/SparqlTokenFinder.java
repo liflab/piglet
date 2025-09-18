@@ -17,8 +17,9 @@
  */
 package ca.uqac.lif.codefinder.find.sparql;
 
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.atlas.lib.StrUtils;
@@ -34,9 +35,12 @@ import org.apache.jena.sparql.util.Context;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.Expression;
 
+import ca.uqac.lif.azrael.ObjectPrinter;
+import ca.uqac.lif.azrael.ObjectReader;
+import ca.uqac.lif.azrael.PrintException;
+import ca.uqac.lif.azrael.ReadException;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinder;
 
 /**
@@ -119,13 +123,13 @@ public class SparqlTokenFinder implements TokenFinder
 	}
 
 	@Override
-	public Collection<Throwable> getErrors()
+	public Set<Throwable> getErrors()
 	{
 		return new HashSet<Throwable>();
 	}
 
 	@Override
-	public Collection<FoundToken> getFoundTokens()
+	public Set<FoundToken> getFoundTokens()
 	{
 		return m_found;
 	}
@@ -178,30 +182,50 @@ public class SparqlTokenFinder implements TokenFinder
 			m_found.add(t);
 		}
 	}
-
-	public static class SparqlTokenFinderFactory extends TokenFinderFactory
+	
+	@Override
+	public Object print(ObjectPrinter<?> p) throws PrintException
 	{
-		/**
-		 * The name of this finder
-		 */
-		protected final String m_name;
+		Map<String,Object> m = new HashMap<>();
+		m.put("name", getName());
+		m.put("found_tokens", getFoundTokens());
+		return p.print(m);
+	}
 
-		/**
-		 * The SPARQL query to execute.
-		 */
-		protected final String m_query;
-
-		public SparqlTokenFinderFactory(String name, String query)
+	@SuppressWarnings("unchecked")
+	@Override
+	public SparqlTokenFinder read(ObjectReader<?> r, Object x) throws ReadException
+	{
+		Object o = r.read(x);
+		if (!(o instanceof Map<?, ?>))
 		{
-			super();
-			m_name = name;
-			m_query = query;
+			throw new ReadException("Expected a map, got " + o.getClass().getSimpleName());
 		}
-
-		@Override
-		public SparqlTokenFinder newFinder()
+		String name = null;
+		Set<FoundToken> found_tokens = new HashSet<>();
+		Map<String, Object> m = (Map<String, Object>) o;
+		if (m.containsKey("name"))
 		{
-			return new SparqlTokenFinder(m_name, m_query);
+			name = (String) m.get("name");
 		}
+		else
+		{
+			throw new ReadException("Missing 'name' entry");
+		}
+		if (m.containsKey("errors"))
+		{
+			// Ignore errors for the moments, as exceptions are hard to serialize
+		}
+		if (m.containsKey("found_tokens"))
+		{
+			found_tokens.addAll((Set<FoundToken>) m.get("found_tokens"));
+		}
+		else
+		{
+			throw new ReadException("Missing 'found_tokens' entry");
+		}
+		SparqlTokenFinder tf = new SparqlTokenFinder(name, m_query, m_model);
+		tf.m_found.addAll(found_tokens);
+		return tf;
 	}
 }
