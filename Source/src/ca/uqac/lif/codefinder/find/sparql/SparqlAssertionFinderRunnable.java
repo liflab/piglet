@@ -47,10 +47,10 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 {	
 	/** The set of finders to use */
 	protected final Set<SparqlTokenFinderFactory> m_finders;
-	
+
 	/** Whether to follow method calls when building the model */
 	protected final int m_follow;
-	
+
 	/**
 	 * Creates a new runnable.
 	 * @param context The thread context
@@ -67,7 +67,7 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 		m_finders = finders;
 		m_follow = follow;
 	}
-	
+
 	@Override
 	public void run()
 	{
@@ -96,7 +96,7 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 			m_callback.done();
 		}
 	}
-	
+
 	/**
 	 * Processes a single Java file to find assertions.
 	 * @param p The Java parser to use
@@ -109,6 +109,10 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 	 */
 	protected void processFile(TokenFinderContext context, String file, String code, Set<SparqlTokenFinderFactory> finders, boolean quiet, int follow)
 	{
+		if (!mustRun())
+		{
+			return;
+		}
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
@@ -135,12 +139,13 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 			}
 		}
 	}
-	
+
+	@Override
 	public Set<FoundToken> getFound()
 	{
 		return m_found;
 	}
-	
+
 	/**
 	 * Gets the list of test cases in a compilation unit.
 	 * @param u The compilation unit

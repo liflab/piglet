@@ -104,5 +104,12 @@ public abstract class AssertionFinderRunnable implements Runnable
 		}
 		return false;
 	}
+	
+	protected boolean mustRun()
+	{
+		
+		return true;
+	}
+	
 
 }

@@ -45,6 +45,8 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 
 import bsh.EvalError;
 import bsh.Interpreter;
+import ca.uqac.lif.azrael.PrintException;
+import ca.uqac.lif.azrael.xml.XmlPrinter;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
@@ -58,6 +60,7 @@ import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
+import ca.uqac.lif.codefinder.report.Reporter.ReporterException;
 import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
@@ -91,6 +94,12 @@ public class Main
 
 	/** Return code indicating a BeanShell error */
 	public static final int RET_BSH = 3;
+	
+	/** Return code indicating an error in the command line */
+	public static final int RET_CLI = 4;
+	
+	/** Return code indicating an unclassified error */
+	public static final int RET_OTHER = 5;
 
 	/** Standard output */
 	protected static final AnsiPrinter s_stdout = new AnsiPrinter(System.out);
@@ -132,13 +141,13 @@ public class Main
 
 	/** Limit to the number of files to process (for testing purposes) */
 	protected static int s_limit = -1;
-	
+
 	/** Depth to which method calls should be followed */
 	protected static int s_follow = 0;
 
 	/** Timeout for type resolution operations (in milliseconds) */
 	protected static long s_resolutionTimeout = 100;
-	
+
 	/** Whether to cache analysis results */
 	protected static boolean s_cache = true;
 
@@ -242,7 +251,7 @@ public class Main
 				throw new RuntimeException("Failed to init per-thread context", e);
 			}
 		});
-		
+
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout, (s_limit >= 0 ? Math.min(total, s_limit) : total));
 		Thread status_thread = new Thread(status);
@@ -310,17 +319,41 @@ public class Main
 			HtmlReporter reporter = new HtmlReporter(
 					new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
 			reporter.report(reverse_path, found.size(), categorized, new HashSet<String>());
+			serializeResults(hd, categorized);
 			hd.close();
 		}
-		catch (IOException e)
+		catch (ReporterException e)
 		{
-			return RET_IO;
-		}
-		catch (FileSystemException e)
-		{
-			return RET_FS;
+			Throwable t = e.getCause();
+			if (t instanceof IOException)
+			{
+				s_stderr.println("I/O error while writing report: " + t.getMessage());
+				return RET_IO;
+			}
+			else if (t instanceof FileSystemException)
+			{
+				s_stderr.println("File system error while writing report: " + t.getMessage());
+				return RET_FS;
+			}
+			else
+			{
+				s_stderr.println("Error while writing report: " + e.getMessage());
+				return RET_OTHER;
+			}
 		}
 		return RET_OK;
+	}
+
+	protected static void serializeResults(FileSystem fs, Map<String, List<FoundToken>> categorized) throws PrintException, FileSystemException
+	{
+		for (Map.Entry<String,List<FoundToken>> e : categorized.entrySet())
+		{
+			String name = e.getKey();
+			List<FoundToken> list = e.getValue();
+			XmlPrinter xp = new XmlPrinter();
+			String s = xp.print(list).toString();
+			FileUtils.writeStringTo(fs, s, name + ".xml");
+		}
 	}
 
 	/**
@@ -688,6 +721,7 @@ public class Main
 		{
 			found.addAll(r.getFound());
 		}
+
 	}
 
 	public static void waitForEnd(List<Future<?>> futures)
@@ -743,7 +777,7 @@ public class Main
 	protected static class EndRunnable implements Runnable
 	{
 		private final Map<String, List<FoundToken>> m_found;
-		
+
 		private int m_total;
 
 		private final boolean m_summary;
@@ -755,7 +789,7 @@ public class Main
 			m_summary = summary;
 			m_total = total;
 		}
-		
+
 		public void setTotal(int total)
 		{
 			m_total = total;
@@ -774,9 +808,9 @@ public class Main
 			{
 				cli_reporter.report(null, m_total, m_found, new HashSet<String>());
 			}
-			catch (IOException e)
+			catch (ReporterException e)
 			{
-				// Ignore
+				// Ignore for the moment
 			}
 		}
 	}

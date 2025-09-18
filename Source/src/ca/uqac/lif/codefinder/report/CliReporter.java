@@ -17,7 +17,6 @@
  */
 package ca.uqac.lif.codefinder.report;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ public class CliReporter implements Reporter
 	}
 	
 	@Override
-	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
+	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException
 	{
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
 		{

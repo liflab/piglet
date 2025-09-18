@@ -99,6 +99,10 @@ public class AstAssertionFinderRunnable extends AssertionFinderRunnable
 	 */
 	protected void processFile(TokenFinderContext context, String file, String code, Set<AstAssertionFinderFactory> finders, boolean quiet)
 	{
+		if (!mustRun())
+		{
+			return;
+		}
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();

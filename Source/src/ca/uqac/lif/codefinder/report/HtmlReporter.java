@@ -31,29 +31,45 @@ import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.util.Paths;
 import ca.uqac.lif.fs.FilePath;
+import ca.uqac.lif.fs.FileSystemException;
+import ca.uqac.lif.fs.FileUtils;
 
 public class HtmlReporter implements Reporter
 {
 	/** The output stream to which the report is sent */
 	protected final PrintStream m_out;
-	
+
 	public HtmlReporter(PrintStream out)
 	{
 		super();
 		m_out = out;
 	}
-	
+
 	@Override
-	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException
-	{ 
-		m_out.println("<!DOCTYPE html>");
-		m_out.println("<html>");
-		m_out.println("<head>");
-		m_out.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">");
-		m_out.println("<title>CodeFinder Report</title>");
-		printHighlightCss(m_out);
-		m_out.println("</head>");
-		m_out.println("<body>");
+	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException
+	{
+		try
+		{
+			FileUtils.copy(HtmlReporter.class.getResourceAsStream("header.html"), m_out);
+			printSummary(root, total, found, unresolved);
+			FileUtils.copy(HtmlReporter.class.getResourceAsStream("footer.html"), m_out);
+		}
+		catch (FileSystemException e)
+		{
+			throw new ReporterException(e);
+		}
+	}
+
+	/**
+	 * Prints a summary of the found tokens
+	 * @param root The root directory of the search
+	 * @param total The total number of tokens searched for
+	 * @param found A map associating file paths to lists of found tokens
+	 * @param unresolved A set of unresolved symbols, or <tt>null</tt> if
+	 * nothing to show
+	 */
+	protected void printSummary(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException
+	{
 		m_out.println("<h2>Summary</h2>");
 		m_out.println("<ul>");
 		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
@@ -85,10 +101,8 @@ public class HtmlReporter implements Reporter
 			}
 			m_out.println("</ul>");
 		}
-		m_out.println("</body>");
-		m_out.println("</html>");
 	}
-	
+
 	/**
 	 * Reports a list of found tokens to the output stream
 	 * @param root The root directory of the search

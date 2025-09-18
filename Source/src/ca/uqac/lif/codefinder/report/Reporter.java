@@ -17,7 +17,6 @@
  */
 package ca.uqac.lif.codefinder.report;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +37,37 @@ public interface Reporter
 	 * @param found A map associating file paths to lists of found tokens
 	 * @param unresolved A set of unresolved symbols, or <tt>null</tt> if
 	 * nothing to show
-	 * @throws IOException If an error occurs while writing the report
+	 * @throws ReporterException If an error occurs while writing the report
 	 */
-	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws IOException;
+	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException;
+	
+	/**
+	 * An exception that can be thrown by a reporter. This class is expected
+	 * to wrap any other exception that may occur during the reporting process.
+	 */
+	public static class ReporterException extends Throwable
+	{
+		/**
+		 * Dummy UID 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * Creates a new exception with the given message.
+		 * @param message The message
+		 */
+		public ReporterException(String message)
+		{
+			super(message);
+		}
+		
+		/**
+		 * Creates a new exception with the given cause.
+		 * @param t The cause
+		 */
+		public ReporterException(Throwable t)
+		{
+			super(t);
+		}
+	}
 }
