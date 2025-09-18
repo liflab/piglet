@@ -32,6 +32,7 @@ import com.github.javaparser.ast.expr.Expression;
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinder.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
@@ -45,9 +46,6 @@ import ca.uqac.lif.fs.FileUtils;
  */
 public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 {	
-	/** The set of finders to use */
-	protected final Set<SparqlTokenFinderFactory> m_finders;
-
 	/** Whether to follow method calls when building the model */
 	protected final int m_follow;
 
@@ -61,10 +59,9 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 	 * @param status A callback to report status
 	 * @param follow Whether to follow method calls when building the model
 	 */
-	public SparqlAssertionFinderRunnable(FileSource source, Set<SparqlTokenFinderFactory> finders, boolean quiet, StatusCallback status, int follow)
+	public SparqlAssertionFinderRunnable(FileSource source, Set<? extends TokenFinderFactory> finders, boolean quiet, StatusCallback status, int follow)
 	{
-		super(source.getFilename(), source, quiet, status);
-		m_finders = finders;
+		super(source.getFilename(), source, quiet, status, finders);
 		m_follow = follow;
 	}
 
@@ -107,27 +104,36 @@ public class SparqlAssertionFinderRunnable extends AssertionFinderRunnable
 	 * @param quiet Whether to suppress warnings
 	 * @param follow Whether to follow method calls when building the model
 	 */
-	protected void processFile(TokenFinderContext context, String file, String code, Set<SparqlTokenFinderFactory> finders, boolean quiet, int follow)
+	protected void processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet, int follow)
 	{
-		if (!mustRun())
-		{
-			return;
-		}
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
 			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context);	    
 			LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
-			for (SparqlTokenFinderFactory fac : finders)
+			for (TokenFinderFactory fac : finders)
 			{
-				SparqlTokenFinder f = fac.newFinder();
-				f.setModel(r.getModel());
-				f.setIndex(globalAstIndex);
-				f.setFilename(file);
-				f.setContext(context);
-				f.process();
-				m_found.addAll(f.getFoundTokens());
+				if (!(fac instanceof SparqlTokenFinderFactory))
+				{
+					continue;
+				}
+				SparqlTokenFinder f = ((SparqlTokenFinderFactory) fac).newFinder();
+				if (hasCache(f))
+				{
+					// Don't run the finder, just read from cache
+					readCache(f);
+				}
+				else
+				{
+					// No cache, run the finder
+					f.setModel(r.getModel());
+					f.setIndex(globalAstIndex);
+					f.setFilename(file);
+					f.setContext(context);
+					f.process();
+					m_found.addAll(f.getFoundTokens());
+				}
 			}
 		}
 		catch (NoSuchElementException e)

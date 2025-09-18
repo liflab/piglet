@@ -28,6 +28,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 
 import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
@@ -41,8 +42,7 @@ import ca.uqac.lif.fs.FileUtils;
 public class AstAssertionFinderRunnable extends AssertionFinderRunnable
 {
 	
-	/** The set of finders to use */
-	protected final Set<AstAssertionFinderFactory> m_finders;
+	
 		
 	/**
 	 * Creates a new runnable.
@@ -55,8 +55,7 @@ public class AstAssertionFinderRunnable extends AssertionFinderRunnable
 	 */
 	public AstAssertionFinderRunnable(FileSource source, Set<AstAssertionFinderFactory> finders, boolean quiet, StatusCallback status)
 	{
-		super(source.getFilename(), source, quiet, status);
-		m_finders = finders;
+		super(source.getFilename(), source, quiet, status, finders);
 	}
 	
 	@Override
@@ -97,7 +96,7 @@ public class AstAssertionFinderRunnable extends AssertionFinderRunnable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 */
-	protected void processFile(TokenFinderContext context, String file, String code, Set<AstAssertionFinderFactory> finders, boolean quiet)
+	protected void processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet)
 	{
 		if (!mustRun())
 		{
@@ -115,9 +114,13 @@ public class AstAssertionFinderRunnable extends AssertionFinderRunnable
 			for (MethodDeclaration m : methods)
 			{
 				PushPopVisitableNode pm = new PushPopVisitableNode(m);
-				for (AstAssertionFinderFactory factory : finders)
+				for (TokenFinderFactory t_factory : finders)
 				{
-					AstAssertionFinder new_f = factory.newFinder();
+					if (!(t_factory instanceof AstAssertionFinderFactory))
+					{
+						continue;
+					}
+					AstAssertionFinder new_f = (AstAssertionFinder) t_factory.newFinder();
 					new_f.setFilename(file);
 					new_f.setContext(context);
 					pm.accept(new_f);

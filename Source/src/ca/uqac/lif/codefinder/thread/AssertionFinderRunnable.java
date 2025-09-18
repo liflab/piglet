@@ -27,6 +27,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 
@@ -47,6 +48,9 @@ public abstract class AssertionFinderRunnable implements Runnable
 	/** A callback to report status */
 	protected final StatusCallback m_callback;
 	
+	/** The set of finders to use */
+	protected final Set<? extends TokenFinderFactory> m_finders;
+	
 	/**
 	 * Creates a new runnable.
 	 * @param source The file source from which to read
@@ -54,7 +58,7 @@ public abstract class AssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AssertionFinderRunnable(String file, FileSource source, boolean quiet, StatusCallback status)
+	public AssertionFinderRunnable(String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
 	{
 		super();
 		m_file = file;
@@ -62,6 +66,7 @@ public abstract class AssertionFinderRunnable implements Runnable
 		m_found = new HashSet<FoundToken>();
 		m_quiet = quiet;
 		m_callback = status;
+		m_finders = new HashSet<TokenFinderFactory>(finders);
 	}
 
 	public Set<FoundToken> getFound()
