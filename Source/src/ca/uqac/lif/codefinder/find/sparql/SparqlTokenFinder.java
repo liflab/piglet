@@ -99,6 +99,12 @@ public class SparqlTokenFinder implements TokenFinder
 	{
 		m_model = model;
 	}
+	
+	@Override
+	public void addToken(int start, int end, String snippet)
+	{
+		m_found.add(new FoundToken(m_name, m_filename, start, end, snippet));
+	}
 
 	@Override
 	public String getName()

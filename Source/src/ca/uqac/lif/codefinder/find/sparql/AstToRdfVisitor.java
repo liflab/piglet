@@ -114,8 +114,8 @@ import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.type.WildcardType;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
-import ca.uqac.lif.codefinder.find.ast.PushPopVisitor;
+import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
+import ca.uqac.lif.codefinder.find.visitor.PushPopVisitor;
 
 public abstract class AstToRdfVisitor implements PushPopVisitor
 {

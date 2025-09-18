@@ -22,7 +22,7 @@ import org.apache.jena.rdf.model.Model;
 import com.github.javaparser.ast.expr.Expression;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
+import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
 
 public class ModelBuilder
 {

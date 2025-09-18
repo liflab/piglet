@@ -49,11 +49,12 @@ import ca.uqac.lif.azrael.PrintException;
 import ca.uqac.lif.azrael.xml.XmlPrinter;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder.AstAssertionFinderFactory;
-import ca.uqac.lif.codefinder.find.ast.AstAssertionFinder;
-import ca.uqac.lif.codefinder.find.ast.AstAssertionFinderRunnable;
-import ca.uqac.lif.codefinder.find.sparql.SparqlAssertionFinderRunnable;
+import ca.uqac.lif.codefinder.find.TokenFinderRunnable;
+import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderRunnable;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinder.SparqlTokenFinderFactory;
+import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinder;
+import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinderRunnable;
+import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinder.AstAssertionFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
@@ -61,7 +62,6 @@ import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
 import ca.uqac.lif.codefinder.report.Reporter.ReporterException;
-import ca.uqac.lif.codefinder.thread.AssertionFinderRunnable;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
@@ -619,12 +619,12 @@ public class Main
 		{
 			name = mat.group(1).trim();
 		}
-		String head = new String(FileUtils.toBytes(AstAssertionFinder.class.getResourceAsStream("top.bsh")));
+		String head = new String(FileUtils.toBytes(VisitorAssertionFinder.class.getResourceAsStream("top.bsh")));
 		head = head.replace("$NAME$", name);
 		code.append(head);
 		code.append(bsh_code);
 
-		code.append(new String(FileUtils.toBytes(AstAssertionFinder.class.getResourceAsStream("bottom.bsh"))));
+		code.append(new String(FileUtils.toBytes(VisitorAssertionFinder.class.getResourceAsStream("bottom.bsh"))));
 		Object o = interpreter.eval(code.toString());
 		if (o == null || !(o instanceof AstAssertionFinderFactory))
 		{
@@ -696,7 +696,7 @@ public class Main
 			int limit) throws IOException, FileSystemException
 	{
 		int count = 0;
-		Set<AssertionFinderRunnable> tasks = new HashSet<>();
+		Set<TokenFinderRunnable> tasks = new HashSet<>();
 		List<Future<?>> futures = new ArrayList<>();
 		while (provider.hasNext() && (limit == -1 || count < limit))
 		{
@@ -704,20 +704,20 @@ public class Main
 			FileSource f_source = provider.next();
 			if (!ast_finders.isEmpty())
 			{
-				AstAssertionFinderRunnable r = new AstAssertionFinderRunnable(f_source, ast_finders, quiet, status);
+				VisitorAssertionFinderRunnable r = new VisitorAssertionFinderRunnable(f_source, ast_finders, quiet, status);
 				tasks.add(r);
 				futures.add(e.submit(r));
 			}
 			if (!sparql_finders.isEmpty())
 			{
-				SparqlAssertionFinderRunnable r = new SparqlAssertionFinderRunnable(f_source, sparql_finders, quiet, status, s_follow);
+				SparqlTokenFinderRunnable r = new SparqlTokenFinderRunnable(f_source, sparql_finders, quiet, status, s_follow);
 				tasks.add(r);
 				futures.add(e.submit(r));
 			}
 		}
 		waitForEnd(futures);
 		e.shutdown(); // All tasks are finished, shutdown the executor
-		for (AssertionFinderRunnable r : tasks)
+		for (TokenFinderRunnable r : tasks)
 		{
 			found.addAll(r.getFound());
 		}

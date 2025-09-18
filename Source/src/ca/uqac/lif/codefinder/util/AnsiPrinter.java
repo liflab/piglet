@@ -299,8 +299,54 @@ public class AnsiPrinter extends PrintStream
 				e.printStackTrace();
 			}	  
 		}
-
+		
+		/**
+		 * Trims a string to a certain number of lines. This method
+		 * is used to limit the size of code snippets in the output.
+		 * @param s The string to trim
+		 * @param num_lines The maximum number of lines to keep
+		 * @return The trimmed string
+		 */
+		public static String trimLines(String s, int num_lines)
+		{
+			StringBuilder out = new StringBuilder();
+			String[] lines = s.split("\\n");
+			for (int i = 0; i < Math.min(lines.length, num_lines); i++)
+			{
+				out.append(lines[i]).append("\n");
+			}
+			return out.toString();
+		}
+		
+		/**
+		 * Pads a string with spaces to a certain length. If the string is longer than
+		 * the specified length, it is truncated.
+		 * 
+		 * @param s
+		 *          The string to pad
+		 * @param length
+		 *          The target length
+		 * @return The padded (or truncated) string
+		 */
 		public static String padToLength(String s, int length)
+		{
+			return padToLength(s, length, false);
+		}
+
+		/**
+		 * Pads a string with spaces to a certain length. If the string is longer than
+		 * the specified length, it is truncated. If the parameter <tt>dots</tt> is true,
+		 * an ellipsis character ("...") is added at the end of the truncated string.
+		 * 
+		 * @param s
+		 *          The string to pad
+		 * @param length
+		 *          The target length
+		 * @param dots        
+		 * If true, adds "..." at the end of the string if it is truncated
+		 * @return The padded (or truncated) string
+		 */
+		public static String padToLength(String s, int length, boolean dots)
 		{
 			if (s == null)
 			{
@@ -313,7 +359,7 @@ public class AnsiPrinter extends PrintStream
 			}
 			if (str_len > length)
 			{
-				return s.substring(0, length);
+				return s.substring(0, length - (dots ? 1 : 0)) + (dots ? "\u2026" : "");
 			}
 			StringBuilder sb = new StringBuilder();
 			sb.append(s);

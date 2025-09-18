@@ -1,11 +1,11 @@
-package ca.uqac.lif.codefinder.find.ast;
+package ca.uqac.lif.codefinder.find.visitor;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.*;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 
-public abstract class TypeAwareAssertionFinder extends AstAssertionFinder
+public abstract class TypeAwareAssertionFinder extends VisitorAssertionFinder
 {
 	public TypeAwareAssertionFinder(String name) 
 	{

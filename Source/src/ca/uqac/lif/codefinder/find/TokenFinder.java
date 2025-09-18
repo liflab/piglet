@@ -2,6 +2,8 @@ package ca.uqac.lif.codefinder.find;
 
 import java.util.Collection;
 
+import com.github.javaparser.ast.Node;
+
 public interface TokenFinder
 {
 	/**
@@ -20,7 +22,7 @@ public interface TokenFinder
 	 * Gets the errors encountered during the analysis.
 	 * @return A collection of errors encountered during the analysis
 	 */
-	public abstract Collection<Throwable> getErrors();
+	public Collection<Throwable> getErrors();
 	
 	/**
 	 * Gets all tokens found by this finder.
@@ -28,18 +30,41 @@ public interface TokenFinder
 	 * <tt>null</tt>, it means that the finder has only counted the tokens
 	 * without storing them.
 	 */
-	public abstract Collection<FoundToken> getFoundTokens();
+	public Collection<FoundToken> getFoundTokens();
 	
 	/**
 	 * Sets the thread context in which this finder operates.
 	 * @param context The thread context
 	 */
-	public abstract void setContext(TokenFinderContext context);
+	public void setContext(TokenFinderContext context);
 	
 	/**
 	 * Sets the name of the file to analyze. This is used to
 	 * put inside the found tokens.
 	 * @param filename The name of the file to analyze
 	 */
-	public abstract void setFilename(String filename);
+	public void setFilename(String filename);
+	
+	/**
+	 * Adds a found token based on a given AST node.
+	 * 
+	 * @param n
+	 *          The AST node that represents the found token
+	 */
+	public default void addToken(Node n)
+	{
+		addToken(n.getBegin().get().line, n.getEnd().get().line, n.toString());
+	}
+	
+	/**
+	 * Adds a found token based on character offsets.
+	 * 
+	 * @param start
+	 *          The start offset of the found token
+	 * @param end
+	 *          The end offset of the found token
+	 * @param snippet
+	 *          A snippet of code corresponding to the found token
+	 */
+	public void addToken(int start, int end, String snippet);
 }

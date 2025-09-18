@@ -1,4 +1,4 @@
-package ca.uqac.lif.codefinder.find.ast;
+package ca.uqac.lif.codefinder.find.visitor;
 
 public interface PushPopVisitable
 {

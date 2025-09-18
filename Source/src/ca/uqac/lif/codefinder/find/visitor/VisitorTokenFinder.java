@@ -15,16 +15,22 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.find.ast;
+package ca.uqac.lif.codefinder.find.visitor;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
+
+import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinder;
 
 /**
  * An abstract base class for token finders that analyze the AST of a
  * Java source code file.
  */
-public abstract class AstTokenFinder extends PushPopVisitorAdapter implements TokenFinder
+public abstract class VisitorTokenFinder extends PushPopVisitorAdapter implements TokenFinder
 {
 	/** The name of the file to analyze */
 	protected String m_filename;
@@ -35,12 +41,20 @@ public abstract class AstTokenFinder extends PushPopVisitorAdapter implements To
 	/** A Java parser instance */
 	protected TokenFinderContext m_context;
 	
+	/** The set of found tokens */
+	protected final Set<FoundToken> m_found;
+	
+	/**
+	 * The set of errors found during parsing
+	 */
+	protected final Set<Throwable> m_errors;
+	
 	/**
 	 * Creates a new token finder.
 	 * @param name The name of this finder
 	 * @param filename The name of the file to analyze
 	 */
-	public AstTokenFinder(String name)
+	public VisitorTokenFinder(String name)
 	{
 		this(name, null);
 	}
@@ -51,11 +65,41 @@ public abstract class AstTokenFinder extends PushPopVisitorAdapter implements To
 	 * @param filename The name of the file to analyze
 	 * @param context A thread context
 	 */
-	protected AstTokenFinder(String name, TokenFinderContext context)
+	protected VisitorTokenFinder(String name, TokenFinderContext context)
 	{
 		super();
 		m_name = name;
 		m_context = context;
+		m_found = new TreeSet<FoundToken>();
+		m_errors = new HashSet<Throwable>();
+	}
+	
+	@Override
+	public void addToken(int start, int end, String snippet)
+	{
+		m_found.add(new FoundToken(m_name, m_filename, start, end, snippet));
+	}
+	
+	/**
+	 * Gets the set of found tokens.
+	 * @return The set of found tokens
+	 */
+	@Override
+	public Set<FoundToken> getFoundTokens()
+	{
+		return m_found;
+	}
+	
+	@Override
+	public int getFoundCount()
+	{
+		return m_found.size();
+	}
+	
+	@Override
+	public Set<Throwable> getErrors()
+	{
+		return m_errors;
 	}
 	
 	@Override
@@ -75,22 +119,5 @@ public abstract class AstTokenFinder extends PushPopVisitorAdapter implements To
 	{
 		return m_name;
 	}
-	
-	/**
-	 * Trims a string to a certain number of lines. This method
-	 * is used to limit the size of code snippets in the output.
-	 * @param s The string to trim
-	 * @param num_lines The maximum number of lines to keep
-	 * @return The trimmed string
-	 */
-	protected static String trimLines(String s, int num_lines)
-	{
-		StringBuilder out = new StringBuilder();
-		String[] lines = s.split("\\n");
-		for (int i = 0; i < Math.min(lines.length, num_lines); i++)
-		{
-			out.append(lines[i]).append("\n");
-		}
-		return out.toString();
-	}
+
 }	

@@ -57,7 +57,7 @@ import com.github.javaparser.resolution.model.SymbolReference;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
+import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
 
 public class JavaAstToRdfVisitor extends AstToRdfVisitor
 {

@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.thread;
+package ca.uqac.lif.codefinder.find;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,12 +26,10 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 
-import ca.uqac.lif.codefinder.find.FoundToken;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 
-public abstract class AssertionFinderRunnable implements Runnable
+public abstract class TokenFinderRunnable implements Runnable
 {
 	/** The file name */
 	protected final String m_file;
@@ -58,7 +56,7 @@ public abstract class AssertionFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public AssertionFinderRunnable(String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
+	public TokenFinderRunnable(String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
 	{
 		super();
 		m_file = file;

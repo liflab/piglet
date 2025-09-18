@@ -1,4 +1,4 @@
-package ca.uqac.lif.codefinder.find.ast;
+package ca.uqac.lif.codefinder.find.visitor;
 
 import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.*;

@@ -15,40 +15,26 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.find.ast;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
+package ca.uqac.lif.codefinder.find.visitor;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
-import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 
 /**
  * An abstract base class for finders that look for assertions in Java code.
  */
-public abstract class AstAssertionFinder extends AstTokenFinder
+public abstract class VisitorAssertionFinder extends VisitorTokenFinder
 {
-	/** The set of found tokens */
-	protected final Set<FoundToken> m_found;
-	
-	/**
-	 * The set of errors found during parsing
-	 */
-	protected final Set<Throwable> m_errors = new HashSet<Throwable>();
-	
 	/**
 	 * Creates a new assertion finder.
 	 * @param name The name of this finder
 	 * @param filename The name of the file to analyze
 	 */
-	public AstAssertionFinder(String name)
+	public VisitorAssertionFinder(String name)
 	{
 		super(name);
-		m_found = new TreeSet<FoundToken>();
 	}
 	
 	/**
@@ -56,46 +42,10 @@ public abstract class AstAssertionFinder extends AstTokenFinder
 	 * @param name The name of this finder
 	 * @param parser A Java parser instance
 	 */
-	protected AstAssertionFinder(String name, TokenFinderContext context)
+	protected VisitorAssertionFinder(String name, TokenFinderContext context)
 	{
 		super(name, context);
-		m_found = new TreeSet<FoundToken>();
-	}
-	
-	/**
-	 * Gets the set of found tokens.
-	 * @return The set of found tokens
-	 */
-	@Override
-	public Set<FoundToken> getFoundTokens()
-	{
-		return m_found;
-	}
-	
-	@Override
-	public int getFoundCount()
-	{
-		return m_found.size();
-	}
-	
-	/**
-	 * Adds a found token to the set of found tokens.
-	 * @param n The method call expression corresponding to the found token
-	 */
-	public void addToken(MethodCallExpr n)
-	{
-		m_found.add(new FoundToken(m_name, m_filename, n.getBegin().get().line, n.getEnd().get().line, n.toString()));
-	}
-	
-	/**
-	 * Adds a found token to the set of found tokens.
-	 * @param start The starting line number of the found token
-	 * @param end The ending line number of the found token
-	 * @param snippet A snippet of code corresponding to the found token
-	 */
-	protected void addToken(int start, int end, String snippet)
-	{
-		m_found.add(new FoundToken(m_name, m_filename, start, end, snippet));
+		
 	}
 	
 	/**
@@ -148,15 +98,9 @@ public abstract class AstAssertionFinder extends AstTokenFinder
 		return isAssertionEquals(m) || isAssertionNotEquals(m) || isAssertThat(m);
 	}
 	
-	@Override
-	public Set<Throwable> getErrors()
-	{
-		return m_errors;
-	}
-	
 	public static abstract class AstAssertionFinderFactory extends TokenFinderFactory
 	{
 		@Override
-		public abstract AstAssertionFinder newFinder();
+		public abstract VisitorAssertionFinder newFinder();
 	}
 }

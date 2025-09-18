@@ -41,7 +41,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
+import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.util.Solvers;
 
 public class JenaTest

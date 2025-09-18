@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.find.ast;
+package ca.uqac.lif.codefinder.find.visitor;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
 
@@ -25,18 +25,18 @@ import ca.uqac.lif.codefinder.find.TokenFinderContext;
  * Counts fluent assertions (i.e., using assertThat)
  * but does not store them.
  */
-public abstract class AssertionCounter extends AstAssertionFinder
+public abstract class VisitorAssertionCounter extends VisitorAssertionFinder
 {	
 	/** The count of found assertions */
 	protected int m_count;
 	
-	public AssertionCounter(String name)
+	public VisitorAssertionCounter(String name)
 	{
 		super(name + " count");
 		m_count = 0;
 	}
 	
-	protected AssertionCounter(String name, TokenFinderContext context)
+	protected VisitorAssertionCounter(String name, TokenFinderContext context)
 	{
 		super(name + " count", context);
 		m_count = 0;
