@@ -36,7 +36,7 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
-import ca.uqac.lif.codefinder.find.ast.PushPopVisitableNode;
+import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.find.sparql.ModelBuilder.ModelBuilderResult;
 import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.fs.FileSystemException;

@@ -19,7 +19,6 @@ package ca.uqac.lif.codefinder.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ca.uqac.lif.codefinder.Main;
 import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
 
 /**
@@ -128,11 +127,11 @@ public class StatusCallback implements Runnable
 		int width = Integer.toString(m_total).length();
 		m_out.print(String.format("%" + width + "d/%" + width + "d", done, m_total));
 		long elapsed = System.currentTimeMillis() - m_startTime;
-		m_out.print(String.format(" Elapsed: %s", Main.formatHms(elapsed)));
+		m_out.print(String.format(" Elapsed: %s", AnsiPrinter.formatHms(elapsed)));
 		long eta = calculateEta(done);
 		if (eta >= 0)
 		{
-			m_out.print(String.format(" ETA: %s", Main.formatDuration(eta)));
+			m_out.print(String.format(" ETA: %s", AnsiPrinter.formatDuration(eta)));
 		}
 		m_out.moveStartLastLine();
 	}

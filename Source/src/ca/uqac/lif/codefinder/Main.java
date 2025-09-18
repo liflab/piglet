@@ -24,10 +24,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
@@ -44,17 +42,10 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import bsh.EvalError;
 import ca.uqac.lif.azrael.PrintException;
 import ca.uqac.lif.azrael.xml.XmlPrinter;
+import ca.uqac.lif.codefinder.Analysis.AnalysisCliException;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
-import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory.TokenFinderFactoryException;
-import ca.uqac.lif.codefinder.find.TokenFinderRunnable;
-import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderRunnable;
-import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderFactory;
-import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinderRunnable;
-import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinderFactory;
-import ca.uqac.lif.codefinder.provider.FileProvider;
-import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
@@ -69,8 +60,6 @@ import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.util.CliParser;
-import ca.uqac.lif.util.CliParser.Argument;
-import ca.uqac.lif.util.CliParser.ArgumentMap;
 
 /**
  * Main class of the CodeFinder application. Parses command line arguments, sets
@@ -128,101 +117,11 @@ public class Main
 	 */
 	protected static final FilePath s_homePath = new FilePath(System.getProperty("user.dir"));
 
-	/**
-	 * The parsed command line arguments 
-	 */
-	protected static ArgumentMap s_map;
-	
-	/**
-	 * The name of the project to analyze	(used for caching)
-	 */
-	protected static String s_projectName = "";
-
-	/**
-	 * Additional source paths
-	 */
-	protected static Set<String> s_sourcePaths = new HashSet<>();
-
-	/**
-	 * Additional jar files
-	 */
-	protected static Set<String> s_jarPaths = new HashSet<>();
-
-	/**
-	 * Name of the output file
-	 */
-	protected static String s_outputFile = "report.html";
-
-	/**
-	 * Whether to operate in quiet mode (no error messages)
-	 */
-	protected static boolean s_quiet = false;
-
-	/**
-	 * Whether to show unresolved symbols
-	 */
-	protected static boolean s_unresolved = false;
-
-	/**
-	 * Number of threads to use. If not specified, use number of processors - 1.
-	 */
-	protected static int s_threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
-
-	/**
-	 * The name of the root package to look for in the source tree
-	 */
-	public static String s_root = null;
-
-	/**
-	 * Whether to only show a summary at the command line
-	 */
-	protected static boolean s_summary = false;
-
-	/**
-	 * Limit to the number of files to process (for testing purposes). A negative
-	 * value means no limit.
-	 */
-	protected static int s_limit = -1;
-
-	/** 
-	 * Depth to which method calls should be followed 
-	 */
-	protected static int s_follow = 0;
-
-	/** 
-	 * Timeout for type resolution operations (in milliseconds)
-	 */
-	protected static long s_resolutionTimeout = 100;
-
-	/** 
-	 * Whether to cache analysis results 
-	 */
-	protected static boolean s_cache = true;
-	
-	/**
-	 * The name of the folder to use for caching
-	 */
-	protected static final String s_cacheFolder = ".codefinder_cache";
-
 	/** 
 	 * Thread-local context (parser, type solver, etc.)
 	 */
 	public static ThreadLocal<TokenFinderContext> CTX;
 
-	/** 
-	 * The set of assertion finders working on the AST 
-	 */
-	public static final Set<VisitorAssertionFinderFactory> s_astFinders = new HashSet<>();
-
-	/** 
-	 * The set of assertion finders working through SPARQL queries
-	 */
-	public static final Set<SparqlTokenFinderFactory> s_sparqlFinders = new HashSet<>();
-	
-	/** 
-	 * The set of assertion finders with cached results
-	 */
-	public static final Set<TokenFinderFactory> s_cachedFinders = new HashSet<>();	
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -264,16 +163,19 @@ public class Main
 		}
 
 		/* Setup command line options */
-		CliParser cli = setupCli();
-		s_map = cli.parse(args);
-		int ret = processCli(cli);
-		if (ret != RET_NOTHING)
+		CliParser cli = Analysis.setupCli();
+		Analysis analysis = null;
+		try
 		{
-			return ret;
+			analysis = Analysis.read(cli,  cli.parse(args));	
+		}
+		catch (AnalysisCliException e)
+		{
+			return handleException(e);
 		}
 
 		/* Setup the file provider */
-		List<String> folders = s_map.getOthers(); // The files to read from
+		List<String> folders = analysis.getOthers(); // The files to read from
 		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
 		for (int i = 0; i < folders.size(); i++)
 		{
@@ -291,13 +193,16 @@ public class Main
 		int total = fsp.filesProvided();
 		Map<String, List<FoundToken>> categorized = new TreeMap<>();
 		Set<FoundToken> found = new HashSet<>();
-		EndRunnable end_callback = new EndRunnable(categorized, found.size(), s_summary);
+		EndRunnable end_callback = new EndRunnable(categorized, found.size(), analysis.getSummary());
 		Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
-
+		final Set<String> source_paths = analysis.getSourcePaths();
+		final String root = analysis.getRoot();
+		final Set<String> jar_paths = analysis.getJarPaths();
+		final long resolution_timeout = analysis.getResolutionTimeout();
 		CTX = ThreadLocal.withInitial(() -> {
 			try
 			{
-				CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
+				CombinedTypeSolver ts = Solvers.buildSolver(source_paths, root, jar_paths);
 
 				// Wire parser to THIS thread’s solver
 				ParserConfiguration threadPc = new ParserConfiguration()
@@ -306,7 +211,7 @@ public class Main
 
 				return new TokenFinderContext(ts, new JavaParser(threadPc),
 						com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
-						s_resolutionTimeout);
+						resolution_timeout);
 			}
 			catch (Exception e)
 			{
@@ -316,7 +221,7 @@ public class Main
 
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout,
-				(s_limit >= 0 ? Math.min(total, s_limit) : total));
+				(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total));
 		Thread status_thread = new Thread(status);
 		AtomicInteger THREAD_ID = new AtomicInteger(1);
 		ThreadFactory tf = r -> {
@@ -325,61 +230,30 @@ public class Main
 			t.setDaemon(false);
 			return t;
 		};
-		
-		// Check which finders have cached results
-		if (s_cache && !s_projectName.isEmpty())
-		{
-			HardDisk hd = new HardDisk().open();
-			if (!hd.isDirectory(s_cacheFolder))
-			{
-				hd.mkdir(s_cacheFolder);
-			}
-			hd.pushd(s_cacheFolder);
-			{
-				Iterator<VisitorAssertionFinderFactory> it = s_astFinders.iterator();
-				while (it.hasNext())
-				{
-					VisitorAssertionFinderFactory f = it.next();
-					if (f.isCached(hd, s_projectName))
-					{
-						s_cachedFinders.add(f);
-						it.remove();
-					}
-				}
-			}
-			{
-				Iterator<SparqlTokenFinderFactory> it = s_sparqlFinders.iterator();
-				while (it.hasNext())
-				{
-					SparqlTokenFinderFactory f = it.next();
-					if (f.isCached(hd, s_projectName))
-					{
-						s_cachedFinders.add(f);
-						it.remove();
-					}
-				}
-			}
-			hd.close();
-		}
 
-		ExecutorService executor = Executors.newFixedThreadPool(s_threads, tf);
+		ExecutorService executor = Executors.newFixedThreadPool(analysis.getThreads(), tf);
 		long start_time = System.currentTimeMillis();
 		long end_time = -1;
 		s_stdout.hideCursor();
 		status_thread.start();
 		try
 		{
-			processBatch(s_projectName, executor, fsp, s_astFinders, s_sparqlFinders, found, s_quiet, status, s_limit);
+			List<Future<?>> futures = analysis.processBatch(executor, fsp, found);
+			waitForEnd(futures);
+			executor.shutdown();
 		}
 		catch (IOException e)
 		{
-			return RET_IO;
+			handleException(e);
 		}
 		catch (FileSystemException e)
 		{
-			return RET_FS;
+			handleException(e);
 		}
-		executor.shutdown();
+		catch (TokenFinderFactoryException e)
+		{
+			handleException(e);
+		}
 		try
 		{
 			if (!executor.awaitTermination(120, TimeUnit.SECONDS))
@@ -398,264 +272,119 @@ public class Main
 			// Preserve interrupt status
 			Thread.currentThread().interrupt();
 		}
-		for (TokenFinderFactory f : s_cachedFinders)
-		{
-			try
-			{
-				found.addAll(f.readCache(new HardDisk(s_cacheFolder), s_projectName));
-			}
-			catch (TokenFinderFactoryException e)
-			{
-				return handleException(e);
-			}
-		}
 		end_time = System.currentTimeMillis();
 		end_callback.setTotal(found.size());
 		long duration = end_time - start_time;
 		status.cleanup();
-		s_stdout.println((s_limit >= 0 ? s_limit : total) + " file(s) analyzed");
+		s_stdout.println((analysis.getLimit() >= 0 ? analysis.getLimit() : total) + " file(s) analyzed");
 		s_stdout.println(found.size() + " assertion(s) found");
 		s_stdout.clearLine();
-		s_stdout.println("Analysis time: " + formatDuration(duration));
+		s_stdout.println("Analysis time: " + AnsiPrinter.formatDuration(duration));
 		s_stdout.println();
 
 		/* Categorize results and produce report */
 		categorize(categorized, found);
-		FilePath output_path = s_homePath.chdir(getPathOfFile(s_outputFile));
+		FilePath output_path = s_homePath.chdir(getPathOfFile(analysis.getOutputFile()));
 		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
 		HardDisk hd;
 		try
 		{
 			hd = new HardDisk(output_path.toString()).open();
 			HtmlReporter reporter = new HtmlReporter(
-					new PrintStream(hd.writeTo(getFilename(s_outputFile)), true, "UTF-8"));
+					new PrintStream(hd.writeTo(getFilename(analysis.getOutputFile())), true, "UTF-8"));
 			reporter.report(reverse_path, found.size(), categorized, new HashSet<String>());
 			hd.close();
-			hd = new HardDisk(s_cacheFolder).open();
-			serializeResults(hd, categorized);
+			hd = new HardDisk(analysis.getCacheFolder()).open();
+			serializeResults(analysis.getProjectName(), hd, categorized);
 			hd.close();
 		}
 		catch (ReporterException e)
 		{
-			Throwable t = e.getCause();
-			if (t instanceof IOException)
-			{
-				s_stderr.println("I/O error while writing report: " + t.getMessage());
-				return RET_IO;
-			}
-			else if (t instanceof FileSystemException)
-			{
-				s_stderr.println("File system error while writing report: " + t.getMessage());
-				return RET_FS;
-			}
-			else
-			{
-				s_stderr.println("Error while writing report: " + e.getMessage());
-				return RET_OTHER;
-			}
+			return handleException(e);
 		}
 		return RET_OK;
 	}
 
-	protected static void serializeResults(FileSystem fs, Map<String, List<FoundToken>> categorized)
+	protected static void serializeResults(String project, FileSystem fs, Map<String, List<FoundToken>> categorized)
 			throws PrintException, FileSystemException
 	{
+		if (!fs.isDirectory(project))
+		{
+			fs.mkdir(project);
+		}
+		fs.pushd(project);
 		for (Map.Entry<String, List<FoundToken>> e : categorized.entrySet())
 		{
 			String name = e.getKey();
 			List<FoundToken> list = e.getValue();
 			XmlPrinter xp = new XmlPrinter();
 			String s = xp.print(list).toString();
-			FileUtils.writeStringTo(fs, s, s_projectName + name + ".xml");
+			FileUtils.writeStringTo(fs, s, name + ".xml");
+		}
+		fs.popd();
+	}
+
+	/**
+	 * Handles an exception by printing an appropriate message to standard error and
+	 * returning an appropriate return code.
+	 * @param e The exception to handle
+	 * @return An appropriate return code
+	 */
+	protected static int handleException(TokenFinderFactoryException e)
+	{
+		Throwable t = e.getCause();
+		return handleCause(t);
+	}
+
+	/**
+	 * Handles an I/O exception by printing an appropriate message to standard error and
+	 * returning an appropriate return code.
+	 * @param e The exception to handle
+	 * @return An appropriate return code
+	 */
+	protected static int handleException(IOException e)
+	{
+		s_stderr.println("I/O error: " + e.getMessage());
+		return RET_IO;
+	}
+	
+	protected static int handleException(ReporterException e)
+	{
+		Throwable t = e.getCause();
+		return handleCause(t);
+	}
+	
+	protected static int handleCause(Throwable t)
+	{
+		if (t instanceof FileSystemException)
+		{
+			s_stderr.println("File system error: " + t.getMessage());
+			return RET_FS;
+		}
+		else if (t instanceof IOException)
+		{
+			s_stderr.println("I/O error: " + t.getMessage());
+			return RET_IO;
+		}
+		else if (t instanceof EvalError)
+		{
+			s_stderr.println("BeanShell error: " + t.getMessage());
+			return RET_BSH;
+		}
+		else
+		{
+			s_stderr.println("Error: " + t.getMessage());
+			return RET_OTHER;
 		}
 	}
 
 	/**
-	 * Processes the command line arguments and sets the appropriate static
-	 * variables.
-	 * 
-	 * @param cli
-	 *          The command line parser
-	 * @return A return code if the program should exit, or -1 to continue
+	 * Handles an analysis exception by printing an appropriate message to standard error and
+	 * returning an appropriate return code.
+	 * @param e The exception to handle
+	 * @return An appropriate return code
 	 */
-	protected static int processCli(CliParser cli)
-	{
-		ArgumentMap map = s_map;
-		if (map == null)
-		{
-			s_stderr.println("Error in command line arguments");
-			showUsage(cli);
-			return RET_CLI;
-		}
-		int ret = -1;
-		if (map.containsKey("profile"))
-		{
-			ret = readProfile(map.getOptionValue("profile"));
-			if (ret != RET_NOTHING)
-			{
-				return ret;
-			}
-		}
-		s_cache = !map.containsKey("no-cache");
-		if (map.containsKey("project"))
-		{
-			s_projectName = map.getOptionValue("project");
-		}
-		else if (s_projectName.isEmpty())
-		{
-			s_stdout.println("Project name not specified, using '" + s_projectName + "' (use --project to specify)");
-		}
-		if (map.containsKey("query"))
-		{
-			s_astFinders.clear();
-			s_sparqlFinders.clear(); // Override whatever the profile says
-			String bsh_file = map.getOptionValue("query");
-			try
-			{
-				HardDisk hd = new HardDisk(s_homePath.toString()).open();
-				if (hd.isDirectory(bsh_file))
-				{
-					s_stdout.println("Reading queries from folder " + bsh_file);
-					hd.pushd(bsh_file);
-					{
-						// First the BeanShell scripts
-						List<String> files = FileUtils.ls(hd, "", "^.*bsh$");
-						for (String f : files)
-						{
-							try
-							{
-								VisitorAssertionFinderFactory factory = VisitorAssertionFinderFactory.readBeanshell(hd, bsh_file + "/" + f);
-								s_astFinders.add(factory);
-							}
-							catch (TokenFinderFactoryException e)
-							{
-								return handleException(e);
-							}
-						}
-					}
-					{
-						// Then the SPARQL scripts
-						List<String> files = FileUtils.ls(hd, "", "^.*sparql$");
-						for (String f : files)
-						{
-							try
-							{
-								SparqlTokenFinderFactory factory = SparqlTokenFinderFactory.readSparql(hd, bsh_file + "/" + f);
-								s_sparqlFinders.add(factory);
-							}
-							catch (TokenFinderFactoryException e)
-							{
-								return handleException(e);
-							}
-						}
-					}
-					hd.popd();
-				}
-				else
-				{
-					if (bsh_file.endsWith(".sparql"))
-					{
-						s_stdout.println("Reading SPARQL query from file " + bsh_file);
-						hd.pushd(getPathOfFile(bsh_file).toString());
-						SparqlTokenFinderFactory factory = SparqlTokenFinderFactory.readSparql(hd, bsh_file);
-						hd.popd();
-						s_sparqlFinders.add(factory);
-					}
-					else if (bsh_file.endsWith(".bsh"))
-					{
-						s_stdout.println("Reading BeanShell script from file " + bsh_file);
-						hd.pushd(getPathOfFile(bsh_file).toString());
-						VisitorAssertionFinderFactory factory = VisitorAssertionFinderFactory.readBeanshell(hd, bsh_file);
-						hd.popd();
-						s_astFinders.add(factory);
-					}
-				}
-			}
-			catch (TokenFinderFactoryException e)
-			{
-				return handleException(e);
-			}
-			catch (FileSystemException e)
-			{
-				s_stderr.println("File system error: " + e.getMessage());
-				return RET_FS;
-			}
-		}
-		if (map.containsKey("resolution-timeout"))
-		{
-			try
-			{
-				s_resolutionTimeout = Long.parseLong(map.getOptionValue("resolution-timeout").trim());
-			}
-			catch (NumberFormatException e)
-			{
-				s_stderr.println("Invalid resolution timeout: " + map.getOptionValue("resolution-timeout"));
-				return RET_NOTHING;
-			}
-		}
-		if (map.containsKey("no-color"))
-		{
-			s_stdout.disableColors();
-			s_stderr.disableColors();
-		}
-		if (map.containsKey("quiet"))
-		{
-			s_quiet = true;
-		}
-		if (map.containsKey("unresolved"))
-		{
-			s_unresolved = true;
-		}
-		if (map.containsKey("summary"))
-		{
-			s_summary = true;
-		}
-		if (map.containsKey("output"))
-		{
-			s_outputFile = map.getOptionValue("output");
-		}
-		if (map.containsKey("follow"))
-		{
-			s_follow = Integer.parseInt(map.getOptionValue("output").trim());
-		}
-		if (map.containsKey("source"))
-		{
-			String[] paths = map.getOptionValue("source").split(":");
-			for (String p : paths)
-			{
-				s_sourcePaths.add(p);
-			}
-		}
-		if (map.containsKey("jar"))
-		{
-			String[] paths = map.getOptionValue("jar").split(":");
-			for (String p : paths)
-			{
-				s_jarPaths.add(p);
-			}
-		}
-		if (map.hasOption("threads"))
-		{
-			s_threads = Integer.parseInt(map.getOptionValue("threads").trim());
-		}
-		if (map.hasOption("limit"))
-		{
-			s_limit = Integer.parseInt(map.getOptionValue("limit").trim());
-			s_stdout.println("Analysis limited to first " + s_limit + " files");
-		}
-		if (map.hasOption("root"))
-		{
-			s_root = map.getOptionValue("root");
-		}
-		if (map.containsKey("help"))
-		{
-			showUsage(cli);
-			return RET_OK;
-		}
-		return RET_NOTHING;
-	}
-	
-	protected static int handleException(TokenFinderFactoryException e)
+	protected static int handleException(AnalysisCliException e)
 	{
 		Throwable t = e.getCause();
 		if (t instanceof FileSystemException)
@@ -679,142 +408,21 @@ public class Main
 			return RET_OTHER;
 		}
 	}
-	
+
+	/**
+	 * Handles a file system exception by printing an appropriate message to standard error and
+	 * returning an appropriate return code.
+	 * @param e The exception to handle
+	 * @return An appropriate return code
+	 */
 	protected static int handleException(FileSystemException e)
 	{
 		s_stderr.println("File system error: " + e.getMessage());
 		return RET_FS;
 	}
 
-	protected static int readProfile(String filename)
-	{
-		FilePath output_path = s_homePath.chdir(getPathOfFile(filename));
-		FilePath reverse_path = output_path.chdir(getPathOfFile(filename));
-		try
-		{
-			HardDisk hd = new HardDisk(reverse_path.toString()).open();
-			StringBuilder contents = new StringBuilder();
-			Scanner scanner = new Scanner(hd.readFrom(getFilename(filename)));
-			while (scanner.hasNextLine())
-			{
-				String line = scanner.nextLine().trim();
-				if (line.isEmpty() || line.startsWith("#"))
-					continue;
-				contents.append(line).append(" ");
-			}
-			scanner.close();
-			hd.close();
-			String[] args = contents.toString().split(" ");
-			CliParser parser = setupCli();
-			s_map = parser.parse(args);
-			return processCli(parser);
-		}
-		catch (FileSystemException e)
-		{
-			return RET_FS;
-		}
-	}
 
-	
 
-	
-
-	/**
-	 * Sets up the command line interface parser with the appropriate options.
-	 * 
-	 * @return The command line parser
-	 */
-	protected static CliParser setupCli()
-	{
-		CliParser cli = new CliParser();
-		cli.addArgument(new Argument().withShortName("o").withLongName("output")
-				.withDescription("Output file (default: report.html)").withArgument("file"));
-		cli.addArgument(new Argument().withShortName("s").withLongName("source")
-				.withDescription("Additional source in path").withArgument("path"));
-		cli.addArgument(new Argument().withShortName("j").withLongName("jar")
-				.withDescription("Additional jar file(s) in path").withArgument("path"));
-		cli.addArgument(new Argument().withShortName("t").withLongName("threads").withArgument("n")
-				.withDescription("Use up to n threads"));
-		cli.addArgument(new Argument().withShortName("q").withLongName("quiet")
-				.withDescription("Do not show error messages"));
-		cli.addArgument(new Argument().withShortName("m").withLongName("summary")
-				.withDescription("Only show a summary at the CLI"));
-		cli.addArgument(new Argument().withShortName("c").withLongName("no-color")
-				.withDescription("Disable colored output"));
-		cli.addArgument(new Argument().withShortName("l").withLongName("limit").withArgument("n")
-				.withDescription("Stop after n files (for testing purposes)"));
-		cli.addArgument(new Argument().withShortName("h").withLongName("help")
-				.withDescription("Display this help message"));
-		cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file")
-				.withDescription("Get options from file"));
-		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved")
-				.withDescription("Show unresolved symbols"));
-		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p")
-				.withDescription("Search in source tree for package p"));
-		cli.addArgument(new Argument().withShortName("l").withLongName("sample").withArgument("p")
-				.withDescription("Sample code snippets with probability p"));
-		cli.addArgument(
-				new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
-						.withDescription("Set timeout for type resolution operations (in ms, default: 100)"));
-		cli.addArgument(new Argument().withShortName("y").withLongName("query").withArgument("x")
-				.withDescription("Read queries from x (file or folder)"));
-		cli.addArgument(new Argument().withShortName("f").withLongName("follow").withArgument("d")
-				.withDescription("Follow method calls up to depth d (default: 0)"));
-		cli.addArgument(new Argument().withLongName("no-cache")
-				.withDescription("Do not reuse cached analysis results"));
-		cli.addArgument(new Argument().withLongName("project").withArgument("name")
-				.withDescription("Set the project name (used for caching)"));
-		return cli;
-	}
-
-	/**
-	 * Displays usage information for the command line interface.
-	 * 
-	 * @param out
-	 *          The output stream to which the usage information is sent
-	 * @param cli
-	 *          The command line parser
-	 */
-	protected static void showUsage(CliParser cli)
-	{
-		cli.printHelp("", s_stdout);
-	}
-
-	protected static void processBatch(String project, ExecutorService e, FileProvider provider,
-			Set<VisitorAssertionFinderFactory> ast_finders, Set<SparqlTokenFinderFactory> sparql_finders,
-			Set<FoundToken> found, boolean quiet, StatusCallback status, int limit)
-			throws IOException, FileSystemException
-	{
-		int count = 0;
-		Set<TokenFinderRunnable> tasks = new HashSet<>();
-		List<Future<?>> futures = new ArrayList<>();
-		while (provider.hasNext() && (limit == -1 || count < limit))
-		{
-			count++;
-			FileSource f_source = provider.next();
-			if (!ast_finders.isEmpty())
-			{
-				VisitorAssertionFinderRunnable r = new VisitorAssertionFinderRunnable(project, f_source,
-						ast_finders, quiet, status);
-				tasks.add(r);
-				futures.add(e.submit(r));
-			}
-			if (!sparql_finders.isEmpty())
-			{
-				SparqlTokenFinderRunnable r = new SparqlTokenFinderRunnable(project, f_source,
-						sparql_finders, quiet, status, s_follow);
-				tasks.add(r);
-				futures.add(e.submit(r));
-			}
-		}
-		waitForEnd(futures);
-		e.shutdown(); // All tasks are finished, shutdown the executor
-		for (TokenFinderRunnable r : tasks)
-		{
-			found.addAll(r.getFound());
-		}
-
-	}
 
 	public static void waitForEnd(List<Future<?>> futures)
 	{
@@ -838,7 +446,6 @@ public class Main
 				throw new RuntimeException("Task failed", ee.getCause());
 			}
 		}
-
 	}
 
 	protected static void categorize(Map<String, List<FoundToken>> map, Set<FoundToken> found)
@@ -903,45 +510,5 @@ public class Main
 				// Ignore for the moment
 			}
 		}
-	}
-
-	/**
-	 * Formats a duration in milliseconds into a human-readable string.
-	 * 
-	 * @param duration
-	 *          The duration in milliseconds
-	 * @return A human-readable string representing the duration
-	 */
-	public static String formatDuration(long duration)
-	{
-		if (duration < 1000)
-		{
-			return duration + " ms";
-		}
-		else if (duration < 60000)
-		{
-			return (duration / 1000) + " s";
-		}
-		else
-		{
-			long minutes = duration / 60000;
-			long seconds = (duration % 60000) / 1000;
-			return minutes + " min " + seconds + " s";
-		}
-	}
-
-	/**
-	 * Formats a duration in milliseconds into a string of the form HH:MM:SS.
-	 * 
-	 * @param duration
-	 *          The duration in milliseconds
-	 * @return A string of the form HH:MM:SS
-	 */
-	public static String formatHms(long duration)
-	{
-		long hours = duration / 3600000;
-		long minutes = (duration % 3600000) / 60000;
-		long seconds = (duration % 60000) / 1000;
-		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
 	}
 }

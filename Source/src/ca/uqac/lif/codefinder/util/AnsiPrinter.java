@@ -74,7 +74,7 @@ public class AnsiPrinter extends PrintStream
 		{
 			m_enabled = false;
 		}
-		
+
 
 		/**
 		 * Sets the foreground color for printed text.
@@ -277,7 +277,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[49m");
 			return this;	  
 		}
-		
+
 		public AnsiPrinter setUnderscore()
 		{
 			printBytes("\u001B[4m");
@@ -299,7 +299,7 @@ public class AnsiPrinter extends PrintStream
 				e.printStackTrace();
 			}	  
 		}
-		
+
 		/**
 		 * Trims a string to a certain number of lines. This method
 		 * is used to limit the size of code snippets in the output.
@@ -317,7 +317,7 @@ public class AnsiPrinter extends PrintStream
 			}
 			return out.toString();
 		}
-		
+
 		/**
 		 * Pads a string with spaces to a certain length. If the string is longer than
 		 * the specified length, it is truncated.
@@ -386,7 +386,7 @@ public class AnsiPrinter extends PrintStream
 			}
 			return "";
 		}
-		
+
 		/**
 		 * Determines if the display of colours is enabled
 		 * @return true if colors enabled, false otherwise
@@ -395,7 +395,7 @@ public class AnsiPrinter extends PrintStream
 		{
 			return m_enabled;
 		}
-		
+
 		/**
 		 * Sets the text to boldface.
 		 * @return This printer
@@ -405,7 +405,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[1m");
 			return this;
 		}
-		
+
 		/**
 		 * Sets the text to normal weight (not boldface).
 		 * @return This printer
@@ -415,7 +415,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[22m");
 			return this;
 		}
-		
+
 		/**
 		 * Clears the screen and moves the cursor to the top left corner.
 		 * @return This printer
@@ -426,7 +426,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[H");
 			return this;
 		}
-		
+
 		/**
 		 * Moves the cursor to the start of the last line of the console.
 		 * @return This printer
@@ -436,7 +436,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[1F");
 			return this;
 		}
-		
+
 		/**
 		 * Moves the cursor to the beginning of the current line.
 		 * @return This printer
@@ -446,7 +446,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\r");
 			return this;
 		}
-		
+
 		/**
 		 * Clears the current line.
 		 * @return This printer
@@ -456,7 +456,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[2K");
 			return this;
 		}
-		
+
 		/**
 		 * Hides the cursor.
 		 * @return This printer
@@ -466,7 +466,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[?25h");
 			return this;
 		}
-		
+
 		/**
 		 * Shows the cursor.
 		 * @return This printer
@@ -476,7 +476,7 @@ public class AnsiPrinter extends PrintStream
 			printBytes("\u001B[?25l");
 			return this;
 		}
-		
+
 		/**
 		 * Sets the color scheme to white text on black background.
 		 * @return This printer
@@ -487,6 +487,46 @@ public class AnsiPrinter extends PrintStream
 			setBackgroundColor(Color.BLACK);
 			setForegroundColor(Color.LIGHT_GRAY);
 			return this;
+		}
+
+		/**
+		 * Formats a duration in milliseconds into a human-readable string.
+		 * 
+		 * @param duration
+		 *          The duration in milliseconds
+		 * @return A human-readable string representing the duration
+		 */
+		public static String formatDuration(long duration)
+		{
+			if (duration < 1000)
+			{
+				return duration + " ms";
+			}
+			else if (duration < 60000)
+			{
+				return (duration / 1000) + " s";
+			}
+			else
+			{
+				long minutes = duration / 60000;
+				long seconds = (duration % 60000) / 1000;
+				return minutes + " min " + seconds + " s";
+			}
+		}
+
+		/**
+		 * Formats a duration in milliseconds into a string of the form HH:MM:SS.
+		 * 
+		 * @param duration
+		 *          The duration in milliseconds
+		 * @return A string of the form HH:MM:SS
+		 */
+		public static String formatHms(long duration)
+		{
+			long hours = duration / 3600000;
+			long minutes = (duration % 3600000) / 60000;
+			long seconds = (duration % 60000) / 1000;
+			return String.format("%02d:%02d:%02d", hours, minutes, seconds);
 		}
 
 }
