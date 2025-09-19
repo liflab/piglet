@@ -39,7 +39,7 @@ import ca.uqac.lif.codefinder.util.StatusCallback;
 /**
  * A runnable that processes a single Java file to find assertions.
  */
-public class SparqlTokenFinderRunnable extends TokenFinderCallable
+public class SparqlTokenFinderCallable extends TokenFinderCallable
 {	
 	/** Whether to follow method calls when building the model */
 	protected final int m_follow;
@@ -54,7 +54,7 @@ public class SparqlTokenFinderRunnable extends TokenFinderCallable
 	 * @param status A callback to report status
 	 * @param follow Whether to follow method calls when building the model
 	 */
-	public SparqlTokenFinderRunnable(String project, FileSource source, Set<? extends TokenFinderFactory> finders, boolean quiet, StatusCallback status, int follow)
+	public SparqlTokenFinderCallable(String project, FileSource source, Set<? extends TokenFinderFactory> finders, boolean quiet, StatusCallback status, int follow)
 	{
 		super(project, source.getFilename(), source, quiet, status, finders);
 		m_follow = follow;

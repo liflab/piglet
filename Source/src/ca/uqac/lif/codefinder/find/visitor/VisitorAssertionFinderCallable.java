@@ -35,7 +35,7 @@ import ca.uqac.lif.codefinder.util.StatusCallback;
 /**
  * A runnable that processes a single Java file to find assertions.
  */
-public class VisitorAssertionFinderRunnable extends TokenFinderCallable
+public class VisitorAssertionFinderCallable extends TokenFinderCallable
 {		
 	/**
 	 * Creates a new runnable.
@@ -46,7 +46,7 @@ public class VisitorAssertionFinderRunnable extends TokenFinderCallable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public VisitorAssertionFinderRunnable(String project, FileSource source, Set<VisitorAssertionFinderFactory> finders, boolean quiet, StatusCallback status)
+	public VisitorAssertionFinderCallable(String project, FileSource source, Set<VisitorAssertionFinderFactory> finders, boolean quiet, StatusCallback status)
 	{
 		super(project, source.getFilename(), source, quiet, status, finders);
 	}

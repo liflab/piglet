@@ -36,9 +36,9 @@ import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinderCallable;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory.TokenFinderFactoryException;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderFactory;
-import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderRunnable;
+import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderCallable;
 import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinderFactory;
-import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinderRunnable;
+import ca.uqac.lif.codefinder.find.visitor.VisitorAssertionFinderCallable;
 import ca.uqac.lif.codefinder.provider.FileProvider;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
@@ -57,6 +57,21 @@ import ca.uqac.lif.util.CliParser.ArgumentMap;
  */
 public class Analysis
 {
+	private Analysis()
+	{
+		// Prevent instantiation from outside the static methods
+	}
+	
+	/**
+	 * Reads command line arguments and returns an analysis object
+	 * 
+	 * @param cli    The command line parser
+	 * @param map    The argument map
+	 * @param stdout Printer for standard output
+	 * @param stderr Printer for error output
+	 * @return The analysis object
+	 * @throws AnalysisCliException If an error occurs while reading the arguments
+	 */
 	public static Analysis read(CliParser cli, ArgumentMap map, AnsiPrinter stdout, AnsiPrinter stderr) throws AnalysisCliException
 	{
 		Analysis a = new Analysis();
@@ -563,14 +578,14 @@ public class Analysis
 			FileSource f_source = provider.next();
 			if (!m_astFinders.isEmpty())
 			{
-				VisitorAssertionFinderRunnable r = new VisitorAssertionFinderRunnable(m_projectName, f_source,
+				VisitorAssertionFinderCallable r = new VisitorAssertionFinderCallable(m_projectName, f_source,
 						m_astFinders, m_quiet, m_callback);
 				tasks.add(r);
 				futures.add(e.submit(r));
 			}
 			if (!m_sparqlFinders.isEmpty())
 			{
-				SparqlTokenFinderRunnable r = new SparqlTokenFinderRunnable(m_projectName, f_source,
+				SparqlTokenFinderCallable r = new SparqlTokenFinderCallable(m_projectName, f_source,
 						m_sparqlFinders, m_quiet, m_callback, m_follow);
 				tasks.add(r);
 				futures.add(e.submit(r));
