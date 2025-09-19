@@ -17,15 +17,16 @@
  */
 package ca.uqac.lif.codefinder.find;
 
-import java.util.Set;
+import java.util.List;
 
 import ca.uqac.lif.azrael.ReadException;
-import ca.uqac.lif.azrael.xml.XmlReader;
+import ca.uqac.lif.azrael.json.JsonReader;
 import ca.uqac.lif.fs.FileSystem;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
-import ca.uqac.lif.xml.XmlElement;
-import ca.uqac.lif.xml.XmlElement.XmlParseException;
+import ca.uqac.lif.json.JsonElement;
+import ca.uqac.lif.json.JsonParser;
+import ca.uqac.lif.json.JsonParser.JsonParseException;
 
 /**
  * A factory for creating token finders.
@@ -64,19 +65,20 @@ public abstract class TokenFinderFactory
 	 * @throws TokenFinderFactoryException
 	 */
 	@SuppressWarnings("unchecked")
-	public Set<FoundToken> readCache(FileSystem fs, String project) throws TokenFinderFactoryException
+	public List<FoundToken> readCache(FileSystem fs, String project) throws TokenFinderFactoryException
 	{
 		try
 		{
 			String content = FileUtils.readStringFrom(fs, getCacheFileName(project));
 			try
 			{
-				XmlElement x = XmlElement.parse(content);
-				XmlReader r = new XmlReader();
-				Set<FoundToken> f = (Set<FoundToken>) r.read(x);
+				JsonParser parser = new JsonParser();
+				JsonElement x = parser.parse(content);
+				JsonReader r = new JsonReader();
+				List<FoundToken> f = (List<FoundToken>) r.read(x);
 				return f;
 			}
-			catch (XmlParseException | ReadException e)
+			catch (JsonParseException | ReadException e)
 			{
 				throw new TokenFinderFactoryException(e);
 			}
@@ -93,7 +95,7 @@ public abstract class TokenFinderFactory
 	 */
 	protected String getCacheFileName(String project)
 	{
-		return project + "/" + m_name + ".xml";
+		return project + "/" + m_name + ".json";
 	}
 
 	/**
@@ -107,7 +109,7 @@ public abstract class TokenFinderFactory
 		try
 		{
 			fs.pushd(project);
-			boolean b = fs.isFile(m_name + ".xml");
+			boolean b = fs.isFile(m_name + ".json");
 			fs.popd();
 			return b;
 		}

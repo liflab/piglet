@@ -41,7 +41,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 
 import bsh.EvalError;
 import ca.uqac.lif.azrael.PrintException;
-import ca.uqac.lif.azrael.xml.XmlPrinter;
+import ca.uqac.lif.azrael.json.JsonPrinter;
 import ca.uqac.lif.codefinder.Analysis.AnalysisCliException;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
@@ -351,9 +351,9 @@ public class Main
 		{
 			String name = e.getKey();
 			List<FoundToken> list = e.getValue();
-			XmlPrinter xp = new XmlPrinter();
+			JsonPrinter xp = new JsonPrinter();
 			String s = xp.print(list).toString();
-			FileUtils.writeStringTo(fs, s, name + ".xml");
+			FileUtils.writeStringTo(fs, s, name + ".json");
 		}
 		fs.popd();
 	}
