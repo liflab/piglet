@@ -33,7 +33,7 @@ import java.util.concurrent.Future;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
-import ca.uqac.lif.codefinder.find.TokenFinderRunnable;
+import ca.uqac.lif.codefinder.find.TokenFinderCallable;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory.TokenFinderFactoryException;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderRunnable;
@@ -57,9 +57,11 @@ import ca.uqac.lif.util.CliParser.ArgumentMap;
  */
 public class Analysis
 {
-	public static Analysis read(CliParser cli, ArgumentMap map) throws AnalysisCliException
+	public static Analysis read(CliParser cli, ArgumentMap map, AnsiPrinter stdout, AnsiPrinter stderr) throws AnalysisCliException
 	{
 		Analysis a = new Analysis();
+		a.setStdout(stdout);
+		a.setStderr(stderr);
 		read(cli, map, a);
 		return a;
 	}
@@ -155,7 +157,7 @@ public class Analysis
 		}
 		a.setQuiet(map.containsKey("quiet"));
 		a.setUnresolved(map.containsKey("unresolved"));
-		a.setSummary(map.containsKey("summary"));
+		a.setSummary(!map.containsKey("summary"));
 		if (map.containsKey("output"))
 		{
 			a.setOutputFile(map.getOptionValue("output"));
@@ -207,22 +209,17 @@ public class Analysis
 	/**
 	 * Additional source paths
 	 */
-	protected Set<String> m_sourcePaths;
+	protected Set<String> m_sourcePaths = new HashSet<>();
 
 	/**
 	 * Additional jar files
 	 */
-	protected Set<String> m_jarPaths;
+	protected Set<String> m_jarPaths = new HashSet<>();
 
 	/**
 	 * A callback to send notifications about the analysis' status.
 	 */
 	protected StatusCallback m_callback;
-
-	/**
-	 * The path of the home folder for this analysis
-	 */
-	protected FilePath m_homePath;
 
 	/**
 	 * Name of the output file
@@ -274,6 +271,12 @@ public class Analysis
 	 * Other command line arguments (not parsed)
 	 */
 	protected final List<String> m_others = new ArrayList<>();
+	
+	/**
+	 * The path in which the executable is executed
+	 */
+	protected final FilePath m_homePath = new FilePath(System.getProperty("user.dir"));
+
 
 	/**
 	 * Whether to cache analysis results
@@ -383,11 +386,6 @@ public class Analysis
 	public FilePath getHomePath()
 	{
 		return m_homePath;
-	}
-
-	public void setHomePath(FilePath homePath)
-	{
-		this.m_homePath = homePath;
 	}
 
 	public String getOutputFile()
@@ -548,7 +546,7 @@ public class Analysis
 		return m_others;
 	}
 
-	public List<Future<?>> processBatch(ExecutorService e, FileProvider provider,
+	public List<Future<Set<FoundToken>>> processBatch(ExecutorService e, FileProvider provider,
 			Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
 	{
 		checkCachedFinders();
@@ -557,8 +555,8 @@ public class Analysis
 			found.addAll(f.readCache(new HardDisk(m_cacheFolder), m_projectName));
 		}
 		int count = 0;
-		Set<TokenFinderRunnable> tasks = new HashSet<>();
-		List<Future<?>> futures = new ArrayList<>();
+		Set<TokenFinderCallable> tasks = new HashSet<>();
+		List<Future<Set<FoundToken>>> futures = new ArrayList<>();
 		while (provider.hasNext() && (m_limit == -1 || count < m_limit))
 		{
 			count++;

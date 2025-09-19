@@ -112,11 +112,6 @@ public class Main
 	 */
 	protected static final AnsiPrinter s_stderr = new AnsiPrinter(System.err);
 
-	/**
-	 * The path in which the executable is executed
-	 */
-	protected static final FilePath s_homePath = new FilePath(System.getProperty("user.dir"));
-
 	/** 
 	 * Thread-local context (parser, type solver, etc.)
 	 */
@@ -167,7 +162,7 @@ public class Main
 		Analysis analysis = null;
 		try
 		{
-			analysis = Analysis.read(cli,  cli.parse(args));	
+			analysis = Analysis.read(cli,  cli.parse(args), s_stdout, s_stderr);	
 		}
 		catch (AnalysisCliException e)
 		{
@@ -179,7 +174,7 @@ public class Main
 		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
 		for (int i = 0; i < folders.size(); i++)
 		{
-			FilePath fold_path = s_homePath.chdir(new FilePath(folders.get(i)));
+			FilePath fold_path = analysis.getHomePath().chdir(new FilePath(folders.get(i)));
 			try
 			{
 				providers[i] = new FileSystemProvider(new HardDisk(fold_path.toString()));
@@ -222,6 +217,7 @@ public class Main
 		// Read file(s)
 		StatusCallback status = new StatusCallback(s_stdout,
 				(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total));
+		analysis.setCallback(status);
 		Thread status_thread = new Thread(status);
 		AtomicInteger THREAD_ID = new AtomicInteger(1);
 		ThreadFactory tf = r -> {
@@ -238,9 +234,13 @@ public class Main
 		status_thread.start();
 		try
 		{
-			List<Future<?>> futures = analysis.processBatch(executor, fsp, found);
+			List<Future<Set<FoundToken>>> futures = analysis.processBatch(executor, fsp, found);
 			waitForEnd(futures);
 			executor.shutdown();
+			for (Future<Set<FoundToken>> f : futures)
+			{
+				found.addAll(f.get());
+			}
 		}
 		catch (IOException e)
 		{
@@ -284,7 +284,7 @@ public class Main
 
 		/* Categorize results and produce report */
 		categorize(categorized, found);
-		FilePath output_path = s_homePath.chdir(getPathOfFile(analysis.getOutputFile()));
+		FilePath output_path = analysis.getHomePath().chdir(getPathOfFile(analysis.getOutputFile()));
 		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
 		HardDisk hd;
 		try
@@ -303,6 +303,29 @@ public class Main
 			return handleException(e);
 		}
 		return RET_OK;
+	}
+	
+	protected static void categorize(Map<String, List<FoundToken>> map, Set<FoundToken> found)
+	{
+		for (FoundToken t : found)
+		{
+			addToMap(map, t);
+		}
+	}
+
+	protected static void addToMap(Map<String, List<FoundToken>> map, FoundToken t)
+	{
+		List<FoundToken> list = null;
+		if (map.containsKey(t.getAssertionName()))
+		{
+			list = map.get(t.getAssertionName());
+		}
+		else
+		{
+			list = new ArrayList<FoundToken>();
+			map.put(t.getAssertionName(), list);
+		}
+		list.add(t);
 	}
 
 	protected static void serializeResults(String project, FileSystem fs, Map<String, List<FoundToken>> categorized)
@@ -347,13 +370,13 @@ public class Main
 		s_stderr.println("I/O error: " + e.getMessage());
 		return RET_IO;
 	}
-	
+
 	protected static int handleException(ReporterException e)
 	{
 		Throwable t = e.getCause();
 		return handleCause(t);
 	}
-	
+
 	protected static int handleCause(Throwable t)
 	{
 		if (t instanceof FileSystemException)
@@ -421,10 +444,7 @@ public class Main
 		return RET_FS;
 	}
 
-
-
-
-	public static void waitForEnd(List<Future<?>> futures)
+	public static void waitForEnd(List<Future<Set<FoundToken>>> futures)
 	{
 		for (Future<?> f : futures)
 		{
@@ -446,29 +466,6 @@ public class Main
 				throw new RuntimeException("Task failed", ee.getCause());
 			}
 		}
-	}
-
-	protected static void categorize(Map<String, List<FoundToken>> map, Set<FoundToken> found)
-	{
-		for (FoundToken t : found)
-		{
-			addToMap(map, t);
-		}
-	}
-
-	protected static void addToMap(Map<String, List<FoundToken>> map, FoundToken t)
-	{
-		List<FoundToken> list = null;
-		if (map.containsKey(t.getAssertionName()))
-		{
-			list = map.get(t.getAssertionName());
-		}
-		else
-		{
-			list = new ArrayList<FoundToken>();
-			map.put(t.getAssertionName(), list);
-		}
-		list.add(t);
 	}
 
 	protected static class EndRunnable implements Runnable

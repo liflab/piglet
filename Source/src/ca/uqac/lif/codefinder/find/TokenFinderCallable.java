@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -34,7 +35,7 @@ import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 
-public abstract class TokenFinderRunnable implements Runnable
+public abstract class TokenFinderCallable implements Callable<Set<FoundToken>>
 {
 	/** The file name */
 	protected final String m_file;
@@ -44,9 +45,6 @@ public abstract class TokenFinderRunnable implements Runnable
 	
 	/** The file source from which to read */
 	protected final FileSource m_fSource;
-	
-	/** The set of found tokens */
-	protected final Set<FoundToken> m_found;
 	
 	/** Whether to suppress warnings */
 	protected final boolean m_quiet;
@@ -66,21 +64,15 @@ public abstract class TokenFinderRunnable implements Runnable
 	 * @param quiet Whether to suppress warnings
 	 * @param status A callback to report status
 	 */
-	public TokenFinderRunnable(String project, String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
+	public TokenFinderCallable(String project, String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
 	{
 		super();
 		m_project = project;
 		m_file = file;
 		m_fSource = source;
-		m_found = new HashSet<FoundToken>();
 		m_quiet = quiet;
 		m_callback = status;
 		m_finders = new HashSet<TokenFinderFactory>(finders);
-	}
-
-	public Set<FoundToken> getFound()
-	{
-		return m_found;
 	}
 	
 	/**
@@ -120,7 +112,7 @@ public abstract class TokenFinderRunnable implements Runnable
 	}
 	
 	@Override
-	public final void run()
+	public final Set<FoundToken> call()
 	{
 		TokenFinderContext context = Main.CTX.get();
 		InputStream is;
@@ -141,13 +133,14 @@ public abstract class TokenFinderRunnable implements Runnable
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		doRun(context, code);
+		Set<FoundToken> found = doRun(context, code);
 		if (m_callback != null)
 		{
 			m_callback.done();
 		}
+		return found;
 	}
 	
-	protected abstract void doRun(TokenFinderContext context, String code);
+	protected abstract Set<FoundToken> doRun(TokenFinderContext context, String code);
 
 }

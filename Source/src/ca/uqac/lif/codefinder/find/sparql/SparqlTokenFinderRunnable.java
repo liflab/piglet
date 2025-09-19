@@ -18,6 +18,7 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -30,7 +31,7 @@ import com.github.javaparser.ast.expr.Expression;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
-import ca.uqac.lif.codefinder.find.TokenFinderRunnable;
+import ca.uqac.lif.codefinder.find.TokenFinderCallable;
 import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
@@ -38,7 +39,7 @@ import ca.uqac.lif.codefinder.util.StatusCallback;
 /**
  * A runnable that processes a single Java file to find assertions.
  */
-public class SparqlTokenFinderRunnable extends TokenFinderRunnable
+public class SparqlTokenFinderRunnable extends TokenFinderCallable
 {	
 	/** Whether to follow method calls when building the model */
 	protected final int m_follow;
@@ -60,9 +61,9 @@ public class SparqlTokenFinderRunnable extends TokenFinderRunnable
 	}
 
 	@Override
-	protected void doRun(TokenFinderContext context, String code)
+	protected Set<FoundToken> doRun(TokenFinderContext context, String code)
 	{
-		processFile(context, m_file, code, m_finders, m_quiet, m_follow);
+		return processFile(context, m_file, code, m_finders, m_quiet, m_follow);
 	}
 
 	/**
@@ -75,8 +76,9 @@ public class SparqlTokenFinderRunnable extends TokenFinderRunnable
 	 * @param quiet Whether to suppress warnings
 	 * @param follow Whether to follow method calls when building the model
 	 */
-	protected void processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet, int follow)
+	protected Set<FoundToken> processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet, int follow)
 	{
+		Set<FoundToken> found = new HashSet<>();
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
@@ -103,7 +105,7 @@ public class SparqlTokenFinderRunnable extends TokenFinderRunnable
 					f.setFilename(file);
 					f.setContext(context);
 					f.process();
-					m_found.addAll(f.getFoundTokens());
+					found.addAll(f.getFoundTokens());
 				}
 			}
 		}
@@ -115,12 +117,7 @@ public class SparqlTokenFinderRunnable extends TokenFinderRunnable
 				System.err.println("Could not parse " + file);
 			}
 		}
-	}
-
-	@Override
-	public Set<FoundToken> getFound()
-	{
-		return m_found;
+		return found;
 	}
 
 	/**

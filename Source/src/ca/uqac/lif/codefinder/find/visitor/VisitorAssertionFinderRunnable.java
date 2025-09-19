@@ -17,6 +17,7 @@
  */
 package ca.uqac.lif.codefinder.find.visitor;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -24,16 +25,17 @@ import java.util.Set;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
+import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
-import ca.uqac.lif.codefinder.find.TokenFinderRunnable;
+import ca.uqac.lif.codefinder.find.TokenFinderCallable;
 import ca.uqac.lif.codefinder.provider.FileSource;
 import ca.uqac.lif.codefinder.util.StatusCallback;
 
 /**
  * A runnable that processes a single Java file to find assertions.
  */
-public class VisitorAssertionFinderRunnable extends TokenFinderRunnable
+public class VisitorAssertionFinderRunnable extends TokenFinderCallable
 {		
 	/**
 	 * Creates a new runnable.
@@ -50,8 +52,9 @@ public class VisitorAssertionFinderRunnable extends TokenFinderRunnable
 	}
 	
 	@Override
-	protected void doRun(TokenFinderContext context, String code)
+	protected Set<FoundToken> doRun(TokenFinderContext context, String code)
 	{
+		Set<FoundToken> found = new HashSet<>();
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
@@ -74,7 +77,7 @@ public class VisitorAssertionFinderRunnable extends TokenFinderRunnable
 					new_f.setFilename(m_file);
 					new_f.setContext(context);
 					pm.accept(new_f);
-					m_found.addAll(new_f.getFoundTokens());
+					found.addAll(new_f.getFoundTokens());
 				}
 			}
 		}
@@ -86,6 +89,7 @@ public class VisitorAssertionFinderRunnable extends TokenFinderRunnable
 				System.err.println("Could not parse " + m_file);
 			}
 		}
+		return found;
 	}
 	
 	/**
