@@ -17,11 +17,6 @@
  */
 package ca.uqac.lif.codefinder.report;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.fs.FilePath;
 
 /**
@@ -33,13 +28,10 @@ public interface Reporter
 	/**
 	 * Generates a report of the found tokens.
 	 * @param root The root directory where the search was performed
-	 * @param total The total number of tokens searched for
-	 * @param found A map associating file paths to lists of found tokens
-	 * @param unresolved A set of unresolved symbols, or <tt>null</tt> if
-	 * nothing to show
+	 * @param r The report data structure
 	 * @throws ReporterException If an error occurs while writing the report
 	 */
-	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException;
+	public void report(FilePath root, Report r) throws ReporterException;
 	
 	/**
 	 * An exception that can be thrown by a reporter. This class is expected

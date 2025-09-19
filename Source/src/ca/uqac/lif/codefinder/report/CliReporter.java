@@ -20,9 +20,10 @@ package ca.uqac.lif.codefinder.report;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.report.Report.MapReport;
+import ca.uqac.lif.codefinder.report.Report.ObjectReport;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.AnsiPrinter.Color;
 import ca.uqac.lif.fs.FilePath;
@@ -42,38 +43,63 @@ public class CliReporter implements Reporter
 		m_summary = summary;
 	}
 	
-	@Override
-	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException
+	protected void reportRecursive(FilePath root, Report r, String indent, int level)
 	{
-		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
+		if (!(r instanceof MapReport))
 		{
-			m_out.print(AnsiPrinter.padToLength(e.getKey(), 36));
-			m_out.setForegroundColor(Color.DARK_GRAY);
+			return;
+		}
+		MapReport mr = (MapReport) r;
+		for (Map.Entry<String, Report> e : mr.entrySet())
+		{
+			String key = e.getKey();
+			Report value = e.getValue();
+			m_out.setForegroundColor(Color.CYAN);
+			m_out.print(indent);
+			m_out.print(key);
 			m_out.print(": ");
-			m_out.setForegroundColor(Color.YELLOW);
-			m_out.print(AnsiPrinter.padToLength(Integer.toString(e.getValue().size()), 4));
-			float percentage = 	100f * e.getValue().size() / total;
-			m_out.setForegroundColor(Color.BROWN);
-			m_out.print(" (");
-			m_out.print(String.format("%.1f", percentage));
-			m_out.print("%)");
-			m_out.println();
 			m_out.resetColors();
-			if (!m_summary)
+			if (value instanceof ObjectReport)
 			{
-				displayTokens(m_out, e.getValue());
+				ObjectReport or = (ObjectReport) value;
+				if (or.getObject() instanceof List<?>)
+				{
+					@SuppressWarnings("unchecked")
+					List<FoundToken> list = (List<FoundToken>) or.getObject();
+					m_out.setForegroundColor(Color.YELLOW);
+					m_out.print(AnsiPrinter.padToLength(Integer.toString(list.size()), 4));
+					//float percentage = 	100f * list.size() / total;
+					m_out.setForegroundColor(Color.BROWN);
+					//m_out.print(" (");
+					//m_out.print(String.format("%.1f", percentage));
+					//m_out.print("%)");
+					m_out.resetColors();
+					if (!m_summary)
+					{
+						m_out.println();
+						displayTokens(m_out, list);
+						m_out.println();
+						continue;
+					}
+				}
+				else
+				{
+					m_out.setForegroundColor(Color.YELLOW);
+				}
+				m_out.println(or.m_object.toString());
+			}
+			else
+			{
 				m_out.println();
+				reportRecursive(root, value, indent + "  ", level + 1);
 			}
 		}
-		if (unresolved != null)
-		{
-			m_out.print(AnsiPrinter.padToLength("Unresolved symbols", 36));
-			m_out.setForegroundColor(Color.DARK_GRAY);
-			m_out.print(": ");
-			m_out.setForegroundColor(Color.RED);
-			m_out.println(unresolved.size());
-			m_out.resetColors();
-		}
+	}
+	
+	@Override
+	public void report(FilePath root, Report r) throws ReporterException
+	{
+		reportRecursive(root, r, "", 0);
 	}
 	
 	/**

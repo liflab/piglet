@@ -23,12 +23,13 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.codelibs.jhighlight.renderer.Renderer;
 import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.report.Report.MapReport;
+import ca.uqac.lif.codefinder.report.Report.ObjectReport;
 import ca.uqac.lif.codefinder.util.Paths;
 import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
@@ -46,12 +47,16 @@ public class HtmlReporter implements Reporter
 	}
 
 	@Override
-	public void report(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException
+	public void report(FilePath root, Report r) throws ReporterException
 	{
+		if (!(r instanceof MapReport))
+		{
+			throw new ReporterException("Expected a map report");
+		}
 		try
 		{
 			FileUtils.copy(HtmlReporter.class.getResourceAsStream("header.html"), m_out);
-			printSummary(root, total, found, unresolved);
+			printSummary(root, (MapReport) r);
 			FileUtils.copy(HtmlReporter.class.getResourceAsStream("footer.html"), m_out);
 		}
 		catch (FileSystemException e)
@@ -68,39 +73,32 @@ public class HtmlReporter implements Reporter
 	 * @param unresolved A set of unresolved symbols, or <tt>null</tt> if
 	 * nothing to show
 	 */
-	protected void printSummary(FilePath root, int total, Map<String,List<FoundToken>> found, Set<String> unresolved) throws ReporterException
+	protected void printSummary(FilePath root, MapReport global) throws ReporterException
 	{
-		m_out.println("<h2>Summary</h2>");
-		m_out.println("<ul>");
-		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
+		m_out.println("<section>");
+		for (Map.Entry<String,Report> p_e : global.entrySet())
 		{
-			m_out.println("<li><a href=\"#" + e.getKey() + "\">" + e.getKey() + "</a> (" + e.getValue().size() + ")</li>");
-		}
-		m_out.println("<li><a href=\"#unresolved\">Unresolved symbols</a> (" + (unresolved == null ? "0" : unresolved.size()) + ")</li>");
-		m_out.println("</ul>");
-		for (Map.Entry<String, List<FoundToken>> e : found.entrySet())
-		{
-			if (!e.getKey().contains("count"))
-			{
-				m_out.println("<h2><a name=\"" + e.getKey() + "\"></a>" + e.getKey() + " (" + e.getValue().size() + ")</h2>");
-				reportTokens(root, e.getValue());
-			}
-			else
-			{
-				m_out.println("<h2>" + e.getKey() + " (" + "foo" + ")</h2>");
-				reportTokens(root, e.getValue());
-			}
-		}
-		if (unresolved != null)
-		{
-			m_out.println("<h2><a name=\"unresolved\"></a>Unresolved symbols</h2>");
+			String project = p_e.getKey();
+			m_out.println("<h2>Summary for " + project + "</h2>");
 			m_out.println("<ul>");
-			for (String u : unresolved)
+			MapReport found = (MapReport) p_e.getValue();
+			for (Map.Entry<String, Report> e : found.entrySet())
 			{
-				m_out.println("<li><code>" + u + "</code></li>");
+				ObjectReport or = (ObjectReport) e.getValue();
+				List<?> in_list = (List<?>) or.getObject();
+				m_out.println("<li><a href=\"#" + e.getKey() + "\">" + e.getKey() + "</a> (" + in_list.size() + ")</li>");
 			}
+			//m_out.println("<li><a href=\"#unresolved\">Unresolved symbols</a> (" + (unresolved == null ? "0" : unresolved.size()) + ")</li>");
 			m_out.println("</ul>");
+			for (Map.Entry<String, Report> e : found.entrySet())
+			{
+				ObjectReport or = (ObjectReport) e.getValue();
+				List<?> in_list = (List<?>) or.getObject();
+				m_out.println("<h2>" + e.getKey() + " (" + "foo" + ")</h2>");
+				reportTokens(root, in_list);
+			}
 		}
+		m_out.println("</section>");
 	}
 
 	/**
@@ -109,11 +107,16 @@ public class HtmlReporter implements Reporter
 	 * @param out The output stream to which the report is sent
 	 * @param found The list of found tokens
 	 */
-	protected void reportTokens(FilePath root, List<FoundToken> found)
+	protected void reportTokens(FilePath root, List<?> found)
 	{
 		m_out.println("<dl>");
-		for (FoundToken t : found)
+		for (Object o : found)
 		{
+			if (!(o instanceof FoundToken))
+			{
+				continue;
+			}
+			FoundToken t = (FoundToken) o;
 			String clear_fn = t.getFilename().substring(1);
 			FilePath folder = root.chdir(Paths.getPathOfFile(clear_fn));
 			m_out.print("<dt><a href=\"");

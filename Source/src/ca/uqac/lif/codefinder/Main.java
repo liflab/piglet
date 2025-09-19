@@ -22,12 +22,9 @@ import static ca.uqac.lif.codefinder.util.Paths.getPathOfFile;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,6 +47,9 @@ import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
 import ca.uqac.lif.codefinder.report.CliReporter;
 import ca.uqac.lif.codefinder.report.HtmlReporter;
+import ca.uqac.lif.codefinder.report.Report;
+import ca.uqac.lif.codefinder.report.Report.MapReport;
+import ca.uqac.lif.codefinder.report.Report.ObjectReport;
 import ca.uqac.lif.codefinder.report.Reporter.ReporterException;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
@@ -186,7 +186,7 @@ public class Main
 		}
 		UnionProvider fsp = new UnionProvider(providers);
 		int total = fsp.filesProvided();
-		Map<String, List<FoundToken>> categorized = new TreeMap<>();
+		Report.MapReport categorized = new Report.MapReport();
 		Set<FoundToken> found = new HashSet<>();
 		EndRunnable end_callback = new EndRunnable(categorized, found.size(), analysis.getSummary());
 		Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
@@ -283,7 +283,7 @@ public class Main
 		s_stdout.println();
 
 		/* Categorize results and produce report */
-		categorize(categorized, found);
+		categorize(analysis.getProjectName(), categorized, found);
 		FilePath output_path = analysis.getHomePath().chdir(getPathOfFile(analysis.getOutputFile()));
 		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
 		HardDisk hd;
@@ -292,10 +292,10 @@ public class Main
 			hd = new HardDisk(output_path.toString()).open();
 			HtmlReporter reporter = new HtmlReporter(
 					new PrintStream(hd.writeTo(getFilename(analysis.getOutputFile())), true, "UTF-8"));
-			reporter.report(reverse_path, found.size(), categorized, new HashSet<String>());
+			reporter.report(reverse_path, categorized);
 			hd.close();
 			hd = new HardDisk(analysis.getCacheFolder()).open();
-			serializeResults(analysis.getProjectName(), hd, categorized);
+			serializeResults(hd, categorized);
 			hd.close();
 		}
 		catch (ReporterException e)
@@ -311,51 +311,37 @@ public class Main
 	 * @param map The map to populate
 	 * @param found The set of found tokens
 	 */
-	protected static void categorize(Map<String, List<FoundToken>> map, Set<FoundToken> found)
+	protected static void categorize(String project, MapReport r, Set<FoundToken> found)
 	{
 		for (FoundToken t : found)
 		{
-			addToMap(map, t);
+			String key = project + Report.PATH_SEPARATOR + t.getAssertionName();
+			r.append(key, t);
 		}
 	}
 
-	/**
-	 * Adds a found token to a map from assertion names to lists of found tokens.
-	 * @param map The map to populate
-	 * @param t The token to add
-	 */
-	protected static void addToMap(Map<String, List<FoundToken>> map, FoundToken t)
-	{
-		List<FoundToken> list = null;
-		if (map.containsKey(t.getAssertionName()))
-		{
-			list = map.get(t.getAssertionName());
-		}
-		else
-		{
-			list = new ArrayList<FoundToken>();
-			map.put(t.getAssertionName(), list);
-		}
-		list.add(t);
-	}
-
-	protected static void serializeResults(String project, FileSystem fs, Map<String, List<FoundToken>> categorized)
+	protected static void serializeResults(FileSystem fs, MapReport r)
 			throws PrintException, FileSystemException
 	{
-		if (!fs.isDirectory(project))
+		for (String project : r.keySet())
 		{
-			fs.mkdir(project);
+			if (!fs.isDirectory(project))
+			{
+				fs.mkdir(project);
+			}
+			fs.pushd(project);
+			MapReport entries = (MapReport) r.get(project);
+			for (String name : entries.keySet())
+			{
+				ObjectReport or = (ObjectReport) entries.get(name);
+				@SuppressWarnings("unchecked")
+				List<FoundToken> list = (List<FoundToken>) or.getObject();
+				JsonPrinter xp = new JsonPrinter();
+				String s = xp.print(list).toString();
+				FileUtils.writeStringTo(fs, s, name + ".json");
+			}
+			fs.popd();
 		}
-		fs.pushd(project);
-		for (Map.Entry<String, List<FoundToken>> e : categorized.entrySet())
-		{
-			String name = e.getKey();
-			List<FoundToken> list = e.getValue();
-			JsonPrinter xp = new JsonPrinter();
-			String s = xp.print(list).toString();
-			FileUtils.writeStringTo(fs, s, name + ".json");
-		}
-		fs.popd();
 	}
 
 	/**
@@ -503,13 +489,13 @@ public class Main
 	 */
 	protected static class EndRunnable implements Runnable
 	{
-		private final Map<String, List<FoundToken>> m_found;
+		private final Report m_found;
 
 		private int m_total;
 
 		private final boolean m_summary;
 
-		public EndRunnable(Map<String, List<FoundToken>> found, int total, boolean summary)
+		public EndRunnable(Report found, int total, boolean summary)
 		{
 			super();
 			m_found = found;
@@ -533,7 +519,7 @@ public class Main
 			CliReporter cli_reporter = new CliReporter(s_stdout, m_summary);
 			try
 			{
-				cli_reporter.report(null, m_total, m_found, new HashSet<String>());
+				cli_reporter.report(null, m_found);
 			}
 			catch (ReporterException e)
 			{
