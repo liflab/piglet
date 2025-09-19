@@ -305,6 +305,12 @@ public class Main
 		return RET_OK;
 	}
 	
+	/**
+	 * Categorizes the found tokens by assertion name (i.e., the name of the
+	 * assertion that produced them).
+	 * @param map The map to populate
+	 * @param found The set of found tokens
+	 */
 	protected static void categorize(Map<String, List<FoundToken>> map, Set<FoundToken> found)
 	{
 		for (FoundToken t : found)
@@ -313,6 +319,11 @@ public class Main
 		}
 	}
 
+	/**
+	 * Adds a found token to a map from assertion names to lists of found tokens.
+	 * @param map The map to populate
+	 * @param t The token to add
+	 */
 	protected static void addToMap(Map<String, List<FoundToken>> map, FoundToken t)
 	{
 		List<FoundToken> list = null;
@@ -371,12 +382,24 @@ public class Main
 		return RET_IO;
 	}
 
+	/**
+	 * Handles a reporting exception by printing an appropriate message to standard error and
+	 * returning an appropriate return code.
+	 * @param e The exception to handle
+	 * @return An appropriate return code
+	 */
 	protected static int handleException(ReporterException e)
 	{
 		Throwable t = e.getCause();
 		return handleCause(t);
 	}
 
+	/**
+	 * Handles a cause exception by printing an appropriate message to standard error and
+	 * returning an appropriate return code.
+	 * @param t The exception to handle
+	 * @return An appropriate return code
+	 */
 	protected static int handleCause(Throwable t)
 	{
 		if (t instanceof FileSystemException)
@@ -444,6 +467,13 @@ public class Main
 		return RET_FS;
 	}
 
+	/**
+	 * Waits for the completion of a list of futures, handling exceptions and
+	 * interruptions properly.
+	 * 
+	 * @param futures
+	 *          The list of futures to wait for
+	 */
 	public static void waitForEnd(List<Future<Set<FoundToken>>> futures)
 	{
 		for (Future<?> f : futures)
@@ -468,6 +498,9 @@ public class Main
 		}
 	}
 
+	/**
+	 * Runnable that displays the results at the end of the analysis.
+	 */
 	protected static class EndRunnable implements Runnable
 	{
 		private final Map<String, List<FoundToken>> m_found;

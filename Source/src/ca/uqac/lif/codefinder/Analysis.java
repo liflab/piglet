@@ -60,6 +60,7 @@ public class Analysis
 	private Analysis()
 	{
 		// Prevent instantiation from outside the static methods
+		super();
 	}
 	
 	/**
@@ -565,10 +566,12 @@ public class Analysis
 			Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
 	{
 		checkCachedFinders();
+		HardDisk fs = new HardDisk(m_cacheFolder).open();
 		for (TokenFinderFactory f : m_cachedFinders)
 		{
-			found.addAll(f.readCache(new HardDisk(m_cacheFolder), m_projectName));
+			found.addAll(f.readCache(fs, m_projectName));
 		}
+		fs.close();
 		int count = 0;
 		Set<TokenFinderCallable> tasks = new HashSet<>();
 		List<Future<Set<FoundToken>>> futures = new ArrayList<>();

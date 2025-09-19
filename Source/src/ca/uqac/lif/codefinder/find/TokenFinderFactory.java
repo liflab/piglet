@@ -68,12 +68,19 @@ public abstract class TokenFinderFactory
 	{
 		try
 		{
-			XmlElement x = XmlElement.parse(FileUtils.readStringFrom(fs, getCacheFileName(project)));
-			XmlReader r = new XmlReader();
-			Set<FoundToken> f = (Set<FoundToken>) r.read(x);
-			return f;
-		}
-		catch (XmlParseException | FileSystemException | ReadException e)
+			String content = FileUtils.readStringFrom(fs, getCacheFileName(project));
+			try
+			{
+				XmlElement x = XmlElement.parse(content);
+				XmlReader r = new XmlReader();
+				Set<FoundToken> f = (Set<FoundToken>) r.read(x);
+				return f;
+			}
+			catch (XmlParseException | ReadException e)
+			{
+				throw new TokenFinderFactoryException(e);
+			}
+		} catch (FileSystemException e)
 		{
 			throw new TokenFinderFactoryException(e);
 		}
@@ -86,7 +93,7 @@ public abstract class TokenFinderFactory
 	 */
 	protected String getCacheFileName(String project)
 	{
-		return project + m_name + ".xml";
+		return project + "/" + m_name + ".xml";
 	}
 
 	/**
@@ -99,7 +106,10 @@ public abstract class TokenFinderFactory
 	{
 		try
 		{
-			return fs.isFile(project + m_name + ".xml");
+			fs.pushd(project);
+			boolean b = fs.isFile(m_name + ".xml");
+			fs.popd();
+			return b;
 		}
 		catch (FileSystemException e)
 		{
