@@ -86,7 +86,7 @@ public class CliReporter implements Reporter
 				{
 					m_out.setForegroundColor(Color.YELLOW);
 				}
-				m_out.println(or.m_object.toString());
+				m_out.println();
 			}
 			else
 			{

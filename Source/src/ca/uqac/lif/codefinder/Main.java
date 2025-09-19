@@ -42,6 +42,7 @@ import ca.uqac.lif.azrael.json.JsonPrinter;
 import ca.uqac.lif.codefinder.Analysis.AnalysisCliException;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
+import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory.TokenFinderFactoryException;
 import ca.uqac.lif.codefinder.provider.FileSystemProvider;
 import ca.uqac.lif.codefinder.provider.UnionProvider;
@@ -295,7 +296,7 @@ public class Main
 			reporter.report(reverse_path, categorized);
 			hd.close();
 			hd = new HardDisk(analysis.getCacheFolder()).open();
-			serializeResults(hd, categorized);
+			serializeResults(hd, analysis, categorized);
 			hd.close();
 		}
 		catch (ReporterException e)
@@ -304,7 +305,7 @@ public class Main
 		}
 		return RET_OK;
 	}
-	
+
 	/**
 	 * Categorizes the found tokens by assertion name (i.e., the name of the
 	 * assertion that produced them).
@@ -320,7 +321,8 @@ public class Main
 		}
 	}
 
-	protected static void serializeResults(FileSystem fs, MapReport r)
+	@SuppressWarnings("unchecked")
+	protected static void serializeResults(FileSystem fs, Analysis a, MapReport r)
 			throws PrintException, FileSystemException
 	{
 		for (String project : r.keySet())
@@ -331,14 +333,37 @@ public class Main
 			}
 			fs.pushd(project);
 			MapReport entries = (MapReport) r.get(project);
-			for (String name : entries.keySet())
+			for (TokenFinderFactory tf : a.getAstFinders())
 			{
-				ObjectReport or = (ObjectReport) entries.get(name);
-				@SuppressWarnings("unchecked")
-				List<FoundToken> list = (List<FoundToken>) or.getObject();
+				ObjectReport or = (ObjectReport) entries.get(tf.getName());
+				List<FoundToken> list = null;
+				if (or != null)
+				{
+					list = (List<FoundToken>) or.getObject();
+				}
+				else
+				{
+					list = new java.util.ArrayList<>();
+				}
 				JsonPrinter xp = new JsonPrinter();
 				String s = xp.print(list).toString();
-				FileUtils.writeStringTo(fs, s, name + ".json");
+				FileUtils.writeStringTo(fs, s, tf.getName() + ".json");
+			}
+			for (TokenFinderFactory tf : a.getSparqlFinders())
+			{
+				ObjectReport or = (ObjectReport) entries.get(tf.getName());
+				List<FoundToken> list = null;
+				if (or != null)
+				{
+					list = (List<FoundToken>) or.getObject();
+				}
+				else
+				{
+					list = new java.util.ArrayList<>();
+				}
+				JsonPrinter xp = new JsonPrinter();
+				String s = xp.print(list).toString();
+				FileUtils.writeStringTo(fs, s, tf.getName() + ".json");
 			}
 			fs.popd();
 		}

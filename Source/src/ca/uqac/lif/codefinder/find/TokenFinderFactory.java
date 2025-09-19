@@ -50,6 +50,15 @@ public abstract class TokenFinderFactory
 		super();
 		m_name = name;
 	}
+	
+	/**
+	 * Gets the name of this finder.
+	 * @return The name of this finder
+	 */
+	public String getName()
+	{
+		return m_name;
+	}
 
 	/**
 	 * Creates a new token finder.

@@ -592,6 +592,7 @@ public class Analysis
 						m_sparqlFinders, m_quiet, m_callback, m_follow);
 				tasks.add(r);
 				futures.add(e.submit(r));
+				//System.out.println("Submitting a task!");
 			}
 		}
 		return futures;
