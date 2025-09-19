@@ -71,4 +71,5 @@ report.xml
 # Others
 out/
 *.html
+!Source/src/ca/uqac/lif/codefinder/report/*.html
 *.profile
