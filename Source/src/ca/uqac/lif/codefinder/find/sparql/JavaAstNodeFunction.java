@@ -1,10 +1,10 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
-import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.Node;
 
-public abstract class JavaAstNodeFunction extends LazyNodeFunction<Expression, String>
+public abstract class JavaAstNodeFunction extends LazyNodeFunction<Node,String>
 {
-	public JavaAstNodeFunction(LazyNodeIndex<Expression, String> idx)
+	public JavaAstNodeFunction(LazyNodeIndex<Node,String> idx)
 	{
 		super(idx);
 	}

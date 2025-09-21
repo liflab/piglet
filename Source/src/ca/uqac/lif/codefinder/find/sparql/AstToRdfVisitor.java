@@ -45,7 +45,6 @@ import com.github.javaparser.ast.expr.ClassExpr;
 import com.github.javaparser.ast.expr.ConditionalExpr;
 import com.github.javaparser.ast.expr.DoubleLiteralExpr;
 import com.github.javaparser.ast.expr.EnclosedExpr;
-import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.InstanceOfExpr;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
@@ -126,7 +125,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	public static final Property JAVADOC = ResourceFactory.createProperty(ModelBuilder.NS, "javadoc");
 
 	/** An index of AST nodes to RDF resources */
-	protected final LazyNodeIndex<Expression, String> m_index;
+	protected final LazyNodeIndex<Node, String> m_index;
 
 	/** The RDF model being built */
 	protected final Model m_model;
@@ -153,7 +152,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		m_context = context;
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, Resource parent, int follow, TokenFinderContext context)
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Node,String> index, Resource parent, int follow, TokenFinderContext context)
 	{
 		super();
 		m_context = context;
@@ -166,7 +165,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		}
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Expression,String> index, int follow, TokenFinderContext context)
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Node,String> index, int follow, TokenFinderContext context)
 	{
 		this(m, index, null, follow, context);
 	}
@@ -175,7 +174,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	 * Gets the index of AST nodes to RDF resources.
 	 * @return The index
 	 */
-	public LazyNodeIndex<Expression, String> getIndex()
+	public LazyNodeIndex<Node,String> getIndex()
 	{
 		return m_index;
 	}
@@ -1619,10 +1618,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 			m_root = rdf_parent != null ? rdf_parent : rdf_node;
 		}
 		m_parents.push(rdf_node);
-		if (n instanceof Expression)
-		{
-			m_index.put(iri, (Expression) n);
-		}
+		m_index.put(iri, n);
 		if (rdf_parent != null)
 		{
 			m_model.add(rdf_parent, IN, rdf_node);

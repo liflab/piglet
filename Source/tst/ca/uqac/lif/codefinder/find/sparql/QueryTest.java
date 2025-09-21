@@ -69,7 +69,7 @@ public class QueryTest
 	{
 		try
 		{
-			ts = Solvers.buildSolver(new HashSet<>(), "", new HashSet<>());
+			ts = Solvers.buildSolver(new HashSet<>(), new String[]{""}, new HashSet<>());
 			threadPc = new ParserConfiguration()
 					.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
 					.setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));

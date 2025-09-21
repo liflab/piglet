@@ -24,9 +24,9 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.ast.expr.Expression;
 
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
@@ -84,7 +84,7 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
 			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context);	    
-			LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
+			LazyNodeIndex<Node,String> globalAstIndex = r.getIndex();
 			for (TokenFinderFactory fac : finders)
 			{
 				if (!(fac instanceof SparqlTokenFinderFactory))
@@ -131,7 +131,7 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
 		for (MethodDeclaration m : methods)
 		{
-			if (isTest(m))
+			//if (isTest(m))
 			{
 				list.add(m);
 			}

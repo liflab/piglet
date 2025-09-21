@@ -54,7 +54,7 @@ public final class Solvers
 	 * @throws IOException 
 	 */
 	@SuppressWarnings("deprecation")
-	public static CombinedTypeSolver buildSolver(Set<String> sourceRoots, String root_package, Set<String> jarPaths) throws FileSystemException, IOException
+	public static CombinedTypeSolver buildSolver(Set<String> sourceRoots, String[] root_package, Set<String> jarPaths) throws FileSystemException, IOException
 	{
 		CombinedTypeSolver ts = new CombinedTypeSolver();
 
@@ -75,7 +75,10 @@ public final class Solvers
 			{
 				Set<String> set = new HashSet<String>();
 				HardDisk hd = new HardDisk(p.toString()).open();
-				traverseSourceRoots(root_package, hd, set);
+				for (String f : root_package)
+				{
+					traverseSourceRoots(f, hd, set);
+				}
 				hd.close();
 				for (String folder : set)
 				{

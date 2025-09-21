@@ -19,7 +19,7 @@ package ca.uqac.lif.codefinder.find.sparql;
 
 import org.apache.jena.rdf.model.Model;
 
-import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.Node;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.visitor.PushPopVisitableNode;
@@ -40,9 +40,9 @@ public class ModelBuilder
 	{
 		protected final Model m_model;
 
-		protected final LazyNodeIndex<Expression,String> m_index;
+		protected final LazyNodeIndex<Node,String> m_index;
 
-		public ModelBuilderResult(Model model, LazyNodeIndex<Expression,String> index)
+		public ModelBuilderResult(Model model, LazyNodeIndex<Node,String> index)
 		{
 			super();
 			m_model = model;
@@ -54,7 +54,7 @@ public class ModelBuilder
 			return m_model;
 		}
 
-		public LazyNodeIndex<Expression,String> getIndex()
+		public LazyNodeIndex<Node,String> getIndex()
 		{
 			return m_index;
 		}

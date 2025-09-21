@@ -86,7 +86,7 @@ public abstract class TokenFinderCallable implements Callable<Set<FoundToken>>
 		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
 		for (MethodDeclaration m : methods)
 		{
-			if (isTest(m))
+			//if (isTest(m))
 			{
 				list.add(m);
 			}

@@ -20,10 +20,10 @@ package ca.uqac.lif.codefinder.report;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * A data structure representing a report of the results of a code
@@ -75,7 +75,7 @@ public abstract class Report
 		 */
 		public MapReport()
 		{
-			this(new HashMap<String,Report>());
+			this(new TreeMap<String,Report>());
 		}
 
 		/**

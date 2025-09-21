@@ -43,6 +43,33 @@ public class CliReporter implements Reporter
 		m_summary = summary;
 	}
 	
+	protected void setTitle(int level)
+	{
+		switch (level)
+		{
+			case 0:
+				m_out.setForegroundColor(Color.PURPLE);
+				m_out.underline();
+				break;
+			case 1:
+				m_out.setForegroundColor(Color.CYAN);
+				m_out.bold();
+				break;
+			case 2:
+				m_out.setForegroundColor(Color.GREEN);
+				break;
+			default:
+				m_out.setForegroundColor(Color.WHITE);
+				break;
+		}
+	}
+	
+	protected void unsetTitle(int level)
+	{
+		m_out.unbold();
+		m_out.ununderline();
+	}
+	
 	protected void reportRecursive(FilePath root, Report r, String indent, int level)
 	{
 		if (!(r instanceof MapReport))
@@ -54,10 +81,18 @@ public class CliReporter implements Reporter
 		{
 			String key = e.getKey();
 			Report value = e.getValue();
-			m_out.setForegroundColor(Color.CYAN);
+			setTitle(level);
 			m_out.print(indent);
-			m_out.print(key);
-			m_out.print(": ");
+			if (level > 0)
+			{
+				m_out.print(AnsiPrinter.padToLength(key, 36, true));
+				m_out.print(": ");
+			}
+			else
+			{
+				m_out.print(key);
+			}
+			unsetTitle(level);
 			m_out.resetColors();
 			if (value instanceof ObjectReport)
 			{
@@ -69,7 +104,7 @@ public class CliReporter implements Reporter
 					m_out.setForegroundColor(Color.YELLOW);
 					m_out.print(AnsiPrinter.padToLength(Integer.toString(list.size()), 4));
 					//float percentage = 	100f * list.size() / total;
-					m_out.setForegroundColor(Color.BROWN);
+					//m_out.setForegroundColor(Color.BROWN);
 					//m_out.print(" (");
 					//m_out.print(String.format("%.1f", percentage));
 					//m_out.print("%)");

@@ -31,6 +31,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
@@ -64,11 +65,11 @@ public class JenaTest
 
 	public static void main(String[] args) throws Exception
 	{
-		s_sourcePaths.add("srcpath");
+		s_sourcePaths.add("/home/sylvain/AssertionStudy/Repositories/thun");
 		s_root = "mypackage";
 		CTX = ThreadLocal.withInitial(() -> {
 			try {
-		    CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, s_root, s_jarPaths);
+		    CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, new String[] {s_root}, s_jarPaths);
 		    
 		    // Wire parser to THIS thread’s solver
 		    ParserConfiguration threadPc = new ParserConfiguration()
@@ -96,7 +97,7 @@ public class JenaTest
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
     		+ "}");*/
-		FileInputStream fis = new FileInputStream("Test.java");
+		FileInputStream fis = new FileInputStream("/home/sylvain/AssertionStudy/Repositories/thun/LinearLayoutManager.java");
 		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
 		fis.close();
     if (!cu.isSuccessful())
@@ -108,7 +109,7 @@ public class JenaTest
     // Build RDF model
     ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(n, 2, ctx);
     
-    LazyNodeIndex<Expression,String> globalAstIndex = r.getIndex();
+    LazyNodeIndex<Node,String> globalAstIndex = r.getIndex();
 		
 		// Register property function
 		PropertyFunctionRegistry.get()

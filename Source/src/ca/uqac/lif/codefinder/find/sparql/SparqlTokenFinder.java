@@ -33,7 +33,6 @@ import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
 import org.apache.jena.sparql.util.Context;
 
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.expr.Expression;
 
 import ca.uqac.lif.azrael.ObjectPrinter;
 import ca.uqac.lif.azrael.ObjectReader;
@@ -62,7 +61,7 @@ public class SparqlTokenFinder implements TokenFinder
 	protected TokenFinderContext m_context;
 
 	/** An index of AST nodes */
-	protected LazyNodeIndex<Expression,String> m_index;
+	protected LazyNodeIndex<Node,String> m_index;
 
 	public static final String prefixes = StrUtils.strjoinNL
 			("PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
@@ -146,7 +145,7 @@ public class SparqlTokenFinder implements TokenFinder
 		m_filename = filename;
 	}
 
-	public void setIndex(LazyNodeIndex<Expression,String> index)
+	public void setIndex(LazyNodeIndex<Node,String> index)
 	{
 		m_index = index;
 	}

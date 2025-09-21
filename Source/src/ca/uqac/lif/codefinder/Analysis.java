@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -55,7 +56,7 @@ import ca.uqac.lif.util.CliParser.ArgumentMap;
  * An analysis of a Java project, as configured through command line
  * arguments.
  */
-public class Analysis
+public class Analysis implements Comparable<Analysis>
 {
 	private Analysis()
 	{
@@ -63,23 +64,35 @@ public class Analysis
 		super();
 	}
 	
+	@Override
+	public int compareTo(Analysis o)
+	{
+		return this.getProjectName().compareTo(o.getProjectName());
+	}
+	
 	/**
-	 * Reads command line arguments and returns an analysis object
+	 * Reads command line arguments and returns a set of analysis objects
 	 * 
 	 * @param cli    The command line parser
 	 * @param map    The argument map
 	 * @param stdout Printer for standard output
 	 * @param stderr Printer for error output
-	 * @return The analysis object
+	 * @return The set of analyses
 	 * @throws AnalysisCliException If an error occurs while reading the arguments
 	 */
-	public static Analysis read(CliParser cli, ArgumentMap map, AnsiPrinter stdout, AnsiPrinter stderr) throws AnalysisCliException
+	public static Set<Analysis> read(CliParser cli, ArgumentMap map, AnsiPrinter stdout, AnsiPrinter stderr) throws AnalysisCliException
 	{
-		Analysis a = new Analysis();
-		a.setStdout(stdout);
-		a.setStderr(stderr);
-		read(cli, map, a);
-		return a;
+		Set<Analysis> analyses = new TreeSet<>();
+		for (String profile : map.getOthers())
+		{
+			Analysis a = new Analysis();
+			a.setStdout(stdout);
+			a.setStderr(stderr);
+			readProfile(cli, a, profile);
+			read(cli, map, a);
+			analyses.add(a);
+		}
+		return analyses;
 	}
 
 	/**
@@ -108,8 +121,8 @@ public class Analysis
 				.withDescription("Stop after n files (for testing purposes)"));
 		cli.addArgument(new Argument().withShortName("h").withLongName("help")
 				.withDescription("Display this help message"));
-		cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file")
-				.withDescription("Get options from file"));
+		/*cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file")
+				.withDescription("Get options from file"));*/
 		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved")
 				.withDescription("Show unresolved symbols"));
 		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p")
@@ -171,9 +184,22 @@ public class Analysis
 			a.getStdout().disableColors();
 			a.getStderr().disableColors();
 		}
-		a.setQuiet(map.containsKey("quiet"));
-		a.setUnresolved(map.containsKey("unresolved"));
-		a.setSummary(!map.containsKey("summary"));
+		if (map.containsKey("quiet"))
+		{
+			a.setQuiet(true);
+		}
+		if (map.containsKey("unresolved"))
+		{
+			a.setUnresolved(true);
+		}
+		if (map.containsKey("summary"))
+		{
+			a.setSummary(true);
+		}
+		if (map.containsKey("no-cache"))
+		{
+			a.setCache(false);
+		}
 		if (map.containsKey("output"))
 		{
 			a.setOutputFile(map.getOptionValue("output"));
@@ -209,12 +235,22 @@ public class Analysis
 		}
 		if (map.hasOption("root"))
 		{
-			a.setRoot(map.getOptionValue("root"));
+			String[] roots = map.getOptionValue("root").split(":");
+			a.setRoots(roots);
 		}
 		if (map.containsKey("help"))
 		{
 			a.showUsage(cli);
 		}
+	}
+	
+	public String getReportPath()
+	{
+		if (m_outputFile == null || m_outputFile.isEmpty())
+		{
+			return "report.html";
+		}
+		return m_outputFile;
 	}
 
 	/**
@@ -248,9 +284,9 @@ public class Analysis
 	protected boolean m_quiet = false;
 
 	/**
-	 * The name of the root package to look for in the source tree
+	 * The name(s) of the root package(s) to look for in the source tree
 	 */
-	protected String m_root = null;
+	protected String[] m_root = null;
 
 	/**
 	 * Whether to show unresolved symbols.
@@ -424,14 +460,14 @@ public class Analysis
 		this.m_quiet = quiet;
 	}
 
-	public String getRoot()
+	public String[] getRoots()
 	{
 		return m_root;
 	}
-
-	public void setRoot(String root)
+	
+	public void setRoots(String[] roots)
 	{
-		this.m_root = root;
+		m_root = roots;
 	}
 
 	public int getThreads()

@@ -21,8 +21,10 @@ import static org.codelibs.jhighlight.renderer.XhtmlRendererFactory.JAVA;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.codelibs.jhighlight.renderer.Renderer;
 import org.codelibs.jhighlight.renderer.XhtmlRendererFactory;
@@ -35,6 +37,9 @@ import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 
+/**
+ * A reporter that outputs the results of a code search in HTML format.
+ */
 public class HtmlReporter implements Reporter
 {
 	/** The output stream to which the report is sent */
@@ -90,15 +95,19 @@ public class HtmlReporter implements Reporter
 			}
 			//m_out.println("<li><a href=\"#unresolved\">Unresolved symbols</a> (" + (unresolved == null ? "0" : unresolved.size()) + ")</li>");
 			m_out.println("</ul>");
+			m_out.println("</section>");
 			for (Map.Entry<String, Report> e : found.entrySet())
 			{
 				ObjectReport or = (ObjectReport) e.getValue();
 				List<?> in_list = (List<?>) or.getObject();
+				m_out.println("<section>");
+				m_out.println("<a name=\"" + e.getKey() + "\"></a>");
 				m_out.println("<h2>" + e.getKey() + " (" + "foo" + ")</h2>");
 				reportTokens(root, in_list);
+				m_out.println("</section>");
 			}
 		}
-		m_out.println("</section>");
+		
 	}
 
 	/**
@@ -110,6 +119,7 @@ public class HtmlReporter implements Reporter
 	protected void reportTokens(FilePath root, List<?> found)
 	{
 		m_out.println("<dl>");
+		TreeSet<FoundToken> ts = new TreeSet<>();
 		for (Object o : found)
 		{
 			if (!(o instanceof FoundToken))
@@ -117,6 +127,13 @@ public class HtmlReporter implements Reporter
 				continue;
 			}
 			FoundToken t = (FoundToken) o;
+			ts.add(t);
+		}
+		Renderer rend = XhtmlRendererFactory.getRenderer(JAVA);
+		Iterator<FoundToken> it = ts.iterator();
+		while (it.hasNext())
+		{
+			FoundToken t = (FoundToken) it.next();
 			String clear_fn = t.getFilename().substring(1);
 			FilePath folder = root.chdir(Paths.getPathOfFile(clear_fn));
 			m_out.print("<dt><a href=\"");
@@ -127,7 +144,6 @@ public class HtmlReporter implements Reporter
 			m_out.print(t.getLocation());
 			m_out.println("</dt>");
 			String code = t.getSnippet();
-			Renderer rend = XhtmlRendererFactory.getRenderer(JAVA);
 			String html;
 			try
 			{
@@ -141,32 +157,5 @@ public class HtmlReporter implements Reporter
 			}
 		}
 		m_out.println("</dl>");
-	}
-
-	/**
-	 * Prints CSS rules for syntax highlighting of Java code
-	 * @param out The output stream to which the CSS rules are sent
-	 */
-	protected static void printHighlightCss(PrintStream out)
-	{
-		out.println("<style type=\"text/css\">\n" + "code {\n"
-				+ "color: rgb(0,0,0); font-family: monospace; font-size: 12px; white-space: nowrap;\n"
-				+ "}\n" + ".java_plain {\n" + "color: rgb(0,0,0);\n"
-				+ "}\n" + ".java_keyword {\n"
-				+ "color: rgb(0,0,0); font-weight: bold;\n" + "}\n"
-				+ ".java_javadoc_tag {\n"
-				+ "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic; font-weight: bold;\n"
-				+ "}\n" + "h1 {\n"
-				+ "font-family: sans-serif; font-size: 16pt; font-weight: bold; color: rgb(0,0,0); background: rgb(210,210,210); border: solid 1px black; padding: 5px; text-align: center;\n"
-				+ "}\n" + ".java_type {\n" + "color: rgb(0,44,221);\n"
-				+ "}\n" + ".java_literal {\n" + "color: rgb(188,0,0);\n"
-				+ "}\n" + ".java_javadoc_comment {\n"
-				+ "color: rgb(147,147,147); background-color: rgb(247,247,247); font-style: italic;\n"
-				+ "}\n" + ".java_operator {\n"
-				+ "color: rgb(0,124,31);\n" + "}\n"
-				+ ".java_separator {\n" + "color: rgb(0,33,255);\n"
-				+ "}\n" + ".java_comment {\n"
-				+ "color: rgb(147,147,147); background-color: rgb(247,247,247);\n"
-				+ "}\n" + "    </style>\n");
 	}
 }

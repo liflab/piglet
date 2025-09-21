@@ -1,5 +1,6 @@
 package ca.uqac.lif.codefinder.find.sparql;
 
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.types.ResolvedType;
@@ -16,16 +17,20 @@ public class ResolveType extends JavaAstNodeFunction
 {
 	private final TypeSolver m_ts;
 	
-	public ResolveType(LazyNodeIndex<Expression, String> idx, TypeSolver ts)
+	public ResolveType(LazyNodeIndex<Node,String> idx, TypeSolver ts)
 	{
 		super(idx);
 		m_ts = ts;
 	}
 
 	@Override
-	protected String calculateValue(Expression n)
+	protected String calculateValue(Node n)
 	{
-		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout(n, m_ts, 100);
+		if (!(n instanceof Expression))
+		{
+			return "?";
+		}
+		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout((Expression) n, m_ts, 100);
 		if (rr.reason == Types.ResolveReason.RESOLVED)
 		{
 			//System.out.println("Resolved type of " + n + " to " + rr.value.get().describe());

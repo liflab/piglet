@@ -1,11 +1,8 @@
-A tool for analyzing assertions in unit tests
-=============================================
+A tool for finding patterns in source code
+==========================================
 
 This repository contains source code for a tool that can parse and analyze
-Java source code. More specifically, it traverses the parse tree of each
-source file provided, and looks for occurrence of JUnit's various `assert`
-statements, collecting those that correspond to one of more particular
-patterns.
+Java source code.
 
 The tool works by running multiple `TokenFinder` objects over a source
 file. Each token finder traverses the parse tree, and looks for whatever
@@ -26,23 +23,28 @@ Usage
 Assuming you have a compiled version of the tool (if not, see below), you can
 run it at the command line as follows:
 
-    java -jar codefinder-1.0.jar [options] <folders>
+    java -jar codefinder-1.0.jar [options] <profiles>
 
-Where `<folders>` is to be replaced by a list of folders containing Java
-unit tests.
+Where `<profiles>` is to be replaced by a list of profiles describing the analysis
+of a particular project.
 
 In the following, we shall simply write `codefinder` instead of the whole
 `java -jar ...` prefix.
 
-### Basic usage
+Suggested setup
+--------------
 
-Suppose that `/my/project/srctest` contains a set of Java files with JUnit
-tests. To analyze assertions in these files, simply type:
+- Create a `root` folder containing the CodeFinder JARs, and a `Projects`
+  folder containing (each in its folder) the projects that need to be
+  analyzed, and a `Reports` folder where the HTML reports are to be saved.
+- Create one profile for each project under the root, and use *relative*
+  paths to refer to these projects in the profiles.
 
-	codefinder /my/project/srctest
+Setting up a profile
+-------------------
 
-This will produce a report at the command line, as well as a pretty-printed
-HTML report in the file `report.html`.
+A *profile* is a set of command line arguments to be fed to the tool,
+encapsulated in a text file.
 
 ### Symbol resolution
 
@@ -56,7 +58,7 @@ libraries as follows.
    You can provide a colon-separated list of folders containing additional
    source files, e.g.:
 ```
-codefinder --source /my/project/src:/my/project/otherfolder /my/project/srctest
+--source /my/project/src:/my/project/otherfolder /my/project/srctest
 ```
    This will tell that the folders `src` and `otherfolder` are to be
    scanned for additional definitions of the symbols.
@@ -70,17 +72,13 @@ it is possible to set a timeout to the resolution of a symbol (using the
 `--resolution-timeout` command line parameter). The symbol will
 be considered unresolved if the timeout expires. The default value is 100 ms.
 
-### Suggested setup
-
-- Create a `root` folder containing the CodeFinder JARs, and a `Projects`
-  folder containing (each in its folder) the projects that need to be
-  analyzed.
-- Create one profile for each project under the root, and use *relative*
-  paths to refer to these projects in the profiles.
-
-### Options
+### Other options
 
 The full list of command line option is given below.
+
+`--project <name>`
+: Name of the project (usefue when analyzing multiple projects in
+  a single run).
 
 `-o <path>`, `--output <path>`
 : Name of the output file where the HTML report is to be written
@@ -116,18 +114,16 @@ The full list of command line option is given below.
 `-h`, `--help`
 : Displays a help message
 
-### Using a profile
+### Writing a profile
 
-It may become tedious to invoke the program with a long list of arguments every time.
-The tool can be "configured" by putting those arguments in a text file, called a "profile".
-Here is an example of such a file:
+The analysis of a project is defined by putting command line arguments in a
+text file, called a "profile". Here is an example of such a file:
 
 ```
 # A sample profile
 -o ../report.html
 --no-color
 --source /path/to/folder
-/path/to/project
 ```
 
 As you can see, arguments can be split across multiple lines. Blank lines and
@@ -136,6 +132,20 @@ If the tool is called with the `--profile` parameter pointing to that file
 (say `myprofile.txt`), it will read the contents of this file as if they had
 been passed directly to the command line. If you call the tool with additional
 command line arguments, they will be merged with whatever was found in the profile.
+
+Caching
+-------
+
+By default, the tool serializes the results of a search in a cache file
+located in the `.codefinder_cache` folder. If an analysis is run when such a file
+exists for a given project and a given token finder, the analysis will not
+proceed and the results already found by a preivous run of the token finder will
+be fetched instead. This feature can save precious time when re-running a
+previous analysis with new finders, or new projects (as already-analyzed
+projects will not be handled once again).
+
+To discard the cached results, simply delete the `.codefinder_cache` folder
+and everything will be recomputed from scratch.
 
 Compiling and Installing
 ------------------------

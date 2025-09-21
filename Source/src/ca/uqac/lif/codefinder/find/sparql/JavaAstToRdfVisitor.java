@@ -98,7 +98,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		super(follow, context);
 	}
 
-	public JavaAstToRdfVisitor(Model m_model, LazyNodeIndex<Expression,String> m_index, Resource method_node, int follow, TokenFinderContext context)
+	public JavaAstToRdfVisitor(Model m_model, LazyNodeIndex<Node,String> m_index, Resource method_node, int follow, TokenFinderContext context)
 	{
 		super(m_model, m_index, method_node, follow, context);
 	}

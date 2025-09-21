@@ -117,7 +117,11 @@ public class Main
 	 * Thread-local context (parser, type solver, etc.)
 	 */
 	public static ThreadLocal<TokenFinderContext> CTX;
-
+	
+	/**
+	 * Default timeout for task execution, in seconds
+	 */
+	public static final long DEFAULT_TIMEOUT = 30;
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -160,22 +164,34 @@ public class Main
 
 		/* Setup command line options */
 		CliParser cli = Analysis.setupCli();
-		Analysis analysis = null;
+		Set<Analysis> analyses = null;
 		try
 		{
-			analysis = Analysis.read(cli,  cli.parse(args), s_stdout, s_stderr);	
+			analyses = Analysis.read(cli,  cli.parse(args), s_stdout, s_stderr);	
 		}
 		catch (AnalysisCliException e)
 		{
 			return handleException(e);
 		}
-
-		/* Setup the file provider */
-		List<String> folders = analysis.getOthers(); // The files to read from
-		FileSystemProvider[] providers = new FileSystemProvider[folders.size()];
-		for (int i = 0; i < folders.size(); i++)
+		for (Analysis a : analyses)
 		{
-			FilePath fold_path = analysis.getHomePath().chdir(new FilePath(folders.get(i)));
+			int ret = runAnalysis(a);
+			if (ret != RET_OK)
+			{
+				return ret;
+			}
+		}
+		return RET_OK;
+	}
+
+	protected static int runAnalysis(Analysis analysis) throws FileSystemException, IOException, InterruptedException, ExecutionException, PrintException
+	{
+		/* Setup the file provider */
+		FileSystemProvider[] providers = new FileSystemProvider[analysis.getSourcePaths().size()];
+		int i = 0;
+		for (String path : analysis.getSourcePaths())
+		{
+			FilePath fold_path = analysis.getHomePath().chdir(new FilePath(path));
 			try
 			{
 				providers[i] = new FileSystemProvider(new HardDisk(fold_path.toString()));
@@ -184,15 +200,16 @@ public class Main
 			{
 				return handleException(e);
 			}
+			i++;
 		}
 		UnionProvider fsp = new UnionProvider(providers);
 		int total = fsp.filesProvided();
 		Report.MapReport categorized = new Report.MapReport();
 		Set<FoundToken> found = new HashSet<>();
-		EndRunnable end_callback = new EndRunnable(categorized, found.size(), analysis.getSummary());
+		EndRunnable end_callback = new EndRunnable(categorized, /*found.size(),*/ analysis.getSummary());
 		Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
 		final Set<String> source_paths = analysis.getSourcePaths();
-		final String root = analysis.getRoot();
+		final String[] root = analysis.getRoots();
 		final Set<String> jar_paths = analysis.getJarPaths();
 		final long resolution_timeout = analysis.getResolutionTimeout();
 		CTX = ThreadLocal.withInitial(() -> {
@@ -257,10 +274,10 @@ public class Main
 		}
 		try
 		{
-			if (!executor.awaitTermination(120, TimeUnit.SECONDS))
+			if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
 			{
 				executor.shutdownNow();
-				if (!executor.awaitTermination(120, TimeUnit.SECONDS))
+				if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
 				{
 					s_stderr.println("Cannot terminate process");
 				}
@@ -274,7 +291,7 @@ public class Main
 			Thread.currentThread().interrupt();
 		}
 		end_time = System.currentTimeMillis();
-		end_callback.setTotal(found.size());
+		//end_callback.setTotal(found.size());
 		long duration = end_time - start_time;
 		status.cleanup();
 		s_stdout.println((analysis.getLimit() >= 0 ? analysis.getLimit() : total) + " file(s) analyzed");
@@ -286,7 +303,7 @@ public class Main
 		/* Categorize results and produce report */
 		categorize(analysis.getProjectName(), categorized, found);
 		FilePath output_path = analysis.getHomePath().chdir(getPathOfFile(analysis.getOutputFile()));
-		FilePath reverse_path = output_path.chdir(new FilePath(folders.get(0)));
+		FilePath reverse_path = output_path.chdir(new FilePath(analysis.getReportPath()));
 		HardDisk hd;
 		try
 		{
@@ -498,13 +515,15 @@ public class Main
 				Thread.currentThread().interrupt();
 				// If interrupted, you can choose to cancel outstanding tasks:
 				for (Future<?> other : futures)
+				{
 					other.cancel(true);
-				throw new RuntimeException("Interrupted while waiting for tasks", ie);
+				}
+				s_stderr.println("Analysis interrupted");
 			}
 			catch (ExecutionException ee)
 			{
 				// The task threw; unwrap and either log or fail fast
-				throw new RuntimeException("Task failed", ee.getCause());
+				s_stderr.println("Error in task: " + ee.getCause().getMessage());
 			}
 		}
 	}
@@ -516,21 +535,13 @@ public class Main
 	{
 		private final Report m_found;
 
-		private int m_total;
-
 		private final boolean m_summary;
 
-		public EndRunnable(Report found, int total, boolean summary)
+		public EndRunnable(Report found, boolean summary)
 		{
 			super();
 			m_found = found;
 			m_summary = summary;
-			m_total = total;
-		}
-
-		public void setTotal(int total)
-		{
-			m_total = total;
 		}
 
 		@Override
