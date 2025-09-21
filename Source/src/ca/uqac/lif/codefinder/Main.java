@@ -22,6 +22,8 @@ import static ca.uqac.lif.codefinder.util.Paths.getPathOfFile;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -208,7 +210,7 @@ public class Main
 		Set<FoundToken> found = new HashSet<>();
 		EndRunnable end_callback = new EndRunnable(categorized, /*found.size(),*/ analysis.getSummary());
 		Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
-		final Set<String> source_paths = analysis.getSourcePaths();
+		final List<String> source_paths = analysis.getSourcePaths();
 		final String[] root = analysis.getRoots();
 		final Set<String> jar_paths = analysis.getJarPaths();
 		final long resolution_timeout = analysis.getResolutionTimeout();
@@ -303,7 +305,9 @@ public class Main
 		/* Categorize results and produce report */
 		categorize(analysis.getProjectName(), categorized, found);
 		FilePath output_path = analysis.getHomePath().chdir(getPathOfFile(analysis.getOutputFile()));
-		FilePath reverse_path = output_path.chdir(new FilePath(analysis.getReportPath()));
+		String s_source_path = analysis.getSourcePaths().get(0);
+		Path p = Paths.get(s_source_path).toAbsolutePath().normalize();
+		FilePath reverse_path = output_path.chdir(new FilePath(p.toString()));
 		HardDisk hd;
 		try
 		{

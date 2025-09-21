@@ -20,6 +20,7 @@ package ca.uqac.lif.codefinder.find.sparql;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.apache.jena.atlas.lib.StrUtils;
@@ -32,7 +33,6 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
@@ -57,7 +57,7 @@ public class JenaTest
 	
 	public static ThreadLocal<TokenFinderContext> CTX;
 	
-	protected static HashSet<String> s_sourcePaths = new HashSet<>();
+	protected static ArrayList<String> s_sourcePaths = new ArrayList<>();
 	
 	protected static HashSet<String> s_jarPaths = new HashSet<>();
 	

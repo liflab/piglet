@@ -54,7 +54,7 @@ public final class Solvers
 	 * @throws IOException 
 	 */
 	@SuppressWarnings("deprecation")
-	public static CombinedTypeSolver buildSolver(Set<String> sourceRoots, String[] root_package, Set<String> jarPaths) throws FileSystemException, IOException
+	public static CombinedTypeSolver buildSolver(List<String> sourceRoots, String[] root_package, Set<String> jarPaths) throws FileSystemException, IOException
 	{
 		CombinedTypeSolver ts = new CombinedTypeSolver();
 

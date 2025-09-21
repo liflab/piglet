@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.apache.jena.query.QueryExecution;
@@ -69,7 +70,7 @@ public class QueryTest
 	{
 		try
 		{
-			ts = Solvers.buildSolver(new HashSet<>(), new String[]{""}, new HashSet<>());
+			ts = Solvers.buildSolver(new ArrayList<>(), new String[]{""}, new HashSet<>());
 			threadPc = new ParserConfiguration()
 					.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
 					.setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));

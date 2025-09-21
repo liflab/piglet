@@ -244,6 +244,11 @@ public class Analysis implements Comparable<Analysis>
 		}
 	}
 	
+	public String getRepositoryPath()
+	{
+		return m_repositoryPath;
+	}
+	
 	public String getReportPath()
 	{
 		if (m_outputFile == null || m_outputFile.isEmpty())
@@ -261,7 +266,7 @@ public class Analysis implements Comparable<Analysis>
 	/**
 	 * Additional source paths
 	 */
-	protected Set<String> m_sourcePaths = new HashSet<>();
+	protected List<String> m_sourcePaths = new ArrayList<>();
 
 	/**
 	 * Additional jar files
@@ -308,6 +313,11 @@ public class Analysis implements Comparable<Analysis>
 	 * value means no limit.
 	 */
 	protected int m_limit = -1;
+	
+	/**
+	 * Path to the repository (if any)
+	 */
+	protected String m_repositoryPath = "";
 
 	/**
 	 * Depth to which method calls should be followed
@@ -364,6 +374,11 @@ public class Analysis implements Comparable<Analysis>
 	 * Printer for error output
 	 */
 	protected AnsiPrinter m_stderr = null;
+	
+	public void setRepositoryPath(String path)
+	{
+		m_repositoryPath = path;
+	}
 
 	public void setStdout(AnsiPrinter stdout)
 	{
@@ -405,12 +420,12 @@ public class Analysis implements Comparable<Analysis>
 		return m_unresolved;
 	}
 
-	public Set<String> getSourcePaths()
+	public List<String> getSourcePaths()
 	{
 		return m_sourcePaths;
 	}
 
-	public void setSourcePaths(Set<String> sourcePaths)
+	public void setSourcePaths(List<String> sourcePaths)
 	{
 		this.m_sourcePaths = sourcePaths;
 	}
