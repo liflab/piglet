@@ -35,7 +35,10 @@ import ca.uqac.lif.codefinder.util.StatusCallback;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 
-public abstract class TokenFinderCallable implements Callable<Set<FoundToken>>
+/**
+ * A callable object that runs a set of token finders on a given file.
+ */
+public abstract class TokenFinderCallable implements Callable<TokenFinderCallable.CallableFuture>
 {
 	/** The file name */
 	protected final String m_file;
@@ -56,7 +59,7 @@ public abstract class TokenFinderCallable implements Callable<Set<FoundToken>>
 	protected final Set<? extends TokenFinderFactory> m_finders;
 	
 	/**
-	 * Creates a new runnable.
+	 * Creates a new callable.
 	 * @param project The project name
 	 * @param file The file name
 	 * @param source The file source from which to read
@@ -112,7 +115,7 @@ public abstract class TokenFinderCallable implements Callable<Set<FoundToken>>
 	}
 	
 	@Override
-	public final Set<FoundToken> call()
+	public final CallableFuture call()
 	{
 		TokenFinderContext context = Main.CTX.get();
 		InputStream is;
@@ -138,9 +141,60 @@ public abstract class TokenFinderCallable implements Callable<Set<FoundToken>>
 		{
 			m_callback.done();
 		}
-		return found;
+		return new CallableFuture(m_file, found);
+	}
+	
+	/**
+	 * Gets the file name.
+	 * @return The file name
+	 */
+	public String getFileName()
+	{
+		return m_file;
 	}
 	
 	protected abstract Set<FoundToken> doRun(TokenFinderContext context, String code);
+	
+	/**
+	 * The result of a callable.
+	 */
+	public static class CallableFuture
+	{
+		/** The file name */
+		protected final String m_filename;
+		
+		/** The set of found tokens */
+		protected final Set<FoundToken> m_found;
+		
+		/**
+		 * Creates a new callable future.
+		 * @param filename The file name
+		 * @param found The set of found tokens
+		 */
+		CallableFuture(String filename, Set<FoundToken> found) 
+		{
+			super();
+			m_filename = filename;
+			m_found = found;
+		}
+		
+		/**
+		 * Gets the file name.
+		 * @return The file name
+		 */
+		public String getFileName()
+		{
+			return m_filename;
+		}
+		
+		/**
+		 * Gets the set of found tokens.
+		 * @return The set of found tokens
+		 */
+		public Set<FoundToken> getFoundTokens()
+		{
+			return m_found;
+		}
+	}
 
 }

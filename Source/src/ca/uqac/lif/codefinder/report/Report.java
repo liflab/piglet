@@ -31,17 +31,36 @@ import java.util.TreeMap;
  */
 public abstract class Report
 {
+	/**
+	 * A separator used in paths to designate sub-reports.
+	 */
 	public static final String PATH_SEPARATOR = "/";
 
+	/**
+	 * Creates a new report. Since this class is abstract, this constructor
+	 * is only called by subclasses.
+	 */
 	protected Report()
 	{
 		super();
 	}
 
+	/**
+	 * A report wrapping a single object. This class is intended to
+	 * be "leaves" in a report tree, with {@link MapReport} instances
+	 * as internal nodes.
+	 */
 	public static class ObjectReport extends Report
 	{
+		/**
+		 * The object
+		 */
 		public final Object m_object;
 
+		/**
+		 * Creates a new object report wrapping the given object.
+		 * @param o The object to wrap
+		 */
 		public ObjectReport(Object o)
 		{
 			super();
@@ -54,6 +73,10 @@ public abstract class Report
 			return m_object.toString();
 		}
 
+		/**
+		 * Gets the wrapped object.
+		 * @return The wrapped object
+		 */
 		public Object getObject()
 		{
 			return m_object;

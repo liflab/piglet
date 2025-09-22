@@ -35,6 +35,7 @@ import java.util.concurrent.Future;
 import ca.uqac.lif.codefinder.find.FoundToken;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinderCallable;
+import ca.uqac.lif.codefinder.find.TokenFinderCallable.CallableFuture;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory.TokenFinderFactoryException;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderFactory;
 import ca.uqac.lif.codefinder.find.sparql.SparqlTokenFinderCallable;
@@ -613,7 +614,7 @@ public class Analysis implements Comparable<Analysis>
 		return m_others;
 	}
 
-	public List<Future<Set<FoundToken>>> processBatch(ExecutorService e, FileProvider provider,
+	public List<Future<CallableFuture>> processBatch(ExecutorService e, FileProvider provider,
 			Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
 	{
 		checkCachedFinders();
@@ -625,7 +626,7 @@ public class Analysis implements Comparable<Analysis>
 		fs.close();
 		int count = 0;
 		Set<TokenFinderCallable> tasks = new HashSet<>();
-		List<Future<Set<FoundToken>>> futures = new ArrayList<>();
+		List<Future<CallableFuture>> futures = new ArrayList<>();
 		while (provider.hasNext() && (m_limit == -1 || count < m_limit))
 		{
 			count++;

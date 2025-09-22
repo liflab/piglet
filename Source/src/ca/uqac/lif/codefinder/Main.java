@@ -43,6 +43,7 @@ import ca.uqac.lif.azrael.PrintException;
 import ca.uqac.lif.azrael.json.JsonPrinter;
 import ca.uqac.lif.codefinder.Analysis.AnalysisCliException;
 import ca.uqac.lif.codefinder.find.FoundToken;
+import ca.uqac.lif.codefinder.find.TokenFinderCallable.CallableFuture;
 import ca.uqac.lif.codefinder.find.TokenFinderContext;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory;
 import ca.uqac.lif.codefinder.find.TokenFinderFactory.TokenFinderFactoryException;
@@ -254,12 +255,12 @@ public class Main
 		status_thread.start();
 		try
 		{
-			List<Future<Set<FoundToken>>> futures = analysis.processBatch(executor, fsp, found);
+			List<Future<CallableFuture>> futures = analysis.processBatch(executor, fsp, found);
 			waitForEnd(futures);
 			executor.shutdown();
-			for (Future<Set<FoundToken>> f : futures)
+			for (Future<CallableFuture> f : futures)
 			{
-				found.addAll(f.get());
+				found.addAll(f.get().getFoundTokens());
 			}
 		}
 		catch (IOException e)
@@ -506,9 +507,9 @@ public class Main
 	 * @param futures
 	 *          The list of futures to wait for
 	 */
-	public static void waitForEnd(List<Future<Set<FoundToken>>> futures)
+	public static void waitForEnd(List<Future<CallableFuture>> futures)
 	{
-		for (Future<?> f : futures)
+		for (Future<CallableFuture> f : futures)
 		{
 			try
 			{
@@ -528,6 +529,7 @@ public class Main
 			{
 				// The task threw; unwrap and either log or fail fast
 				s_stderr.println("Error in task: " + ee.getCause().getMessage());
+				
 			}
 		}
 	}
