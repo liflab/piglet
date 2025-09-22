@@ -85,8 +85,11 @@ public class CliReporter implements Reporter
 			m_out.print(indent);
 			if (level > 0)
 			{
-				m_out.print(AnsiPrinter.padToLength(key, 36, true));
-				m_out.print(": ");
+				m_out.print(AnsiPrinter.padToLength(key, 36 - (level * 2), true));
+				if (value instanceof ObjectReport)
+				{
+					m_out.print(": ");
+				}
 			}
 			else
 			{
