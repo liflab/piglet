@@ -5,6 +5,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.types.ResolvedType;
 
+import ca.uqac.lif.codefinder.util.TypeRdf;
 import ca.uqac.lif.codefinder.util.Types;
 import ca.uqac.lif.codefinder.util.Types.ResolveResult;
 
@@ -30,6 +31,8 @@ public class ResolveType extends JavaAstNodeFunction
 		{
 			return "?";
 		}
+		return TypeRdf.resolveTypeToString(n, m_ts);
+		/*
 		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout((Expression) n, m_ts, 100);
 		if (rr.reason == Types.ResolveReason.RESOLVED)
 		{
@@ -37,5 +40,6 @@ public class ResolveType extends JavaAstNodeFunction
 			return rr.value.get().describe();
 		}
 		return "?";
+		*/
 	}
 }

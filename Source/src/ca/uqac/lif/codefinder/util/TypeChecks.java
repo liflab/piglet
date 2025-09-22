@@ -132,7 +132,7 @@ public final class TypeChecks
 	@SuppressWarnings("deprecation")
 	public static boolean isSubtypeOf(String subSig, String superSig, TypeSolver typeSolver) {
     StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(typeSolver));
-		if (subSig.compareTo("?") == 0 || superSig.compareTo("?") == 0)
+		if (subSig.contains("?") || superSig.contains("?") || subSig.compareTo("null") == 0 || superSig.compareTo("null") == 0)
 		{
 			return false;
 		}

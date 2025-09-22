@@ -10,6 +10,7 @@ import org.apache.jena.sparql.util.IterLib;
 import com.github.javaparser.resolution.TypeSolver;
 
 import ca.uqac.lif.codefinder.util.TypeChecks;
+import ca.uqac.lif.codefinder.util.TypeRdf;
 
 /**
  * A function that determines if a given type name is a descendant of
@@ -32,7 +33,7 @@ public class InstanceOf extends PFuncSimple
 		// Resolve RDF node -> internal Type
 		String t_subject = trimQuotes(subject.toString());
 		String t_object = trimQuotes(object.toString());
-		if (TypeChecks.isSubtypeOf(t_object, t_subject, m_ts)) {
+		if (TypeRdf.isSubtypeOf(t_object, t_subject, m_ts)) {
 			return IterLib.result(binding, execCxt);
 		} else {
 			return IterLib.noResults(execCxt);
