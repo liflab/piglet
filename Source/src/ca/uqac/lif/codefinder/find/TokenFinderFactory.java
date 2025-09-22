@@ -21,6 +21,7 @@ import java.util.List;
 
 import ca.uqac.lif.azrael.ReadException;
 import ca.uqac.lif.azrael.json.JsonReader;
+import ca.uqac.lif.codefinder.report.Report;
 import ca.uqac.lif.fs.FileSystem;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -57,7 +58,7 @@ public abstract class TokenFinderFactory
 	 */
 	public String getName()
 	{
-		return m_name;
+		return escape(m_name);
 	}
 
 	/**
@@ -104,7 +105,7 @@ public abstract class TokenFinderFactory
 	 */
 	protected String getCacheFileName(String project)
 	{
-		return project + "/" + m_name + ".json";
+		return project + "/" + escape(m_name) + ".json";
 	}
 
 	/**
@@ -118,7 +119,7 @@ public abstract class TokenFinderFactory
 		try
 		{
 			fs.pushd(project);
-			boolean b = fs.isFile(m_name + ".json");
+			boolean b = fs.isFile(escape(m_name) + ".json");
 			fs.popd();
 			return b;
 		}
@@ -126,6 +127,16 @@ public abstract class TokenFinderFactory
 		{
 			return false;
 		}
+	}
+	
+	/**
+	 * Escapes a string to be used as a file name.
+	 * @param s The string to escape
+	 * @return The escaped string
+	 */
+	public static String escape(String s)
+	{
+		return s.replaceAll(Report.PATH_SEPARATOR, "_");
 	}
 
 	/**

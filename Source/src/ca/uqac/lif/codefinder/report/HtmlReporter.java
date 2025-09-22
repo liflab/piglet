@@ -62,6 +62,7 @@ public class HtmlReporter implements Reporter
 		{
 			FileUtils.copy(HtmlReporter.class.getResourceAsStream("header.html"), m_out);
 			printSummary(root, (MapReport) r);
+			reportTokensRecursive(root, (MapReport) r, 0);
 			FileUtils.copy(HtmlReporter.class.getResourceAsStream("footer.html"), m_out);
 		}
 		catch (FileSystemException e)
@@ -85,29 +86,54 @@ public class HtmlReporter implements Reporter
 		{
 			String project = p_e.getKey();
 			m_out.println("<h2>Summary for " + project + "</h2>");
-			m_out.println("<ul>");
-			MapReport found = (MapReport) p_e.getValue();
-			for (Map.Entry<String, Report> e : found.entrySet())
+			printSummaryRecursive(root, (MapReport) p_e.getValue());
+		}
+		m_out.println("</section>");
+	}
+	
+	protected void printSummaryRecursive(FilePath root, MapReport found) throws ReporterException
+	{
+		m_out.println("<ul>");
+		for (Map.Entry<String,Report> e : found.entrySet())
+		{
+			if (e.getValue() instanceof MapReport)
+			{
+				m_out.println("<li>" + e.getKey());
+				printSummaryRecursive(root, (MapReport) e.getValue());
+				m_out.println("</li>");
+			}
+			else if (e.getValue() instanceof ObjectReport)
 			{
 				ObjectReport or = (ObjectReport) e.getValue();
 				List<?> in_list = (List<?>) or.getObject();
 				m_out.println("<li><a href=\"#" + e.getKey() + "\">" + e.getKey() + "</a> (" + in_list.size() + ")</li>");
 			}
-			//m_out.println("<li><a href=\"#unresolved\">Unresolved symbols</a> (" + (unresolved == null ? "0" : unresolved.size()) + ")</li>");
-			m_out.println("</ul>");
-			m_out.println("</section>");
-			for (Map.Entry<String, Report> e : found.entrySet())
+		}
+		m_out.println("</ul>");
+	}
+	
+	protected void reportTokensRecursive(FilePath root, MapReport found, int level) throws ReporterException
+	{
+		for (Map.Entry<String,Report> e : found.entrySet())
+		{
+			m_out.println("<section>");
+			if (level > 0)
+			{
+				m_out.println("<a name=\"" + e.getKey() + "\"></a>");
+				m_out.println("<h" + (level + 2) + ">" + e.getKey() + " (" + "foo" + ")</h" + (level + 2) + ">");
+			}
+			if (e.getValue() instanceof MapReport)
+			{
+				reportTokensRecursive(root, (MapReport) e.getValue(), level + 1);
+			}
+			else if (e.getValue() instanceof ObjectReport)
 			{
 				ObjectReport or = (ObjectReport) e.getValue();
 				List<?> in_list = (List<?>) or.getObject();
-				m_out.println("<section>");
-				m_out.println("<a name=\"" + e.getKey() + "\"></a>");
-				m_out.println("<h2>" + e.getKey() + " (" + "foo" + ")</h2>");
 				reportTokens(root, in_list);
-				m_out.println("</section>");
 			}
+			m_out.println("</section>");
 		}
-		
 	}
 
 	/**
@@ -140,9 +166,9 @@ public class HtmlReporter implements Reporter
 			m_out.print(folder + FilePath.SLASH + Paths.getFilename(clear_fn));
 			m_out.print("\">");
 			m_out.print(clear_fn);
-			m_out.print("</a> ");
+			m_out.print("</a> <span class=\"lines\">");
 			m_out.print(t.getLocation());
-			m_out.println("</dt>");
+			m_out.println("</span></dt>");
 			String code = t.getSnippet();
 			String html;
 			try
