@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
@@ -122,16 +124,13 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Stop after n files (for testing purposes)"));
 		cli.addArgument(new Argument().withShortName("h").withLongName("help")
 				.withDescription("Display this help message"));
-		/*cli.addArgument(new Argument().withShortName("p").withLongName("profile").withArgument("file")
-				.withDescription("Get options from file"));*/
 		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved")
 				.withDescription("Show unresolved symbols"));
 		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p")
 				.withDescription("Search in source tree for package p"));
 		cli.addArgument(new Argument().withShortName("l").withLongName("sample").withArgument("p")
 				.withDescription("Sample code snippets with probability p"));
-		cli.addArgument(
-				new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
+		cli.addArgument(new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
 				.withDescription("Set timeout for type resolution operations (in ms, default: 100)"));
 		cli.addArgument(new Argument().withShortName("y").withLongName("query").withArgument("x")
 				.withDescription("Read queries from x (file or folder)"));
@@ -139,7 +138,7 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Follow method calls up to depth d (default: 0)"));
 		cli.addArgument(new Argument().withLongName("no-cache")
 				.withDescription("Do not reuse cached analysis results"));
-		cli.addArgument(new Argument().withLongName("project").withArgument("name")
+		cli.addArgument(new Argument().withShortName("p").withLongName("project").withArgument("name")
 				.withDescription("Set the project name (used for caching)"));
 		return cli;
 	}
@@ -352,9 +351,10 @@ public class Analysis implements Comparable<Analysis>
 	protected String m_cacheFolder = ".codefinder_cache";
 
 	/**
-	 * The set of assertion finders working on the AST
+	 * The set of assertion finders working on the AST using
+	 * the visitor pattern
 	 */
-	protected Set<VisitorAssertionFinderFactory> m_astFinders = new HashSet<>();
+	protected Set<VisitorAssertionFinderFactory> m_visitorFinders = new HashSet<>();
 
 	/**
 	 * The set of assertion finders working through SPARQL queries
@@ -375,6 +375,8 @@ public class Analysis implements Comparable<Analysis>
 	 * Printer for error output
 	 */
 	protected AnsiPrinter m_stderr = null;
+	
+	protected Map<Future<TokenFinderCallable.CallableFuture>,String> m_futureToFile = new IdentityHashMap<>();
 	
 	public void setRepositoryPath(String path)
 	{
@@ -558,12 +560,12 @@ public class Analysis implements Comparable<Analysis>
 
 	public Set<VisitorAssertionFinderFactory> getAstFinders()
 	{
-		return m_astFinders;
+		return m_visitorFinders;
 	}
 
 	public void setAstFinders(Set<VisitorAssertionFinderFactory> astFinders)
 	{
-		this.m_astFinders = astFinders;
+		this.m_visitorFinders = astFinders;
 	}
 
 	public Set<SparqlTokenFinderFactory> getSparqlFinders()
@@ -631,10 +633,10 @@ public class Analysis implements Comparable<Analysis>
 		{
 			count++;
 			FileSource f_source = provider.next();
-			if (!m_astFinders.isEmpty())
+			if (!m_visitorFinders.isEmpty())
 			{
 				VisitorAssertionFinderCallable r = new VisitorAssertionFinderCallable(m_projectName, f_source,
-						m_astFinders, m_quiet, m_callback);
+						m_visitorFinders, m_quiet, m_callback);
 				tasks.add(r);
 				futures.add(e.submit(r));
 			}
@@ -662,7 +664,7 @@ public class Analysis implements Comparable<Analysis>
 			}
 			hd.pushd(m_cacheFolder);
 			{
-				Iterator<VisitorAssertionFinderFactory> it = m_astFinders.iterator();
+				Iterator<VisitorAssertionFinderFactory> it = m_visitorFinders.iterator();
 				while (it.hasNext())
 				{
 					VisitorAssertionFinderFactory f = it.next();
