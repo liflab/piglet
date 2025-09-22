@@ -256,7 +256,7 @@ public class Main
 		try
 		{
 			List<Future<CallableFuture>> futures = analysis.processBatch(executor, fsp, found);
-			waitForEnd(futures);
+			waitForEnd(analysis, futures);
 			executor.shutdown();
 			for (Future<CallableFuture> f : futures)
 			{
@@ -507,7 +507,7 @@ public class Main
 	 * @param futures
 	 *          The list of futures to wait for
 	 */
-	public static void waitForEnd(List<Future<CallableFuture>> futures)
+	public static void waitForEnd(Analysis a, List<Future<CallableFuture>> futures)
 	{
 		for (Future<CallableFuture> f : futures)
 		{
@@ -528,7 +528,7 @@ public class Main
 			catch (ExecutionException ee)
 			{
 				// The task threw; unwrap and either log or fail fast
-				s_stderr.println("Error in task: " + ee.getCause().getMessage());
+				s_stderr.println("Error in task: " + a.getFileForFuture(f));
 				
 			}
 		}

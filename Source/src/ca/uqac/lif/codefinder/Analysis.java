@@ -442,6 +442,11 @@ public class Analysis implements Comparable<Analysis>
 	{
 		this.m_jarPaths = jarPaths;
 	}
+	
+	public String getFileForFuture(Future<TokenFinderCallable.CallableFuture> f)
+	{
+		return m_futureToFile.get(f);
+	}
 
 	public StatusCallback getCallback()
 	{
@@ -638,7 +643,9 @@ public class Analysis implements Comparable<Analysis>
 				VisitorAssertionFinderCallable r = new VisitorAssertionFinderCallable(m_projectName, f_source,
 						m_visitorFinders, m_quiet, m_callback);
 				tasks.add(r);
-				futures.add(e.submit(r));
+				Future<CallableFuture> fu = e.submit(r);
+				m_futureToFile.put(fu, getFilename(f_source.getFilename()));
+				futures.add(fu);
 			}
 			if (!m_sparqlFinders.isEmpty())
 			{
