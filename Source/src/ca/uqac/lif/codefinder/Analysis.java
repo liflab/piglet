@@ -652,7 +652,8 @@ public class Analysis implements Comparable<Analysis>
 				SparqlTokenFinderCallable r = new SparqlTokenFinderCallable(m_projectName, f_source,
 						m_sparqlFinders, m_quiet, m_callback, m_follow);
 				tasks.add(r);
-				futures.add(e.submit(r));
+				Future<CallableFuture> fu = e.submit(r);
+				m_futureToFile.put(fu, getFilename(f_source.getFilename()));
 				//System.out.println("Submitting a task!");
 			}
 		}
