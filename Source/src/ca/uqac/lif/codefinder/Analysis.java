@@ -655,6 +655,7 @@ public class Analysis implements Comparable<Analysis>
 				Future<CallableFuture> fu = e.submit(r);
 				m_futureToFile.put(fu, getFilename(f_source.getFilename()));
 				futures.add(fu);
+				//System.out.println("Submitting a task!");
 			}
 		}
 		return futures;

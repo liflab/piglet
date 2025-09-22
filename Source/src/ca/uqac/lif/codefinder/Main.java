@@ -529,6 +529,7 @@ public class Main
 			{
 				// The task threw; unwrap and either log or fail fast
 				s_stderr.println("Error in task: " + a.getFileForFuture(f));
+				s_stderr.println("Cause: " + ee.getCause().getMessage());
 				
 			}
 		}
