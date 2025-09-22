@@ -17,19 +17,30 @@
  */
 package ca.uqac.lif.codefinder.util;
 
+import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration;
+import com.github.javaparser.resolution.types.ResolvedPrimitiveType;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.resolution.types.ResolvedTypeVariable;
 import com.github.javaparser.resolution.types.ResolvedWildcard;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility methods to check types.
  */
 public final class TypeChecks
 {
+  private static final Map<String, ResolvedType> CACHE = new ConcurrentHashMap<>();
+  
 	private TypeChecks()
 	{
 		super();
@@ -103,6 +114,70 @@ public final class TypeChecks
 
 		return "java.util.Optional".equals(qn);
 	}
+	
+	 private static String boxedTypeName(ResolvedPrimitiveType prim) {
+	    switch (prim) {
+	      case BOOLEAN: return "java.lang.Boolean";
+	      case BYTE:    return "java.lang.Byte";
+	      case SHORT:   return "java.lang.Short";
+	      case INT:     return "java.lang.Integer";
+	      case LONG:    return "java.lang.Long";
+	      case CHAR:    return "java.lang.Character";
+	      case FLOAT:   return "java.lang.Float";
+	      case DOUBLE:  return "java.lang.Double";
+	      default: throw new IllegalArgumentException("Unexpected primitive: " + prim);
+	    }
+	  }
+	
+	@SuppressWarnings("deprecation")
+	public static boolean isSubtypeOf(String subSig, String superSig, TypeSolver typeSolver) {
+    StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(typeSolver));
+
+    ResolvedType sub = resolveTypeSignature(subSig, typeSolver);
+    ResolvedType sup = resolveTypeSignature(superSig, typeSolver);
+
+    if (sup.isAssignableBy(sub)) {
+      return true;
+    }
+
+    // Handle primitive ↔ boxed
+    if (sub.isPrimitive()) {
+      ResolvedType boxedSub = resolveTypeSignature(boxedTypeName(sub.asPrimitive()), typeSolver);
+      if (sup.isAssignableBy(boxedSub)) return true;
+    }
+    if (sup.isPrimitive()) {
+      ResolvedType boxedSup = resolveTypeSignature(boxedTypeName(sup.asPrimitive()), typeSolver);
+      if (boxedSup.isAssignableBy(sub)) return true;
+    }
+
+    // Arrays automatically subtype Object, Cloneable, Serializable
+    if (sub.isArray() && isArrayTopInterface(sup)) return true;
+
+    return false;
+  }
+
+  /** Resolve a Java type signature (FQN, generic, wildcard, array, primitive) to a ResolvedType, with simple caching. */
+  private static ResolvedType resolveTypeSignature(String typeSig, TypeSolver ts) {
+    // Small cache to avoid reparsing common targets like "java.util.List<? extends Number>"
+    return CACHE.computeIfAbsent(typeSig, sig -> {
+      // Build a tiny class with one field of the desired type; then resolve that field's type.
+      // Using a field (not a local) makes raw types behave like Java (e.g., "List" is raw).
+      String src = "class __T { " + sig + " __x; }";
+      CompilationUnit cu = StaticJavaParser.parse(src);
+      FieldDeclaration fd = cu.findFirst(FieldDeclaration.class)
+          .orElseThrow(() -> new IllegalStateException("Failed to parse type signature: " + sig));
+      return JavaParserFacade.get(ts).getType(fd.getVariable(0));
+    });
+  }
+
+  private static boolean isArrayTopInterface(ResolvedType sup) {
+    // Per JLS, all array types implement Object, Cloneable, Serializable.
+    if (sup.isPrimitive()) return false;
+    String qn = sup.describe(); // safe for reference types
+    return "java.lang.Object".equals(qn)
+        || "java.lang.Cloneable".equals(qn)
+        || "java.io.Serializable".equals(qn);
+  }
 
 	/** Get the type argument inside Optional<T>, or empty if not an Optional. */
 	public static java.util.Optional<ResolvedType> unwrapOptional(ResolvedType t)

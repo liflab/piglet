@@ -153,17 +153,13 @@ public class SparqlTokenFinder implements TokenFinder
 	public void process()
 	{
 		String PF = "http://liflab.uqac.ca/codefinder#resolvedtype";
+		String IO = "http://liflab.uqac.ca/codefinder#instanceof";
 		QueryExecution qe = QueryExecution.model(m_model).query(prefixes + m_query).build();
 		Context ctx = qe.getContext();
 		PropertyFunctionRegistry local = PropertyFunctionRegistry.get(ctx);
 		local.put(PF, uri -> new ResolveType(m_index, m_context.getTypeSolver()));
+		local.put(IO, uri -> new InstanceOf(m_context.getTypeSolver()));
 		ctx.set(ARQConstants.registryPropertyFunctions, local);
-		// Register property function
-		/*
-		PropertyFunctionRegistry.get()
-		.put(PF,
-				(uri) -> new ResolveType(m_index, m_context.getTypeSolver()));
-				*/
 		ResultSet resultSet1 = qe.execSelect();
 		while (resultSet1.hasNext())
 		{
