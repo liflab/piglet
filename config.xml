@@ -23,20 +23,20 @@
        script's default values -->
 
   <!-- The project's name -->
-  <name>Code Finder</name>
+  <name>Piglet</name>
   
   <!-- The project's author. Currently this only
   shows up in the footer of the Javadoc documentation. -->
-  <!-- <author>Marty McFly</author> -->
+  <author>Laboratoire d'informatique formelle, Université du Québec à Chicoutimi</author>
   
   <!-- The project's main class -->
-  <mainclass>ca.uqac.lif.codefinder.Main</mainclass>
+  <mainclass>ca.uqac.lif.piglet.Main</mainclass>
   
   <!-- The target JDK for which we are compiling -->
   <targetjdk>17</targetjdk>
 
   <jar>
-	  <filename>codefinder</filename>
+	  <filename>piglet</filename>
 	  <withdoc>false</withdoc>
   </jar>
 

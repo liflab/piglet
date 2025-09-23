@@ -15,25 +15,29 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.report;
+package ca.uqac.lif.piglet.find.sparql;
 
-import org.junit.Test;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import ca.uqac.lif.piglet.report.Report.MapReport;
-import ca.uqac.lif.piglet.report.Report.ObjectReport;
-
-/**
- * Unit tests for the classes in the <tt>ca.uqac.lif.codefinder.report</tt>.
- */
-public class ReportTest
+public class LazyNodeIndex<T,U>
 {
-	@Test
-	public void test()
+	Map<String, T> nodesByIri = new ConcurrentHashMap<>();
+	Map<String, U> typeCache = new ConcurrentHashMap<>(); // iri -> type IRI
+	
+	public void put(String iri, T node)
 	{
-		MapReport r = new MapReport();
-		r.put("a", new ObjectReport(1));
-		r.put("b/c", new ObjectReport(2));
-		r.put("b/d", new ObjectReport(3));
-		System.out.println(r);
+		nodesByIri.put(iri, node);
+	}
+	
+	public T get(String iri)
+	{
+		return nodesByIri.get(iri);
+	}
+	
+	public Set<String> allIris()
+	{
+		return nodesByIri.keySet();
 	}
 }

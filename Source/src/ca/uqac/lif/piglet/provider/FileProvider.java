@@ -15,25 +15,32 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.codefinder.report;
-
-import org.junit.Test;
-
-import ca.uqac.lif.piglet.report.Report.MapReport;
-import ca.uqac.lif.piglet.report.Report.ObjectReport;
+package ca.uqac.lif.piglet.provider;
 
 /**
- * Unit tests for the classes in the <tt>ca.uqac.lif.codefinder.report</tt>.
+ * An interface for objects that provide source files to be analyzed.
+ * Implementations of this interface typically read files from a file system,
+ * a compressed archive, or a version control repository.
+ * 
+ * @author Sylvain Hallé
  */
-public class ReportTest
+public interface FileProvider
 {
-	@Test
-	public void test()
-	{
-		MapReport r = new MapReport();
-		r.put("a", new ObjectReport(1));
-		r.put("b/c", new ObjectReport(2));
-		r.put("b/d", new ObjectReport(3));
-		System.out.println(r);
-	}
+	/**
+	 * Indicates whether there are more files to be provided.
+	 * @return <tt>true</tt> if there are more files, <tt>false</tt> otherwise
+	 */
+	public boolean hasNext();
+	
+	/**
+	 * Provides the next file.
+	 * @return The next file, or <tt>null</tt> if there are no more files
+	 */
+	public FileSource next();
+	
+	/**
+	 * Returns the number of files that have been provided so far.
+	 * @return The number of files provided
+	 */
+	public int filesProvided();
 }

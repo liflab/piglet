@@ -25,6 +25,7 @@ import ca.uqac.lif.azrael.PrintException;
 import ca.uqac.lif.azrael.ReadException;
 import ca.uqac.lif.azrael.xml.XmlPrinter;
 import ca.uqac.lif.azrael.xml.XmlReader;
+import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.xml.XmlElement;
 
 public class FoundTokenTest

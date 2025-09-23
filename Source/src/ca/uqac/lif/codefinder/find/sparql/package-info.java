@@ -1,1 +1,0 @@
-package ca.uqac.lif.codefinder.find.sparql;
