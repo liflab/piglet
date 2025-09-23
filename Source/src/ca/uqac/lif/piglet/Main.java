@@ -226,7 +226,7 @@ public class Main
 
 				// Wire parser to THIS thread’s solver
 				ParserConfiguration threadPc = new ParserConfiguration()
-						.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_11)
+						.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)
 						.setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));
 
 				return new TokenFinderContext(ts, new JavaParser(threadPc),

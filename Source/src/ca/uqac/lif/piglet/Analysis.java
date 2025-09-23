@@ -50,6 +50,7 @@ import ca.uqac.lif.piglet.find.visitor.VisitorAssertionFinderFactory;
 import ca.uqac.lif.piglet.provider.FileProvider;
 import ca.uqac.lif.piglet.provider.FileSource;
 import ca.uqac.lif.piglet.util.AnsiPrinter;
+import ca.uqac.lif.piglet.util.Paths;
 import ca.uqac.lif.piglet.util.StatusCallback;
 import ca.uqac.lif.util.CliParser;
 import ca.uqac.lif.util.CliParser.Argument;
@@ -72,6 +73,11 @@ public class Analysis implements Comparable<Analysis>
 	{
 		return this.getProjectName().compareTo(o.getProjectName());
 	}
+	
+	/**
+	 * A set of file patterns to ignore
+	 */
+	protected Set<String> m_ignoredFiles = new HashSet<>();
 	
 	/**
 	 * Reads command line arguments and returns a set of analysis objects
@@ -140,6 +146,8 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Do not reuse cached analysis results"));
 		cli.addArgument(new Argument().withShortName("p").withLongName("project").withArgument("name")
 				.withDescription("Set the project name (used for caching)"));
+		cli.addArgument(new Argument().withShortName("i").withLongName("ignore").withArgument("filespec")
+				.withDescription("Ignore files"));
 		return cli;
 	}
 
@@ -163,6 +171,14 @@ public class Analysis implements Comparable<Analysis>
 		else if (a.getProjectName().isEmpty())
 		{
 			a.getStdout().println("Project name not specified, using '' (use --project to specify)");
+		}
+		if (map.containsKey("ignore"))
+		{
+			String[] patterns = map.getOptionValue("ignore").split(":");
+			for (String p : patterns)
+			{
+				a.m_ignoredFiles.add(p);
+			}
 		}
 		if (map.containsKey("query"))
 		{
@@ -638,6 +654,11 @@ public class Analysis implements Comparable<Analysis>
 		{
 			count++;
 			FileSource f_source = provider.next();
+			if (m_ignoredFiles.contains(Paths.getFilename(f_source.getFilename())))
+			{
+				getStdout().println("Ignoring file " + f_source.getFilename());
+				continue;
+			}
 			if (!m_visitorFinders.isEmpty())
 			{
 				VisitorAssertionFinderCallable r = new VisitorAssertionFinderCallable(m_projectName, f_source,
