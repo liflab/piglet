@@ -120,7 +120,7 @@ public class Main
 	 * Thread-local context (parser, type solver, etc.)
 	 */
 	public static ThreadLocal<TokenFinderContext> CTX;
-	
+
 	/**
 	 * Default timeout for task execution, in seconds
 	 */
@@ -253,14 +253,18 @@ public class Main
 		long end_time = -1;
 		s_stdout.hideCursor();
 		status_thread.start();
+		boolean success = true;
 		try
 		{
 			List<Future<CallableFuture>> futures = analysis.processBatch(executor, fsp, found);
-			waitForEnd(analysis, futures);
-			executor.shutdown();
-			for (Future<CallableFuture> f : futures)
+			success = waitForEnd(analysis, futures);
+			if (success)
 			{
-				found.addAll(f.get().getFoundTokens());
+				executor.shutdown();
+				for (Future<CallableFuture> f : futures)
+				{
+					found.addAll(f.get().getFoundTokens());
+				}
 			}
 		}
 		catch (IOException e)
@@ -277,7 +281,7 @@ public class Main
 		}
 		try
 		{
-			if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
+			if (!success || !executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
 			{
 				executor.shutdownNow();
 				if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
@@ -507,7 +511,7 @@ public class Main
 	 * @param futures
 	 *          The list of futures to wait for
 	 */
-	public static void waitForEnd(Analysis a, List<Future<CallableFuture>> futures)
+	public static boolean waitForEnd(Analysis a, List<Future<CallableFuture>> futures)
 	{
 		for (Future<CallableFuture> f : futures)
 		{
@@ -524,15 +528,18 @@ public class Main
 					other.cancel(true);
 				}
 				s_stderr.println("Analysis interrupted");
+				return false;
 			}
 			catch (ExecutionException ee)
 			{
 				// The task threw; unwrap and either log or fail fast
 				s_stderr.println("Error in task: " + a.getFileForFuture(f));
 				s_stderr.println("Cause: " + ee.getCause().getMessage());
-				
+				ee.printStackTrace(s_stderr);
+				return false;
 			}
 		}
+		return true;
 	}
 
 	/**
