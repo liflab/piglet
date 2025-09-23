@@ -183,6 +183,7 @@
       debug="${build.debug}"
       includeantruntime="false">
       <classpath refid="build.classpath"/>
+      <compilerarg value="-proc:none"/>
     </javac>
     <copy todir="${build.bindir}" includeemptydirs="false">
       <fileset dir="${build.srcdir}" excludes="**/*.java,doc-files/**/*"/>
@@ -206,6 +207,20 @@
       <fileset dir="${build.test.srcdir}" excludes="**/*.java,doc-files/**/*"/>
     </copy>
   </target>
+  
+  <!-- Target: native-image
+       Uses GraalVM to build a native executable of the project -->
+  <target name="native-image" depends="compile">
+        <echo message="Building native image with GraalVM..." />
+        <exec executable="native-image" failonerror="true">
+            <arg value="-jar" />
+            <arg value="${build.jar.filename}-${build.version}.jar" />
+            <arg value="${build.jar.filename}" />
+            <!-- Example: Adding a configuration file for reflection -->
+            <!-- <arg value="-H:ReflectionConfigurationFiles=src/main/resources/META-INF/native-image/reflection-config.json" /> -->
+        </exec>
+        <echo message="Native image '${build.jar.filename}' built successfully!" />
+    </target>
   
   <!-- Target: javadoc
        Generates the javadoc associated to the project
