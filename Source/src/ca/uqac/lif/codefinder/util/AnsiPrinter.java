@@ -78,6 +78,23 @@ public class AnsiPrinter extends PrintStream
 	{
 		m_enabled = false;
 	}
+	
+	/**
+	 * Prints a SIXEL image to the output stream. The SIXEL data must be provided as a
+	 * string, presumably produced from an image conversion tool.
+	 * like <tt>img2sixel</tt>.
+	 * @param sixelData The SIXEL data
+	 * @return This printer
+	 */
+	public AnsiPrinter printSixel(String sixelData)
+	{
+		if (!m_enabled)
+			return this;
+		print("\u001B[P");
+		print(sixelData);
+		print("\u001B\\");
+		return this;
+	}
 
 	/**
 	 * Sets the foreground color for printed text. Until this color is changed, the
@@ -316,7 +333,7 @@ public class AnsiPrinter extends PrintStream
 	 * @param s
 	 *          The string to print
 	 */
-	private void printBytes(String s)
+	public void printBytes(String s)
 	{
 		try
 		{

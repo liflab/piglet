@@ -58,6 +58,7 @@ import ca.uqac.lif.codefinder.report.Reporter.ReporterException;
 import ca.uqac.lif.codefinder.util.AnsiPrinter;
 import ca.uqac.lif.codefinder.util.Solvers;
 import ca.uqac.lif.codefinder.util.StatusCallback;
+import ca.uqac.lif.codefinder.util.Terminal;
 import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystem;
 import ca.uqac.lif.fs.FileSystemException;
@@ -164,6 +165,9 @@ public class Main
 		catch (Throwable ignored)
 		{
 		}
+		
+		/* Print greeting */
+		printGreeting();
 
 		/* Setup command line options */
 		CliParser cli = Analysis.setupCli();
@@ -541,6 +545,25 @@ public class Main
 		}
 		return true;
 	}
+	
+	/**
+	 * Prints a greeting to standard output, if the terminal supports it.
+	 */
+	protected static void printGreeting()
+	{
+		if (Terminal.likelySupportsSixel())
+		{
+			try
+			{
+				String sixel_data = new String(FileUtils.toBytes(Main.class.getResourceAsStream("Piglet_crop.sixel")));
+				s_stdout.printBytes(sixel_data);
+			}
+			catch (FileSystemException e)
+			{
+				// Don't care, this is cosmetic
+			}
+		}
+	}
 
 	/**
 	 * Runnable that displays the results at the end of the analysis.
@@ -577,4 +600,5 @@ public class Main
 			}
 		}
 	}
+	
 }
