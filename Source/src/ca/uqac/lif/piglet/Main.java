@@ -223,6 +223,7 @@ public class Main
 		UnionProvider fsp = new UnionProvider(providers);
 		int total = fsp.filesProvided();
 		Report.MapReport categorized = new Report.MapReport();
+		categorized.put(analysis.getProjectName(), new MapReport());
 		Set<FoundToken> found = new HashSet<>();
 		//EndRunnable end_callback = new EndRunnable(categorized, /*found.size(),*/ analysis.getSummary());
 		//Runtime.getRuntime().addShutdownHook(new Thread(end_callback));

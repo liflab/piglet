@@ -65,8 +65,8 @@ public class JenaTest
 
 	public static void main(String[] args) throws Exception
 	{
-		s_sourcePaths.add("/home/sylvain/AssertionStudy/Repositories/thun");
-		s_root = "mypackage";
+		s_sourcePaths.add("");
+		s_root = "";
 		CTX = ThreadLocal.withInitial(() -> {
 			try {
 		    CombinedTypeSolver ts = Solvers.buildSolver(s_sourcePaths, new String[] {s_root}, s_jarPaths);
@@ -97,7 +97,7 @@ public class JenaTest
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
     		+ "}");*/
-		FileInputStream fis = new FileInputStream("/home/sylvain/AssertionStudy/Repositories/thun/LinearLayoutManager.java");
+		FileInputStream fis = new FileInputStream("/home/sylvain/AssertionStudy/Repositories/Guava/android/guava-testlib/src/com/google/common/testing/AbstractPackageSanityTests.java");
 		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
 		fis.close();
     if (!cu.isSuccessful())
