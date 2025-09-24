@@ -33,6 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
@@ -521,7 +522,13 @@ public class Main
 		{
 			try
 			{
-				f.get(); // blocks until this task completes; rethrows exceptions from the task
+				f.get(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+			}
+			catch (TimeoutException te)
+			{
+				f.cancel(true);
+				s_stderr.println("Timeout expired for task analyzing: " + a.getFileForFuture(f));
+				return false;
 			}
 			catch (InterruptedException ie)
 			{
