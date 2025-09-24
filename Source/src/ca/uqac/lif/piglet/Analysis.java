@@ -612,10 +612,9 @@ public class Analysis implements Comparable<Analysis>
 	protected static void readProfile(CliParser cli, Analysis a, String filename) throws AnalysisCliException
 	{
 		FilePath output_path = a.getHomePath().chdir(getPathOfFile(filename));
-		FilePath reverse_path = output_path.chdir(getPathOfFile(filename));
 		try
 		{
-			HardDisk hd = new HardDisk(reverse_path.toString()).open();
+			HardDisk hd = new HardDisk(output_path.toString()).open();
 			String contents = readLinesWithComments(hd.readFrom(getFilename(filename)));
 			hd.close();
 			String[] args = contents.toString().split(" ");

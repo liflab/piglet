@@ -86,7 +86,12 @@ public class Terminal
 
 	public static boolean likelySupportsSixel()
 	{
-		String term = System.getenv("TERM").toLowerCase();
+		String term = System.getenv("TERM");
+		if (term == null)
+		{
+			return false;
+		}
+		term = term.toLowerCase();
 		System.out.println("TERM=" + term);
 		
 		/*
