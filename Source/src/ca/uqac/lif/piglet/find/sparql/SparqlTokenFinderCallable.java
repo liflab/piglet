@@ -79,34 +79,37 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 	protected Set<FoundToken> processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet, int follow)
 	{
 		Set<FoundToken> found = new HashSet<>();
+		Set<SparqlTokenFinderFactory> localFinders = new HashSet<>();
+		for (TokenFinderFactory fac : finders)
+		{
+			if (fac instanceof SparqlTokenFinderFactory)
+			{
+				localFinders.add((SparqlTokenFinderFactory) fac);
+			}
+		}
+		if (localFinders.isEmpty())
+		{
+			return found;
+		}
 		try
 		{
+			//System.out.println("Parsing");
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
+			//System.out.println("Building model");
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
 			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context);	    
 			LazyNodeIndex<Node,String> globalAstIndex = r.getIndex();
-			for (TokenFinderFactory fac : finders)
+			//System.out.println("Running finders");
+			for (SparqlTokenFinderFactory fac : localFinders)
 			{
-				if (!(fac instanceof SparqlTokenFinderFactory))
-				{
-					continue;
-				}
-				SparqlTokenFinder f = ((SparqlTokenFinderFactory) fac).newFinder();
-				/*if (hasCache(f))
-				{
-					// Don't run the finder, just read from cache
-					readCache(f);
-				}
-				else*/
-				{
-					// No cache, run the finder
-					f.setModel(r.getModel());
-					f.setIndex(globalAstIndex);
-					f.setFilename(file);
-					f.setContext(context);
-					f.process();
-					found.addAll(f.getFoundTokens());
-				}
+				SparqlTokenFinder f = fac.newFinder();
+				//System.out.println("Using finder " + f.getName());
+				f.setModel(r.getModel());
+				f.setIndex(globalAstIndex);
+				f.setFilename(file);
+				f.setContext(context);
+				f.process();
+				found.addAll(f.getFoundTokens());
 			}
 		}
 		catch (NoSuchElementException e)

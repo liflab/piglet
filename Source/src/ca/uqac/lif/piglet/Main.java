@@ -126,7 +126,7 @@ public class Main
 	/**
 	 * Default timeout for task execution, in seconds
 	 */
-	public static final long DEFAULT_TIMEOUT = 30;
+	public static final long DEFAULT_TIMEOUT = 15;
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -181,18 +181,28 @@ public class Main
 		{
 			return handleException(e);
 		}
+		MapReport global = new MapReport();
 		for (Analysis a : analyses)
 		{
-			int ret = runAnalysis(a);
+			int ret = runAnalysis(a, global);
 			if (ret != RET_OK)
 			{
 				return ret;
 			}
 		}
+		CliReporter cli_reporter = new CliReporter(s_stdout, true);
+		try
+		{
+			cli_reporter.report(null, global);
+		}
+		catch (ReporterException e)
+		{
+			return handleException(e);
+		}
 		return RET_OK;
 	}
 
-	protected static int runAnalysis(Analysis analysis) throws FileSystemException, IOException, InterruptedException, ExecutionException, PrintException
+	protected static int runAnalysis(Analysis analysis, MapReport global) throws FileSystemException, IOException, InterruptedException, ExecutionException, PrintException
 	{
 		/* Setup the file provider */
 		FileSystemProvider[] providers = new FileSystemProvider[analysis.getSourcePaths().size()];
@@ -214,8 +224,8 @@ public class Main
 		int total = fsp.filesProvided();
 		Report.MapReport categorized = new Report.MapReport();
 		Set<FoundToken> found = new HashSet<>();
-		EndRunnable end_callback = new EndRunnable(categorized, /*found.size(),*/ analysis.getSummary());
-		Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
+		//EndRunnable end_callback = new EndRunnable(categorized, /*found.size(),*/ analysis.getSummary());
+		//Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
 		final List<String> source_paths = analysis.getSourcePaths();
 		final String[] root = analysis.getRoots();
 		final Set<String> jar_paths = analysis.getJarPaths();
@@ -258,19 +268,11 @@ public class Main
 		long end_time = -1;
 		s_stdout.hideCursor();
 		status_thread.start();
-		boolean success = true;
 		try
 		{
 			List<Future<CallableFuture>> futures = analysis.processBatch(executor, fsp, found);
-			success = waitForEnd(analysis, futures);
-			if (success)
-			{
-				executor.shutdown();
-				for (Future<CallableFuture> f : futures)
-				{
-					found.addAll(f.get().getFoundTokens());
-				}
-			}
+			waitForEnd(analysis, futures, found);
+			executor.shutdown();
 		}
 		catch (IOException e)
 		{
@@ -286,7 +288,7 @@ public class Main
 		}
 		try
 		{
-			if (!success || !executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
+			if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
 			{
 				executor.shutdownNow();
 				if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
@@ -307,13 +309,15 @@ public class Main
 		long duration = end_time - start_time;
 		status.cleanup();
 		s_stdout.println((analysis.getLimit() >= 0 ? analysis.getLimit() : total) + " file(s) analyzed");
-		s_stdout.println(found.size() + " assertion(s) found");
+		s_stdout.println(found.size() + " token" + (found.size() > 1 ? "s" : "") + " found");
 		s_stdout.clearLine();
 		s_stdout.println("Analysis time: " + AnsiPrinter.formatDuration(duration));
 		s_stdout.println();
 
 		/* Categorize results and produce report */
 		categorize(analysis.getProjectName(), categorized, found);
+		// TODO: eventually merge with global results
+		categorize(analysis.getProjectName(), global, found);
 		FilePath output_path = analysis.getHomePath().chdir(getPathOfFile(analysis.getOutputFile()));
 		String s_source_path = analysis.getSourcePaths().get(0);
 		Path p = Paths.get(s_source_path).toAbsolutePath().normalize();
@@ -516,19 +520,21 @@ public class Main
 	 * @param futures
 	 *          The list of futures to wait for
 	 */
-	public static boolean waitForEnd(Analysis a, List<Future<CallableFuture>> futures)
+	public static boolean waitForEnd(Analysis a, List<Future<CallableFuture>> futures, Set<FoundToken> found)
 	{
 		for (Future<CallableFuture> f : futures)
 		{
 			try
 			{
-				f.get(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+				CallableFuture cf = f.get(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+				found.addAll(cf.getFoundTokens());
 			}
 			catch (TimeoutException te)
 			{
 				f.cancel(true);
+				s_stderr.fg(AnsiPrinter.Color.RED);
 				s_stderr.println("Timeout expired for task analyzing: " + a.getFileForFuture(f));
-				return false;
+				s_stderr.resetColors();
 			}
 			catch (InterruptedException ie)
 			{
@@ -539,7 +545,6 @@ public class Main
 					other.cancel(true);
 				}
 				s_stderr.println("Analysis interrupted");
-				return false;
 			}
 			catch (ExecutionException ee)
 			{
@@ -547,7 +552,6 @@ public class Main
 				s_stderr.println("Error in task: " + a.getFileForFuture(f));
 				s_stderr.println("Cause: " + ee.getCause().getMessage());
 				ee.printStackTrace(s_stderr);
-				return false;
 			}
 		}
 		return true;
