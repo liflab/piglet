@@ -1,13 +1,11 @@
 package ca.uqac.lif.piglet.find.sparql;
 
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.resolution.TypeSolver;
-import com.github.javaparser.resolution.types.ResolvedType;
 
 import ca.uqac.lif.piglet.util.TypeRdf;
-import ca.uqac.lif.piglet.util.Types;
-import ca.uqac.lif.piglet.util.Types.ResolveResult;
 
 /**
  * A function that resolves the type of an expression.
@@ -27,11 +25,12 @@ public class ResolveType extends JavaAstNodeFunction
 	@Override
 	protected String calculateValue(Node n)
 	{
-		if (!(n instanceof Expression))
+		if (n instanceof ClassOrInterfaceDeclaration || n instanceof Expression)
 		{
-			return "?";
+			return TypeRdf.resolveTypeToString(n, m_ts);
 		}
-		return TypeRdf.resolveTypeToString(n, m_ts);
+		return "?";
+		
 		/*
 		ResolveResult<ResolvedType> rr = Types.typeOfWithTimeout((Expression) n, m_ts, 100);
 		if (rr.reason == Types.ResolveReason.RESOLVED)

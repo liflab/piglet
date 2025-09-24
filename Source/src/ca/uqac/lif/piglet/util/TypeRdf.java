@@ -3,6 +3,7 @@ package ca.uqac.lif.piglet.util;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.type.*;
 import com.github.javaparser.ast.expr.Expression;
@@ -14,6 +15,7 @@ import com.github.javaparser.resolution.TypeSolver;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.declarations.*;
 import com.github.javaparser.resolution.model.SymbolReference;
+import com.github.javaparser.resolution.model.typesystem.ReferenceTypeImpl;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 
@@ -122,112 +124,122 @@ public final class TypeRdf
 	private static void configure(TypeSolver ts)
 	{
 		StaticJavaParser.getConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)
-				.setSymbolResolver(new JavaSymbolSolver(ts));
+		.setSymbolResolver(new JavaSymbolSolver(ts));
 	}
 
 	private static ResolvedType toResolvedType(Object o, TypeSolver ts) {
-	  if (o instanceof ResolvedType rt) return rt;
+		if (o instanceof ResolvedType rt) return rt;
 
-	  // --- Method calls: most fragile path in JP when generics + wildcards appear ---
-	  if (o instanceof MethodCallExpr call) {
-	    // (1) Normal path
-	    try {
-	      return JavaParserFacade.get(ts).getType(call);
-	    } catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e1) {
-	      // (2) Usage (does some substitution)
-	      try {
-	        var usage = JavaParserFacade.get(ts).solveMethodAsUsage(call);
-	        return usage.returnType();
-	      } catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e2) {
-	        // (3) Declaration without substitution → then erase generics to avoid further failures
-	        try {
-	          SymbolReference<ResolvedMethodDeclaration> ref = JavaParserFacade.get(ts).solve(call);
-	          if (ref.isSolved()) {
-	            ResolvedType rt = ref.getCorrespondingDeclaration().getReturnType();
-	            return eraseToRaw(rt, ts); // drop problematic type args
-	          }
-	        } catch (Throwable ignore) { /* fall through */ }
-	        // (4) Last resort
-	        return resolveSignatureToType("java.lang.Object", ts);
-	      }
-	    }
-	  }
+		// --- Method calls: most fragile path in JP when generics + wildcards appear ---
+		if (o instanceof MethodCallExpr call) {
+			// (1) Normal path
+			try {
+				return JavaParserFacade.get(ts).getType(call);
+			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e1) {
+				// (2) Usage (does some substitution)
+				try {
+					var usage = JavaParserFacade.get(ts).solveMethodAsUsage(call);
+					return usage.returnType();
+				} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e2) {
+					// (3) Declaration without substitution → then erase generics to avoid further failures
+					try {
+						SymbolReference<ResolvedMethodDeclaration> ref = JavaParserFacade.get(ts).solve(call);
+						if (ref.isSolved()) {
+							ResolvedType rt = ref.getCorrespondingDeclaration().getReturnType();
+							return eraseToRaw(rt, ts); // drop problematic type args
+						}
+					} catch (Throwable ignore) { /* fall through */ }
+					// (4) Last resort
+					return resolveSignatureToType("java.lang.Object", ts);
+				}
+			}
+		}
 
-	  // Method references: treat like their functional interface's return type
-	  if (o instanceof MethodReferenceExpr mref) {
-	    try {
-	      return JavaParserFacade.get(ts).getType(mref);
-	    } catch (Throwable t) {
-	      return resolveSignatureToType("java.lang.Object", ts);
-	    }
-	  }
+		// Method references: treat like their functional interface's return type
+		if (o instanceof MethodReferenceExpr mref) {
+			try {
+				return JavaParserFacade.get(ts).getType(mref);
+			} catch (Throwable t) {
+				return resolveSignatureToType("java.lang.Object", ts);
+			}
+		}
 
-	  // Object creation: usually safe, but keep a guard
-	  if (o instanceof ObjectCreationExpr newExpr) {
-	    try {
-	      return JavaParserFacade.get(ts).getType(newExpr);
-	    } catch (Throwable t) {
-	      // Erase to raw of the constructor's type if possible
-	      try {
-	        var tpe = newExpr.getType();
-	        return eraseToRaw(JavaParserFacade.get(ts).convertToUsage(tpe), ts);
-	      } catch (Throwable t2) {
-	        return resolveSignatureToType("java.lang.Object", ts);
-	      }
-	    }
-	  }
+		// Object creation: usually safe, but keep a guard
+		if (o instanceof ObjectCreationExpr newExpr) {
+			try {
+				return JavaParserFacade.get(ts).getType(newExpr);
+			} catch (Throwable t) {
+				// Erase to raw of the constructor's type if possible
+				try {
+					var tpe = newExpr.getType();
+					return eraseToRaw(JavaParserFacade.get(ts).convertToUsage(tpe), ts);
+				} catch (Throwable t2) {
+					return resolveSignatureToType("java.lang.Object", ts);
+				}
+			}
+		}
 
-	  if (o instanceof Expression expr) {
-	    try {
-	      return JavaParserFacade.get(ts).getType(expr);
-	    } catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e) {
-	      return resolveSignatureToType("java.lang.Object", ts);
-	    }
-	  }
+		if (o instanceof Expression expr) {
+			try {
+				return JavaParserFacade.get(ts).getType(expr);
+			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e) {
+				return resolveSignatureToType("java.lang.Object", ts);
+			}
+		}
 
-	  if (o instanceof Type typeAst) {
-	    try {
-	      return JavaParserFacade.get(ts).convertToUsage(typeAst);
-	    } catch (IllegalStateException ise) {
-	      // “Symbol resolution not configured” case → conservative fallback
-	      if (typeAst.isVarType()) {
-	        return resolveSignatureToType("java.lang.Object", ts);
-	      }
-	      try {
-	        return resolveSignatureToType(typeAst.toString(), ts);
-	      } catch (RuntimeException ex) {
-	        return resolveSignatureToType("java.lang.Object", ts);
-	      }
-	    } catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException e) {
-	      return resolveSignatureToType("java.lang.Object", ts);
-	    }
-	  }
+		if (o instanceof Type typeAst) {
+			try {
+				return JavaParserFacade.get(ts).convertToUsage(typeAst);
+			} catch (IllegalStateException ise) {
+				// “Symbol resolution not configured” case → conservative fallback
+				if (typeAst.isVarType()) {
+					return resolveSignatureToType("java.lang.Object", ts);
+				}
+				try {
+					return resolveSignatureToType(typeAst.toString(), ts);
+				} catch (RuntimeException ex) {
+					return resolveSignatureToType("java.lang.Object", ts);
+				}
+			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException e) {
+				return resolveSignatureToType("java.lang.Object", ts);
+			}
+		}
 
-	  if (o instanceof ResolvedValueDeclaration rvd) return rvd.getType();
+		if (o instanceof ResolvedValueDeclaration rvd) return rvd.getType();
 
-	  if (o instanceof com.github.javaparser.ast.Node node && node instanceof Expression expr2) {
-	    try {
-	      return JavaParserFacade.get(ts).getType(expr2);
-	    } catch (Throwable t) {
-	      return resolveSignatureToType("java.lang.Object", ts);
-	    }
-	  }
+		if (o instanceof com.github.javaparser.ast.Node node && node instanceof Expression expr2) {
+			try {
+				return JavaParserFacade.get(ts).getType(expr2);
+			} catch (Throwable t) {
+				return resolveSignatureToType("java.lang.Object", ts);
+			}
+		}
 
-	  throw new IllegalArgumentException("Unsupported input to resolveTypeToString: " +
-	      (o == null ? "null" : o.getClass().getName()));
+		if (o instanceof ClassOrInterfaceDeclaration cid) {
+			try {
+				ResolvedReferenceTypeDeclaration decl = cid.resolve();
+				ResolvedType rt = new ReferenceTypeImpl(decl);
+				return rt;
+			} catch (Throwable t) {
+				return resolveSignatureToType("?", ts);
+			}
+		}
+
+		throw new IllegalArgumentException("Unsupported input to resolveTypeToString: " +
+				(o == null ? "null" : o.getClass().getName()));
 	}
-	
+
 	private static ResolvedType eraseToRaw(ResolvedType t, TypeSolver ts) {
-	  if (t.isArray()) {
-	    // Erase component then rebuild via our stub
-	    String erasedComp = TypeRdf.canonical(t.asArrayType().getComponentType());
-	    return resolveSignatureToType(erasedComp + "[]", ts);
-	  }
-	  if (t.isReferenceType()) {
-	    String qn = t.asReferenceType().getQualifiedName(); // raw FQN
-	    return resolveSignatureToType(qn, ts);
-	  }
-	  return t; // primitive, null, wildcard, etc.
+		if (t.isArray()) {
+			// Erase component then rebuild via our stub
+			String erasedComp = TypeRdf.canonical(t.asArrayType().getComponentType());
+			return resolveSignatureToType(erasedComp + "[]", ts);
+		}
+		if (t.isReferenceType()) {
+			String qn = t.asReferenceType().getQualifiedName(); // raw FQN
+			return resolveSignatureToType(qn, ts);
+		}
+		return t; // primitive, null, wildcard, etc.
 	}
 
 	/* ===================== CANONICALIZATION ===================== */
@@ -515,16 +527,16 @@ public final class TypeRdf
 	private static String boxedTypeName(ResolvedPrimitiveType prim)
 	{
 		return switch (prim)
-		{
-		case BOOLEAN -> "java.lang.Boolean";
-		case BYTE -> "java.lang.Byte";
-		case SHORT -> "java.lang.Short";
-		case INT -> "java.lang.Integer";
-		case LONG -> "java.lang.Long";
-		case CHAR -> "java.lang.Character";
-		case FLOAT -> "java.lang.Float";
-		case DOUBLE -> "java.lang.Double";
-		};
+				{
+				case BOOLEAN -> "java.lang.Boolean";
+				case BYTE -> "java.lang.Byte";
+				case SHORT -> "java.lang.Short";
+				case INT -> "java.lang.Integer";
+				case LONG -> "java.lang.Long";
+				case CHAR -> "java.lang.Character";
+				case FLOAT -> "java.lang.Float";
+				case DOUBLE -> "java.lang.Double";
+				};
 	}
 
 	private static String cleanSig(String sig)

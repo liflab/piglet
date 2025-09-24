@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.apache.jena.atlas.lib.StrUtils;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
@@ -41,11 +44,11 @@ import ca.uqac.lif.piglet.util.Solvers;
 
 public class JenaTest
 {
-	protected static final String NS = "http://liflab.uqac.ca/";
+	protected static final String NS = "http://liflab.uqac.ca/codefinder#";
 
 	public static final String prefixes = StrUtils.strjoinNL
 			("PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
-					"PREFIX lif:  <http://liflab.uqac.ca/>",
+					"PREFIX :  <http://liflab.uqac.ca/codefinder#>",
 					""
 					);
 
@@ -97,7 +100,7 @@ public class JenaTest
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
     		+ "}");*/
-		FileInputStream fis = new FileInputStream("/home/sylvain/AssertionStudy/Repositories/Guava/android/guava-testlib/src/com/google/common/testing/AbstractPackageSanityTests.java");
+		FileInputStream fis = new FileInputStream("/home/sylvain/MyTest.java");
 		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
 		fis.close();
     if (!cu.isSuccessful())
@@ -113,27 +116,30 @@ public class JenaTest
 		
 		// Register property function
 		PropertyFunctionRegistry.get()
-	  .put(NS + "resolvedType",
+	  .put(NS + "resolvedtype",
 	       (uri) -> new ResolveType(globalAstIndex, ctx.getTypeSolver()));
+		PropertyFunctionRegistry.get()
+	  .put(NS + "instanceof",
+	       (uri) -> new InstanceOf(ctx.getTypeSolver()));
 		
 		FileOutputStream fos = new FileOutputStream("/tmp/model.dot");
 		RdfRenderer renderer = new RdfRenderer(r.getModel());
 		renderer.toDot(new PrintStream(fos));
 		fos.close();;
 
-		/*
+		
 		ResultSet resultSet1 = QueryExecution.model(r.getModel())
 				//.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
-				.query(prefixes + "SELECT ?n (GROUP_CONCAT(DISTINCT ?t;separator=\",\") AS ?types)\n"
-						+ "           (GROUP_CONCAT(DISTINCT ?nm;separator=\",\") AS ?names)\n"
-						+ "WHERE {\n"
-						+ "  ?n lif:nodetype ?t ;\n"
-						+ "     lif:name     ?nm .\n"
+				.query(prefixes + ""
+						+ "SELECT DISTINCT ?t WHERE {\n"
+						+ "  ?n :nodetype \"MethodCallExpr\" ;\n"
+						+ "     :name ?an .\n"
+						+ "  ?n :params/:arg1/:resolvedtype ?t .\n"
+						+ "  ?t :instanceof \"java.util.List\" .\n"
+						+ "  FILTER (CONTAINS(?an, \"assert\"))\n"
 						+ "}\n"
-						+ "GROUP BY ?n\n"
-						+ "HAVING (COUNT(DISTINCT ?t) > 1 || COUNT(DISTINCT ?nm) > 1)\n"
-						+ "LIMIT 20").select();
+						).select();
     ResultSetFormatter.out(resultSet1);
-    */
+    
 	}
 }

@@ -162,8 +162,10 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			if (n.getScope().isPresent())
 			{
 				Expression e = n.getScope().get();
-				Literal scope_node = m_model.createLiteral(e.toString());
-				m_model.add(method_node, SCOPE, scope_node);
+				JavaAstToRdfVisitor arg_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow, m_context);
+				PushPopVisitableNode to_explore = new PushPopVisitableNode(n.getScope().get());
+				to_explore.accept(arg_visitor);
+				m_model.add(method_node, SCOPE, arg_visitor.getRoot());
 			}
 		}
 		if (m_follow > 0)
