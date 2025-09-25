@@ -67,18 +67,18 @@ public class Analysis implements Comparable<Analysis>
 		// Prevent instantiation from outside the static methods
 		super();
 	}
-	
+
 	@Override
 	public int compareTo(Analysis o)
 	{
 		return this.getProjectName().compareTo(o.getProjectName());
 	}
-	
+
 	/**
 	 * A set of file patterns to ignore
 	 */
 	protected Set<String> m_ignoredFiles = new HashSet<>();
-	
+
 	/**
 	 * Reads command line arguments and returns a set of analysis objects
 	 * 
@@ -265,12 +265,12 @@ public class Analysis implements Comparable<Analysis>
 			a.showUsage(cli);
 		}
 	}
-	
+
 	public String getRepositoryPath()
 	{
 		return m_repositoryPath;
 	}
-	
+
 	public String getReportPath()
 	{
 		if (m_outputFile == null || m_outputFile.isEmpty())
@@ -335,7 +335,7 @@ public class Analysis implements Comparable<Analysis>
 	 * value means no limit.
 	 */
 	protected int m_limit = -1;
-	
+
 	/**
 	 * Path to the repository (if any)
 	 */
@@ -350,12 +350,12 @@ public class Analysis implements Comparable<Analysis>
 	 * Timeout for type resolution operations (in milliseconds)
 	 */
 	protected long m_resolutionTimeout = 100;
-	
+
 	/**
 	 * Other command line arguments (not parsed)
 	 */
 	protected final List<String> m_others = new ArrayList<>();
-	
+
 	/**
 	 * The path in which the executable is executed
 	 */
@@ -365,7 +365,7 @@ public class Analysis implements Comparable<Analysis>
 	 * Whether to cache analysis results
 	 */
 	protected boolean m_cache = true;
-	
+
 	/**
 	 * Whether to halt on first match.
 	 */
@@ -401,9 +401,9 @@ public class Analysis implements Comparable<Analysis>
 	 * Printer for error output
 	 */
 	protected AnsiPrinter m_stderr = null;
-	
+
 	protected Map<Future<TokenFinderCallable.CallableFuture>,String> m_futureToFile = new IdentityHashMap<>();
-	
+
 	public void setRepositoryPath(String path)
 	{
 		m_repositoryPath = path;
@@ -468,7 +468,7 @@ public class Analysis implements Comparable<Analysis>
 	{
 		this.m_jarPaths = jarPaths;
 	}
-	
+
 	public String getFileForFuture(Future<TokenFinderCallable.CallableFuture> f)
 	{
 		return m_futureToFile.get(f);
@@ -513,7 +513,7 @@ public class Analysis implements Comparable<Analysis>
 	{
 		return m_root;
 	}
-	
+
 	public void setRoots(String[] roots)
 	{
 		m_root = roots;
@@ -649,13 +649,7 @@ public class Analysis implements Comparable<Analysis>
 	public List<Future<CallableFuture>> processBatch(ExecutorService e, FileProvider provider,
 			Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
 	{
-		checkCachedFinders();
-		HardDisk fs = new HardDisk(m_cacheFolder).open();
-		for (TokenFinderFactory f : m_cachedFinders)
-		{
-			found.addAll(f.readCache(fs, m_projectName));
-		}
-		fs.close();
+		found.addAll(checkCachedFinders());
 		int count = 0;
 		Set<TokenFinderCallable> tasks = new HashSet<>();
 		List<Future<CallableFuture>> futures = new ArrayList<>();
@@ -690,8 +684,9 @@ public class Analysis implements Comparable<Analysis>
 		return futures;
 	}
 
-	protected void checkCachedFinders() throws FileSystemException, TokenFinderFactoryException
+	protected List<FoundToken> checkCachedFinders() throws FileSystemException, TokenFinderFactoryException
 	{
+		List<FoundToken> all_cached = new ArrayList<>();
 		// Check which finders have cached results
 		if (m_cache && !m_projectName.isEmpty())
 		{
@@ -708,8 +703,19 @@ public class Analysis implements Comparable<Analysis>
 					VisitorAssertionFinderFactory f = it.next();
 					if (f.isCached(hd, m_projectName))
 					{
-						m_cachedFinders.add(f);
-						it.remove();
+						// Verify cache integrity by trying to read it
+						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName);
+						if (cached_tokens == null)
+						{
+							// Cache is corrupt, ignore it
+							continue;
+						}
+						else
+						{
+							m_cachedFinders.add(f);
+							all_cached.addAll(cached_tokens);
+							it.remove();
+						}
 					}
 				}
 			}
@@ -720,13 +726,25 @@ public class Analysis implements Comparable<Analysis>
 					SparqlTokenFinderFactory f = it.next();
 					if (f.isCached(hd, m_projectName))
 					{
-						m_cachedFinders.add(f);
-						it.remove();
+						// Verify cache integrity by trying to read it
+						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName);
+						if (cached_tokens == null)
+						{
+							// Cache is corrupt, ignore it
+							continue;
+						}
+						else
+						{
+							m_cachedFinders.add(f);
+							all_cached.addAll(cached_tokens);
+							it.remove();
+						}
 					}
 				}
 			}
 			hd.close();
 		}
+		return all_cached;
 	}
 
 	protected void showUsage(CliParser cli)

@@ -176,6 +176,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		if (parent != null)
 		{
 			m_parents.push(parent);
+			m_root = parent;
 		}
 		m_filename = filename;
 	}

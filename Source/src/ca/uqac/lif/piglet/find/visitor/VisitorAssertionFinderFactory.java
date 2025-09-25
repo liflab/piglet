@@ -46,6 +46,14 @@ public class VisitorAssertionFinderFactory extends TokenFinderFactory
 	{
 		super(name);
 	}
+	
+	@Override
+	public final String getId()
+	{
+		// TODO: eventually, we should compute a hash of the actual
+		// beanshell code
+		return hashCode() + "";
+	}
 
 	@Override
 	public VisitorAssertionFinder newFinder()

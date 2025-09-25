@@ -60,6 +60,16 @@ public abstract class TokenFinderFactory
 	{
 		return escape(m_name);
 	}
+	
+	/**
+	 * Gets a unique identifier for this finder. The goal of this identifier
+	 * is to detect when the implementation of the finder has changed, which
+	 * invalidates the cached results. It is up to the implementer of the
+	 * finder to ensure that this identifier changes when the implementation
+	 * changes.
+	 * @return A unique identifier for this finder
+	 */
+	public abstract String getId();
 
 	/**
 	 * Creates a new token finder.
@@ -85,7 +95,13 @@ public abstract class TokenFinderFactory
 				JsonParser parser = new JsonParser();
 				JsonElement x = parser.parse(content);
 				JsonReader r = new JsonReader();
-				List<FoundToken> f = (List<FoundToken>) r.read(x);
+				List<Object> l = (List<Object>) r.read(x);
+				String hash = (String) l.get(0);
+				List<FoundToken> f = (List<FoundToken>) l.get(1);
+				if (!hash.equals(getId()))
+				{
+					return null;
+				}
 				return f;
 			}
 			catch (JsonParseException | ReadException e)

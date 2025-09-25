@@ -382,7 +382,10 @@ public class Main
 					list = new java.util.ArrayList<>();
 				}
 				JsonPrinter xp = new JsonPrinter();
-				String s = xp.print(list).toString();
+				List<Object> to_serialize = new java.util.ArrayList<>();
+				to_serialize.add(tf.getId());
+				to_serialize.add(list);
+				String s = xp.print(to_serialize).toString();
 				FileUtils.writeStringTo(fs, s, tf.getName() + ".json");
 			}
 			for (TokenFinderFactory tf : a.getSparqlFinders())

@@ -106,7 +106,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(BlockStmt n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource block_node = m_parents.peek();
 		NodeList<Statement> statements = n.getStatements();
 		if (statements.size() == 0)
@@ -138,7 +138,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(MethodCallExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource method_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getName().asString());
 		m_model.add(method_node, NAME, name_node);
@@ -181,7 +181,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 						String target_filename = getDeclaringFileName(n).orElse("");
 						Node root = md.toAst().get();
 						PushPopVisitableNode to_explore = new PushPopVisitableNode(root);
-						JavaAstToRdfVisitor method_visitor = new JavaAstToRdfVisitor(m_model, m_index, null, m_follow - 1, m_context, target_filename);
+						JavaAstToRdfVisitor method_visitor = new JavaAstToRdfVisitor(m_model, m_index, method_node, m_follow - 1, m_context, target_filename);
 						to_explore.accept(method_visitor);
 						m_model.add(method_node, DECLARATION, method_visitor.getRoot());
 					}
@@ -204,7 +204,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(FieldAccessExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource field_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getName().asString());
 		m_model.add(field_node, NAME, name_node);
@@ -220,7 +220,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(VariableDeclarationExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource var_node = m_parents.peek();
 		NodeList<VariableDeclarator> n_vars = n.getVariables();
 		if (n_vars.size() == 0)
@@ -251,7 +251,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(FieldDeclaration n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource field_node = m_parents.peek();
 		handleAnnotations(n);
 		handleModifiers(n);
@@ -284,7 +284,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(IfStmt n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource if_node = m_parents.peek();
 		// Condition
 		{
@@ -325,7 +325,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(BinaryExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource bin_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getOperator().asString());
 		m_model.add(bin_node, OPERATOR, name_node);
@@ -351,7 +351,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(UnaryExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource bin_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getOperator().asString());
 		m_model.add(bin_node, OPERATOR, name_node);
@@ -371,7 +371,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource class_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getNameAsString());
 		m_model.add(class_node, NAME, name_node);
@@ -382,10 +382,21 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(MethodDeclaration n)
 	{
-		if (!genericVisit(n)) stop();
-		Resource method_node = m_parents.peek();
+		if (!genericVisit(n)) { stop(); return; }
+		Resource method_node;
+		if (m_parents.isEmpty())
+		{
+			method_node = null;
+		}
+		else
+		{
+			method_node = m_parents.peek();
+		}
 		Literal name_node = m_model.createLiteral(n.getNameAsString());
-		m_model.add(method_node, NAME, name_node);
+		if (method_node != null)
+		{
+			m_model.add(method_node, NAME, name_node);
+		}
 		handleAnnotations(n);
 		handleModifiers(n);
 		handleJavadoc(n);
@@ -431,7 +442,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(IntegerLiteralExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource int_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getValue());
 		m_model.add(int_node, NAME, name_node);
@@ -441,7 +452,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(BooleanLiteralExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource bool_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(Boolean.toString(n.getValue()));
 		m_model.add(bool_node, NAME, name_node);
@@ -452,7 +463,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(StringLiteralExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource str_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getValue());
 		m_model.add(str_node, NAME, name_node);
@@ -463,7 +474,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(NullLiteralExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Resource null_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral("null");
 		m_model.add(null_node, NAME, name_node);
@@ -473,7 +484,7 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	@Override
 	public void visit(NameExpr n)
 	{
-		if (!genericVisit(n)) stop();
+		if (!genericVisit(n)) { stop(); return; }
 		Literal name_node = m_model.createLiteral(n.getName().asString());
 		m_model.add(m_parents.peek(), NAME, name_node);
 		stop();
