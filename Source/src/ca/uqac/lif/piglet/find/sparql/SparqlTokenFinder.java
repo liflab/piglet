@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryParseException;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
@@ -150,7 +151,7 @@ public class SparqlTokenFinder implements TokenFinder
 		m_index = index;
 	}
 
-	public void process()
+	public void process() throws QueryParseException
 	{
 		String PF = "http://liflab.uqac.ca/codefinder#resolvedtype";
 		String IO = "http://liflab.uqac.ca/codefinder#instanceof";

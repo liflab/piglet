@@ -32,6 +32,7 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.piglet.Main;
+import ca.uqac.lif.piglet.find.TokenFinder.TokenFinderException;
 import ca.uqac.lif.piglet.provider.FileSource;
 import ca.uqac.lif.piglet.util.StatusCallback;
 
@@ -136,7 +137,19 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Set<FoundToken> found = doRun(context, code);
+		Set<FoundToken> found = new HashSet<FoundToken>();
+		try
+		{
+			doRun(context, code, found);
+		}
+		catch (TokenFinderException e)
+		{
+			if (m_callback != null)
+			{
+				m_callback.error("Error processing " + m_file + ": " + e.getMessage());
+			}
+			return new CallableFuture(m_file, found);
+		}
 		if (m_callback != null)
 		{
 			m_callback.done();
@@ -153,7 +166,7 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 		return m_file;
 	}
 	
-	protected abstract Set<FoundToken> doRun(TokenFinderContext context, String code);
+	protected abstract void doRun(TokenFinderContext context, String code, Set<FoundToken> found) throws TokenFinderException;
 	
 	/**
 	 * The result of a callable.

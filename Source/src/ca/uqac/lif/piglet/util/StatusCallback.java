@@ -60,6 +60,15 @@ public class StatusCallback implements Runnable
 		printBar();
 	}
 	
+	public void error(String msg)
+	{
+		m_out.moveBeginningLine().clearLine();
+		m_out.setForegroundColor(Color.RED);
+		m_out.println("Error: " + msg);
+		m_out.resetColors();
+		printBar();
+	}
+	
 	@Override
 	public void run()
 	{

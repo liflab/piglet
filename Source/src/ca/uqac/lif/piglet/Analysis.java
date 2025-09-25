@@ -762,7 +762,7 @@ public class Analysis implements Comparable<Analysis>
 			HardDisk hd = new HardDisk(a.getHomePath().toString()).open();
 			if (hd.isDirectory(bsh_file))
 			{
-				a.getStdout().println("Reading queries from folder " + bsh_file);
+				//a.getStdout().println("Reading queries from folder " + bsh_file);
 				hd.pushd(bsh_file);
 				{
 					// First the BeanShell scripts
@@ -802,7 +802,7 @@ public class Analysis implements Comparable<Analysis>
 			{
 				if (bsh_file.endsWith(".sparql"))
 				{
-					a.getStdout().println("Reading SPARQL query from file " + bsh_file);
+					//a.getStdout().println("Reading SPARQL query from file " + bsh_file);
 					hd.pushd(getPathOfFile(bsh_file).toString());
 					SparqlTokenFinderFactory factory = SparqlTokenFinderFactory.readSparql(hd, bsh_file);
 					hd.popd();
@@ -810,7 +810,7 @@ public class Analysis implements Comparable<Analysis>
 				}
 				else if (bsh_file.endsWith(".bsh"))
 				{
-					a.getStdout().println("Reading BeanShell script from file " + bsh_file);
+					//a.getStdout().println("Reading BeanShell script from file " + bsh_file);
 					hd.pushd(getPathOfFile(bsh_file).toString());
 					VisitorAssertionFinderFactory factory = VisitorAssertionFinderFactory.readBeanshell(hd, bsh_file);
 					hd.popd();

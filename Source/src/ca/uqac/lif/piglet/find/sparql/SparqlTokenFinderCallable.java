@@ -27,11 +27,13 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ParseProblemException;
 
 import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderContext;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
+import ca.uqac.lif.piglet.find.TokenFinder.TokenFinderException;
 import ca.uqac.lif.piglet.find.visitor.PushPopVisitableNode;
 import ca.uqac.lif.piglet.provider.FileSource;
 import ca.uqac.lif.piglet.util.StatusCallback;
@@ -61,9 +63,10 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 	}
 
 	@Override
-	protected Set<FoundToken> doRun(TokenFinderContext context, String code)
+	protected void doRun(TokenFinderContext context, String code, Set<FoundToken> found) throws TokenFinderException
 	{
-		return processFile(context, m_file, code, m_finders, m_quiet, m_follow);
+		Set<FoundToken> in_found = processFile(context, m_file, code, m_finders, m_quiet, m_follow);
+		found.addAll(in_found);
 	}
 
 	/**
@@ -75,8 +78,9 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 	 * @param found The set of found tokens
 	 * @param quiet Whether to suppress warnings
 	 * @param follow Whether to follow method calls when building the model
+	 * @throws TokenFinderException If an error occurs during processing
 	 */
-	protected Set<FoundToken> processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet, int follow)
+	protected Set<FoundToken> processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet, int follow) throws TokenFinderException
 	{
 		Set<FoundToken> found = new HashSet<>();
 		Set<SparqlTokenFinderFactory> localFinders = new HashSet<>();
@@ -111,6 +115,10 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 				f.process();
 				found.addAll(f.getFoundTokens());
 			}
+		}
+		catch (ParseProblemException e)
+		{
+			throw new TokenFinderException("Error parsing " + file + ": " + e.getMessage(), e);
 		}
 		catch (NoSuchElementException e)
 		{

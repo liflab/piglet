@@ -8,6 +8,9 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QueryParseException;
+
 import ca.uqac.lif.fs.FileSystem;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
@@ -120,6 +123,7 @@ public class SparqlTokenFinderFactory extends TokenFinderFactory
 				sparql_code.append(line).append("\n");
 			}
 			scanner.close();
+			validate(sparql_code.toString());
 			return new SparqlTokenFinderFactory(name == null ? "Unnamed SPARQL finder" : name,
 					sparql_code.toString());
 		}
@@ -127,5 +131,19 @@ public class SparqlTokenFinderFactory extends TokenFinderFactory
 		{
 			throw new TokenFinderFactoryException(e);
 		}
+		catch (QueryParseException e)
+		{
+			throw new TokenFinderFactoryException("Error in SPARQL query " + filename + ": " + e.getMessage());
+		}
+	}
+	
+	/**
+	 * Validates a SPARQL query by trying to parse it.
+	 * @param query The query
+	 * @throws QueryParseException If the query is not valid
+	 */
+	protected static void validate(String query) throws QueryParseException
+	{
+		QueryFactory.create(SparqlTokenFinder.prefixes + query);
 	}
 }

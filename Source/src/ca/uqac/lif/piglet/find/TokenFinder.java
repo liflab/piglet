@@ -97,4 +97,43 @@ public interface TokenFinder extends Printable, Readable
 	
 	@Override
 	public Object print(ObjectPrinter<?> p) throws PrintException;
+	
+	/**
+	 * An exception thrown when a token finder cannot process a file.
+	 */
+	public static class TokenFinderException extends Throwable
+	{
+		/**
+		 * Dummy UID
+		 */
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * Creates a new exception with a message.
+		 * @param message The message
+		 */
+		public TokenFinderException(String message)
+		{
+			super(message);
+		}
+
+		/**
+		 * Creates a new exception with a cause.
+		 * @param cause The cause
+		 */
+		public TokenFinderException(Throwable cause)
+		{
+			super(cause);
+		}
+		
+		/**
+		 * Creates a new exception with a message and a cause.
+		 * @param message The message
+		 * @param cause The cause
+		 */
+		public TokenFinderException(String message, Throwable cause)
+		{
+			super(message, cause);
+		}
+	}
 }

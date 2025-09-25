@@ -35,6 +35,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.jena.query.QueryParseException;
+
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -225,8 +228,6 @@ public class Main
 		Report.MapReport categorized = new Report.MapReport();
 		categorized.put(analysis.getProjectName(), new MapReport());
 		Set<FoundToken> found = new HashSet<>();
-		//EndRunnable end_callback = new EndRunnable(categorized, /*found.size(),*/ analysis.getSummary());
-		//Runtime.getRuntime().addShutdownHook(new Thread(end_callback));
 		final List<String> source_paths = analysis.getSourcePaths();
 		final String[] root = analysis.getRoots();
 		final Set<String> jar_paths = analysis.getJarPaths();
@@ -549,6 +550,10 @@ public class Main
 					other.cancel(true);
 				}
 				s_stderr.println("Analysis interrupted");
+			}
+			catch (QueryParseException qpe)
+			{
+				s_stderr.println("Cannot parse query: " + qpe.getMessage());
 			}
 			catch (ExecutionException ee)
 			{

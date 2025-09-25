@@ -17,11 +17,11 @@
  */
 package ca.uqac.lif.piglet.find.visitor;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
@@ -29,6 +29,7 @@ import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderContext;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
+import ca.uqac.lif.piglet.find.TokenFinder.TokenFinderException;
 import ca.uqac.lif.piglet.provider.FileSource;
 import ca.uqac.lif.piglet.util.StatusCallback;
 
@@ -52,9 +53,8 @@ public class VisitorAssertionFinderCallable extends TokenFinderCallable
 	}
 	
 	@Override
-	protected Set<FoundToken> doRun(TokenFinderContext context, String code)
+	protected void doRun(TokenFinderContext context, String code, Set<FoundToken> found) throws TokenFinderException
 	{
-		Set<FoundToken> found = new HashSet<>();
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
@@ -81,6 +81,10 @@ public class VisitorAssertionFinderCallable extends TokenFinderCallable
 				}
 			}
 		}
+		catch (ParseProblemException e)
+		{
+			throw new TokenFinderException("Error parsing " + m_file + ": " + e.getMessage(), e);
+		}
 		catch (NoSuchElementException e)
 		{
 			// Ignore this file
@@ -89,7 +93,6 @@ public class VisitorAssertionFinderCallable extends TokenFinderCallable
 				System.err.println("Could not parse " + m_file);
 			}
 		}
-		return found;
 	}
 	
 	/**

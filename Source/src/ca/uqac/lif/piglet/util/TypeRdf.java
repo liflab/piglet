@@ -18,6 +18,7 @@ import com.github.javaparser.resolution.model.SymbolReference;
 import com.github.javaparser.resolution.model.typesystem.ReferenceTypeImpl;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
+import com.github.javaparser.resolution.MethodAmbiguityException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,6 +50,8 @@ public final class TypeRdf
 		try
 		{
 			ResolvedType rt = toResolvedType(symbolOrType, ts);
+			if (rt == null)
+				return "?";
 			return canonical(rt);
 		}
 		catch (UnsolvedSymbolException e)
@@ -135,12 +138,12 @@ public final class TypeRdf
 			// (1) Normal path
 			try {
 				return JavaParserFacade.get(ts).getType(call);
-			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e1) {
+			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException | MethodAmbiguityException e1) {
 				// (2) Usage (does some substitution)
 				try {
 					var usage = JavaParserFacade.get(ts).solveMethodAsUsage(call);
 					return usage.returnType();
-				} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e2) {
+				} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException | MethodAmbiguityException e2) {
 					// (3) Declaration without substitution → then erase generics to avoid further failures
 					try {
 						SymbolReference<ResolvedMethodDeclaration> ref = JavaParserFacade.get(ts).solve(call);
@@ -182,7 +185,7 @@ public final class TypeRdf
 		if (o instanceof Expression expr) {
 			try {
 				return JavaParserFacade.get(ts).getType(expr);
-			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException e) {
+			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | IllegalStateException | MethodAmbiguityException e) {
 				return resolveSignatureToType("java.lang.Object", ts);
 			}
 		}
@@ -200,7 +203,7 @@ public final class TypeRdf
 				} catch (RuntimeException ex) {
 					return resolveSignatureToType("java.lang.Object", ts);
 				}
-			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException e) {
+			} catch (UnsupportedOperationException | IllegalArgumentException | UnsolvedSymbolException | MethodAmbiguityException e) {
 				return resolveSignatureToType("java.lang.Object", ts);
 			}
 		}
@@ -395,7 +398,7 @@ public final class TypeRdf
 	private static TypePattern parseSuperPattern(String superSig)
 	{
 		String trimmed = superSig.trim();
-		if (trimmed.equals("?"))
+		if (trimmed.equals("?") || trimmed.equals("null"))
 			return new TypePattern("java.lang.Object", List.of());
 
 		String src = "class __T { " + superSig + " __x; }";
@@ -460,17 +463,23 @@ public final class TypeRdf
 		{
 			ResolvedType target = resolveSignatureToType(ex.sig(), ts);
 			// invariance for generic arguments
+			if (target == null || actual == null)
+				return false;
 			return target.isAssignableBy(actual) && actual.isAssignableBy(target);
 		}
 		if (pat instanceof TypePattern.ArgPat.Extends ex)
 		{
 			ResolvedType bound = resolveSignatureToType(ex.boundSig(), ts);
+			if (bound == null || actual == null)
+				return false;
 			// actual <: bound
 			return bound.isAssignableBy(actual);
 		}
 		if (pat instanceof TypePattern.ArgPat.Super su)
 		{
 			ResolvedType bound = resolveSignatureToType(su.boundSig(), ts);
+			if (bound == null || actual == null)
+				return false;
 			// bound <: actual
 			return actual.isAssignableBy(bound);
 		}
@@ -509,6 +518,10 @@ public final class TypeRdf
 	private static ResolvedType resolveSignatureToType(String typeSig, TypeSolver ts)
 	{
 		return SIG_RESOLVE_CACHE.computeIfAbsent(typeSig, sig -> {
+			if (sig == null || sig.isEmpty() || sig.equals("null") || sig.equals("?"))
+			{
+				return null;
+			}
 			String src = "class __T { " + sig + " __x; }";
 			CompilationUnit cu = StaticJavaParser.parse(src);
 			FieldDeclaration fd = cu.findFirst(FieldDeclaration.class).orElseThrow();

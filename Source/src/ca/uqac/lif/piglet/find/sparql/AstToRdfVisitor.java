@@ -1,5 +1,6 @@
 package ca.uqac.lif.piglet.find.sparql;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -34,6 +35,7 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.ast.comments.LineComment;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ArrayAccessExpr;
 import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
@@ -78,6 +80,10 @@ import com.github.javaparser.ast.modules.ModuleOpensDirective;
 import com.github.javaparser.ast.modules.ModuleProvidesDirective;
 import com.github.javaparser.ast.modules.ModuleRequiresDirective;
 import com.github.javaparser.ast.modules.ModuleUsesDirective;
+import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
+import com.github.javaparser.ast.nodeTypes.NodeWithJavadoc;
+import com.github.javaparser.ast.nodeTypes.NodeWithModifiers;
+import com.github.javaparser.ast.nodeTypes.NodeWithType;
 import com.github.javaparser.ast.stmt.AssertStmt;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.BreakStmt;
@@ -121,12 +127,19 @@ import ca.uqac.lif.piglet.find.visitor.PushPopVisitor;
 
 public abstract class AstToRdfVisitor implements PushPopVisitor
 {
+	public static final Property ANNOTATIONS = ResourceFactory.createProperty(ModelBuilder.NS, "annotations");
+	
+	public static final Property NAME = ResourceFactory.createProperty(ModelBuilder.NS, "name");
+	
 	public static final Property IN = ResourceFactory.createProperty(ModelBuilder.NS, "in");
 
-	public static final Property NODETYPE = ResourceFactory.createProperty(ModelBuilder.NS,
-			"nodetype");
+	public static final Property NODETYPE = ResourceFactory.createProperty(ModelBuilder.NS,	"nodetype");
 
 	public static final Property JAVADOC = ResourceFactory.createProperty(ModelBuilder.NS, "javadoc");
+	
+	public static final Property TYPE = ResourceFactory.createProperty(ModelBuilder.NS, "type");
+	
+	public static final Property MODIFIERS = ResourceFactory.createProperty(ModelBuilder.NS, "modifiers");
 
 	/** An index of AST nodes to RDF resources */
 	protected final LazyNodeIndex<Node, String> m_index;
@@ -1665,6 +1678,10 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 			Literal namenode = m_model.createLiteral(n.getClass().getSimpleName());
 			m_model.add(rdf_node, NODETYPE, namenode);
 		}
+		handleJavadoc(n);
+		handleAnnotations(n);
+		handleModifiers(n);
+		handleDeclaredType(n);
 		return true;
 	}
 
@@ -1732,6 +1749,86 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		{
 			// resolution failed
 			return Optional.empty();
+		}
+	}
+	
+	/**
+	 * Handles the Javadoc comment associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	private void handleJavadoc(Node n)
+	{
+		if (!(n instanceof NodeWithJavadoc<?>))
+		{
+			return;
+		}
+		if (n.getComment().isPresent())
+		{
+			String comment = n.getComment().get().getContent();
+			Literal comment_node = m_model.createLiteral(comment);
+			m_model.add(m_parents.peek(), JAVADOC, comment_node);
+		}
+	}
+
+	/**
+	 * Handles the annotations associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	private void handleAnnotations(Node n)
+	{
+		if (!(n instanceof NodeWithAnnotations<?>))
+		{
+			return;
+		}
+		List<AnnotationExpr> annotations = ((NodeWithAnnotations<?>) n).getAnnotations();
+		if (annotations.size() > 0)
+		{
+			Resource ann_node = m_model.createResource();
+			m_model.add(m_parents.peek(), ANNOTATIONS, ann_node);
+			annotations.forEach(a -> {
+				Literal ann_name = m_model.createLiteral(a.getName().asString());
+				m_model.add(ann_node, NAME, ann_name);
+			});
+		}
+	}
+
+	/**
+	 * Handles the modifiers associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	private void handleModifiers(Node n)
+	{
+		if (!(n instanceof NodeWithModifiers<?>))
+		{
+			return;
+		}
+		NodeList<Modifier> modifiers = ((NodeWithModifiers<?>) n).getModifiers();
+		if (modifiers.size() > 0)
+		{
+			Resource mod_node = m_model.createResource();
+			m_model.add(m_parents.peek(), MODIFIERS, mod_node);
+			modifiers.forEach(m -> {
+				Literal mod_name = m_model.createLiteral(m.getKeyword().asString());
+				m_model.add(mod_node, NAME, mod_name);
+			});
+		}
+	}
+	
+	/**
+	 * Handles the declared type associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	private void handleDeclaredType(Node n)
+	{
+		if (!(n instanceof NodeWithType<?,?>))
+		{
+			return;
+		}
+		String type = ((NodeWithType<?,?>)n).getTypeAsString();
+		if (type != null && !type.isEmpty())
+		{
+			Literal type_name = m_model.createLiteral(type);
+			m_model.add(m_parents.peek(), TYPE, type_name);
 		}
 	}
 }

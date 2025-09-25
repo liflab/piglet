@@ -17,22 +17,18 @@
  */
 package ca.uqac.lif.piglet.find.sparql;
 
-import java.util.List;
-
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 
-import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -44,9 +40,6 @@ import com.github.javaparser.ast.expr.NullLiteralExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
-import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
-import com.github.javaparser.ast.nodeTypes.NodeWithJavadoc;
-import com.github.javaparser.ast.nodeTypes.NodeWithModifiers;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.Statement;
@@ -61,21 +54,13 @@ import ca.uqac.lif.piglet.find.visitor.PushPopVisitableNode;
 
 public class JavaAstToRdfVisitor extends AstToRdfVisitor
 {
-	public static final Property NAME = ResourceFactory.createProperty(ModelBuilder.NS, "name");
-
 	public static final Property PARAMETERS = ResourceFactory.createProperty(ModelBuilder.NS, "params");
 
 	public static final Property VALUE = ResourceFactory.createProperty(ModelBuilder.NS, "value");
 
 	public static final Property RETURNS = ResourceFactory.createProperty(ModelBuilder.NS, "returns");
 
-	public static final Property ANNOTATIONS = ResourceFactory.createProperty(ModelBuilder.NS, "annotations");
-
-	public static final Property MODIFIERS = ResourceFactory.createProperty(ModelBuilder.NS, "modifiers");
-
 	public static final Property VARIABLES = ResourceFactory.createProperty(ModelBuilder.NS, "variables");
-
-	public static final Property TYPE = ResourceFactory.createProperty(ModelBuilder.NS, "type");
 
 	public static final Property CONDITION = ResourceFactory.createProperty(ModelBuilder.NS, "condition");
 
@@ -197,7 +182,6 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 				// Ignored
 			}
 		}
-		handleJavadoc(n);
 		stop();
 	}
 
@@ -253,8 +237,6 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 	{
 		if (!genericVisit(n)) { stop(); return; }
 		Resource field_node = m_parents.peek();
-		handleAnnotations(n);
-		handleModifiers(n);
 		NodeList<VariableDeclarator> n_vars = n.getVariables();
 		if (n_vars.size() == 0)
 		{
@@ -375,8 +357,6 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		Resource class_node = m_parents.peek();
 		Literal name_node = m_model.createLiteral(n.getNameAsString());
 		m_model.add(class_node, NAME, name_node);
-		handleAnnotations(n);
-		handleModifiers(n);
 	}				
 
 	@Override
@@ -397,9 +377,6 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		{
 			m_model.add(method_node, NAME, name_node);
 		}
-		handleAnnotations(n);
-		handleModifiers(n);
-		handleJavadoc(n);
 		{
 			// Method parameters
 			NodeList<com.github.javaparser.ast.body.Parameter> params = n.getParameters();
@@ -488,59 +465,5 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 		Literal name_node = m_model.createLiteral(n.getName().asString());
 		m_model.add(m_parents.peek(), NAME, name_node);
 		stop();
-	}
-
-	/**
-	 * Handles the Javadoc comment associated with a node, if any.
-	 * @param n The node to inspect
-	 */
-	protected void handleJavadoc(Node n)
-	{
-		if (!(n instanceof NodeWithJavadoc<?>))
-		{
-			return;
-		}
-		if (n.getComment().isPresent())
-		{
-			String comment = n.getComment().get().getContent();
-			Literal comment_node = m_model.createLiteral(comment);
-			m_model.add(m_parents.peek(), JAVADOC, comment_node);
-		}
-	}
-
-	/**
-	 * Handles the annotations associated with a node, if any.
-	 * @param n The node to inspect
-	 */
-	protected void handleAnnotations(NodeWithAnnotations<?> n)
-	{
-		List<AnnotationExpr> annotations = n.getAnnotations();
-		if (annotations.size() > 0)
-		{
-			Resource ann_node = m_model.createResource();
-			m_model.add(m_parents.peek(), ANNOTATIONS, ann_node);
-			annotations.forEach(a -> {
-				Literal ann_name = m_model.createLiteral(a.getName().asString());
-				m_model.add(ann_node, NAME, ann_name);
-			});
-		}
-	}
-
-	/**
-	 * Handles the modifiers associated with a node, if any.
-	 * @param n The node to inspect
-	 */
-	protected void handleModifiers(NodeWithModifiers<?> n)
-	{
-		NodeList<Modifier> modifiers = n.getModifiers();
-		if (modifiers.size() > 0)
-		{
-			Resource mod_node = m_model.createResource();
-			m_model.add(m_parents.peek(), MODIFIERS, mod_node);
-			modifiers.forEach(m -> {
-				Literal mod_name = m_model.createLiteral(m.getKeyword().asString());
-				m_model.add(mod_node, NAME, mod_name);
-			});
-		}
 	}
 }
