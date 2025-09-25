@@ -124,7 +124,30 @@ public abstract class Report
 
 		public Report get(String key)
 		{
-			return m_map.get(key);
+			return get(key.split(PATH_SEPARATOR));
+		}
+		
+		protected Report get(String[] parts)
+		{
+			if (parts.length > 1)
+			{
+				if (m_map.containsKey(parts[0]))
+				{
+					Report r = m_map.get(parts[0]);
+					if (!(r instanceof MapReport))
+					{
+						return null;
+					}
+					return ((MapReport) r).get(Arrays.copyOfRange(parts, 1, parts.length));
+				}
+				return null;
+			}
+			// We are at the end of the path
+			if (m_map.containsKey(parts[0]))
+			{
+				return m_map.get(parts[0]);
+			}
+			return null;
 		}
 
 		public void put(String key, Report value)

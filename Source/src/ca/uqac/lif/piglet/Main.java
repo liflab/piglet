@@ -332,6 +332,12 @@ public class Main
 					new PrintStream(hd.writeTo(getFilename(analysis.getOutputFile())), true, "UTF-8"));
 			reporter.report(reverse_path, categorized);
 			hd.close();
+			hd = new HardDisk(analysis.getHomePath().toString()).open();
+			if (!hd.isDirectory(analysis.getCacheFolder()))
+			{
+				hd.mkdir(analysis.getCacheFolder());
+			}
+			hd.close();
 			hd = new HardDisk(analysis.getCacheFolder()).open();
 			serializeResults(hd, analysis, categorized);
 			hd.close();
@@ -368,7 +374,7 @@ public class Main
 			{
 				fs.mkdir(project);
 			}
-			fs.pushd(project);
+			//fs.pushd(project);
 			MapReport entries = (MapReport) r.get(project);
 			for (TokenFinderFactory tf : a.getAstFinders())
 			{
@@ -387,7 +393,7 @@ public class Main
 				to_serialize.add(tf.getId());
 				to_serialize.add(list);
 				String s = xp.print(to_serialize).toString();
-				FileUtils.writeStringTo(fs, s, tf.getName() + ".json");
+				FileUtils.writeStringTo(fs, s, tf.getCacheFileName(project));
 			}
 			for (TokenFinderFactory tf : a.getSparqlFinders())
 			{
@@ -402,10 +408,13 @@ public class Main
 					list = new java.util.ArrayList<>();
 				}
 				JsonPrinter xp = new JsonPrinter();
-				String s = xp.print(list).toString();
-				FileUtils.writeStringTo(fs, s, tf.getName() + ".json");
+				List<Object> to_serialize = new java.util.ArrayList<>();
+				to_serialize.add(tf.getId());
+				to_serialize.add(list);
+				String s = xp.print(to_serialize).toString();
+				FileUtils.writeStringTo(fs, s, tf.getCacheFileName(project));
 			}
-			fs.popd();
+			//fs.popd();
 		}
 	}
 

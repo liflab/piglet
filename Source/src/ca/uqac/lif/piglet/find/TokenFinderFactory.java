@@ -56,9 +56,9 @@ public abstract class TokenFinderFactory
 	 * Gets the name of this finder.
 	 * @return The name of this finder
 	 */
-	public String getName()
+	public final String getName()
 	{
-		return escape(m_name);
+		return m_name;
 	}
 	
 	/**
@@ -100,6 +100,7 @@ public abstract class TokenFinderFactory
 				List<FoundToken> f = (List<FoundToken>) l.get(1);
 				if (!hash.equals(getId()))
 				{
+					System.err.println("Warning: cache file for finder \"" + m_name + "\" is outdated");
 					return null;
 				}
 				return f;
@@ -119,7 +120,7 @@ public abstract class TokenFinderFactory
 	 * @param project The name of the project being analyzed
 	 * @return The name of the cache file
 	 */
-	protected String getCacheFileName(String project)
+	public String getCacheFileName(String project)
 	{
 		return project + "/" + escape(m_name) + ".json";
 	}
