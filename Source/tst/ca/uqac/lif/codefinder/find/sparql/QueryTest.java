@@ -188,7 +188,7 @@ public class QueryTest
 		String code = new String(FileUtils.toBytes(QueryTest.class.getResourceAsStream(path)));
 		ParseResult<CompilationUnit> res = parser.parse(code);
 		PushPopVisitableNode ppn = new PushPopVisitableNode(res.getResult().get());
-		ModelBuilderResult r = ModelBuilder.buildModel(ppn, 0, null);
+		ModelBuilderResult r = ModelBuilder.buildModel(ppn, 0, null, path);
 		return r;
 	}
 }

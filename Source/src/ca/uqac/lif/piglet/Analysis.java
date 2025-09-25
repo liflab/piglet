@@ -49,9 +49,9 @@ import ca.uqac.lif.piglet.find.visitor.VisitorAssertionFinderCallable;
 import ca.uqac.lif.piglet.find.visitor.VisitorAssertionFinderFactory;
 import ca.uqac.lif.piglet.provider.FileProvider;
 import ca.uqac.lif.piglet.provider.FileSource;
-import ca.uqac.lif.piglet.util.AnsiPrinter;
 import ca.uqac.lif.piglet.util.Paths;
 import ca.uqac.lif.piglet.util.StatusCallback;
+import ca.uqac.lif.util.AnsiPrinter;
 import ca.uqac.lif.util.CliParser;
 import ca.uqac.lif.util.CliParser.Argument;
 import ca.uqac.lif.util.CliParser.ArgumentMap;
@@ -148,6 +148,8 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Set the project name (used for caching)"));
 		cli.addArgument(new Argument().withShortName("i").withLongName("ignore").withArgument("filespec")
 				.withDescription("Ignore files"));
+		cli.addArgument(new Argument().withShortName("1").withLongName("halt-on-first")
+				.withDescription("Halt on first match"));
 		return cli;
 	}
 
@@ -162,6 +164,10 @@ public class Analysis implements Comparable<Analysis>
 		if (map.containsKey("profile"))
 		{
 			readProfile(cli, a, map.getOptionValue("profile"));
+		}
+		if (map.containsKey("halt-on-first"))
+		{
+			a.m_haltOnFirst = true;
 		}
 		a.setCache(!map.containsKey("no-cache"));
 		if (map.containsKey("project"))
@@ -222,7 +228,7 @@ public class Analysis implements Comparable<Analysis>
 		}
 		if (map.containsKey("follow"))
 		{
-			a.setFollow(Integer.parseInt(map.getOptionValue("output").trim()));
+			a.setFollow(Integer.parseInt(map.getOptionValue("follow").trim()));
 		}
 		if (map.containsKey("source"))
 		{
@@ -355,11 +361,15 @@ public class Analysis implements Comparable<Analysis>
 	 */
 	protected final FilePath m_homePath = new FilePath(System.getProperty("user.dir"));
 
-
 	/**
 	 * Whether to cache analysis results
 	 */
 	protected boolean m_cache = true;
+	
+	/**
+	 * Whether to halt on first match.
+	 */
+	protected boolean m_haltOnFirst = false;
 
 	/**
 	 * The name of the folder to use for caching

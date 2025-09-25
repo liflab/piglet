@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.HardDisk;
-import ca.uqac.lif.piglet.util.CommandRunner;
+import ca.uqac.lif.util.CommandRunner;
 
 public class GitRepositoryProvider extends FileSystemProvider
 {

@@ -1,5 +1,6 @@
 package ca.uqac.lif.piglet.find.sparql;
 
+import java.util.Optional;
 import java.util.Stack;
 
 import org.apache.jena.rdf.model.Literal;
@@ -111,6 +112,8 @@ import com.github.javaparser.ast.type.UnknownType;
 import com.github.javaparser.ast.type.VarType;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.type.WildcardType;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserMethodDeclaration;
 
 import ca.uqac.lif.piglet.find.TokenFinderContext;
 import ca.uqac.lif.piglet.find.visitor.PushPopVisitableNode;
@@ -120,8 +123,9 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 {
 	public static final Property IN = ResourceFactory.createProperty(ModelBuilder.NS, "in");
 
-	public static final Property NODETYPE = ResourceFactory.createProperty(ModelBuilder.NS, "nodetype");
-	
+	public static final Property NODETYPE = ResourceFactory.createProperty(ModelBuilder.NS,
+			"nodetype");
+
 	public static final Property JAVADOC = ResourceFactory.createProperty(ModelBuilder.NS, "javadoc");
 
 	/** An index of AST nodes to RDF resources */
@@ -130,29 +134,39 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	/** The RDF model being built */
 	protected final Model m_model;
 
+	/** A stack of parent RDF resources */
 	protected final Stack<Resource> m_parents = new Stack<>();
 
+	/** The root of the AST in RDF */
 	protected Resource m_root = null;
-	
+
+	/** Whether the visitor should stop */
 	protected boolean m_shouldStop = false;
-	
+
+	/** How many levels of class declarations to follow */
 	protected final int m_follow;
-	
+
+	/** The context in which the token finder operates */
 	protected final TokenFinderContext m_context;
+
+	/** The name of the file being processed */
+	protected final String m_filename;
 
 	/**
 	 * Creates a new visitor.
 	 */
-	public AstToRdfVisitor(int follow, TokenFinderContext context)
+	public AstToRdfVisitor(int follow, TokenFinderContext context, String filename)
 	{
 		super();
 		m_follow = follow;
 		m_index = new JavaAstNodeIndex();
 		m_model = ModelFactory.createDefaultModel();
 		m_context = context;
+		m_filename = filename;
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Node,String> index, Resource parent, int follow, TokenFinderContext context)
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Node, String> index, Resource parent, int follow,
+			TokenFinderContext context, String filename)
 	{
 		super();
 		m_context = context;
@@ -163,24 +177,42 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		{
 			m_parents.push(parent);
 		}
+		m_filename = filename;
 	}
 
-	protected AstToRdfVisitor(Model m, LazyNodeIndex<Node,String> index, int follow, TokenFinderContext context)
+	/**
+	 * Creates a new visitor.
+	 * 
+	 * @param m
+	 *          The RDF model to populate
+	 * @param index
+	 *          The index of AST nodes to RDF resources
+	 * @param follow
+	 *          How many levels of class declarations to follow
+	 * @param context
+	 *          The context in which the token finder operates
+	 * @param filename
+	 *          The name of the file being processed
+	 */
+	protected AstToRdfVisitor(Model m, LazyNodeIndex<Node, String> index, int follow,
+			TokenFinderContext context, String filename)
 	{
-		this(m, index, null, follow, context);
+		this(m, index, null, follow, context, filename);
 	}
 
 	/**
 	 * Gets the index of AST nodes to RDF resources.
+	 * 
 	 * @return The index
 	 */
-	public LazyNodeIndex<Node,String> getIndex()
+	public LazyNodeIndex<Node, String> getIndex()
 	{
 		return m_index;
 	}
 
 	/**
 	 * Gets the RDF model being built.
+	 * 
 	 * @return The RDF model
 	 */
 	public Model getModel()
@@ -192,463 +224,463 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	public void leave(@SuppressWarnings("rawtypes") NodeList n)
 	{
 		// Assume this does not happen
-		//genericleave(n);
-		
+		// genericleave(n);
+
 	}
 
 	@Override
 	public void leave(AnnotationDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(AnnotationMemberDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ArrayAccessExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ArrayCreationExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ArrayCreationLevel n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ArrayInitializerExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ArrayType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(AssertStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(AssignExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(BinaryExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(BlockComment n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(BlockStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(BooleanLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(BreakStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(CastExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(CatchClause n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(CharLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ClassExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ClassOrInterfaceDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ClassOrInterfaceType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(CompilationUnit n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ConditionalExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ConstructorDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ContinueStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(DoStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(DoubleLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(EmptyStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(EnclosedExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(EnumConstantDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(EnumDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ExplicitConstructorInvocationStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ExpressionStmt n)
 	{
 		// Do not create nodes for ExpressionStmt, they are just containers
-		//genericleave(n);
+		// genericleave(n);
 	}
 
 	@Override
 	public void leave(FieldAccessExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(FieldDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ForStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ForEachStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(IfStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ImportDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(InitializerDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(InstanceOfExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(IntegerLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(IntersectionType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(JavadocComment n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(LabeledStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(LambdaExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(LineComment n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(LocalClassDeclarationStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(LocalRecordDeclarationStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(LongLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(MarkerAnnotationExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(MemberValuePair n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(MethodCallExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(MethodDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(MethodReferenceExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(NameExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(Name n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(NormalAnnotationExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(NullLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ObjectCreationExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(PackageDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(Parameter n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(PrimitiveType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(RecordDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(CompactConstructorDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ReturnStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
@@ -656,709 +688,709 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	{
 		// By design, we ignore SimpleName nodes; those that are relevant
 		// are handled in their parent nodes
-		//genericleave(n);
-		
+		// genericleave(n);
+
 	}
 
 	@Override
 	public void leave(SingleMemberAnnotationExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(StringLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(SuperExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(SwitchEntry n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(SwitchStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(SynchronizedStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ThisExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ThrowStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(TryStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(TypeExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(TypeParameter n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(UnaryExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(UnionType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(UnknownType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(VariableDeclarationExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(VariableDeclarator n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(VoidType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(WhileStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(WildcardType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ModuleDeclaration n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ModuleRequiresDirective n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ModuleExportsDirective n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ModuleProvidesDirective n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ModuleUsesDirective n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ModuleOpensDirective n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(UnparsableStmt n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(ReceiverParameter n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(VarType n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(Modifier n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(SwitchExpr switchExpr)
 	{
 		genericleave(switchExpr);
-		
+
 	}
 
 	@Override
 	public void leave(TextBlockLiteralExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(YieldStmt yieldStmt)
 	{
 		genericleave(yieldStmt);
-		
+
 	}
 
 	@Override
 	public void leave(TypePatternExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void leave(RecordPatternExpr n)
 	{
 		genericleave(n);
-		
+
 	}
 
 	@Override
 	public void visit(@SuppressWarnings("rawtypes") NodeList n)
 	{
 		// Assume this does not happen
-		//genericvisit(n);
-		
+		// genericvisit(n);
+
 	}
 
 	@Override
 	public void visit(AnnotationDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(AnnotationMemberDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ArrayAccessExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ArrayCreationExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ArrayCreationLevel n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ArrayInitializerExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ArrayType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(AssertStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(AssignExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(BinaryExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(BlockComment n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(BlockStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(BooleanLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(BreakStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(CastExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(CatchClause n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(CharLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ClassExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ClassOrInterfaceType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(CompilationUnit n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ConditionalExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ConstructorDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ContinueStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(DoStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(DoubleLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(EmptyStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(EnclosedExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(EnumConstantDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(EnumDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ExplicitConstructorInvocationStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ExpressionStmt n)
 	{
 		// Do not create nodes for ExpressionStmt, they are just containers
-		//genericvisit(n);
+		// genericvisit(n);
 	}
 
 	@Override
 	public void visit(FieldAccessExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(FieldDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ForStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ForEachStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(IfStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ImportDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(InitializerDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(InstanceOfExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(IntegerLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(IntersectionType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(JavadocComment n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(LabeledStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(LambdaExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(LineComment n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(LocalClassDeclarationStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(LocalRecordDeclarationStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(LongLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(MarkerAnnotationExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(MemberValuePair n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(MethodCallExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(MethodDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(MethodReferenceExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(NameExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(Name n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(NormalAnnotationExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(NullLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ObjectCreationExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(PackageDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(Parameter n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(PrimitiveType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(RecordDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(CompactConstructorDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ReturnStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
@@ -1366,250 +1398,255 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	{
 		// By design, we ignore SimpleName nodes; those that are relevant
 		// are handled in their parent nodes
-		//genericvisit(n);
-		
+		// genericvisit(n);
 	}
 
 	@Override
 	public void visit(SingleMemberAnnotationExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(StringLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(SuperExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(SwitchEntry n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(SwitchStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(SynchronizedStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ThisExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ThrowStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(TryStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(TypeExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(TypeParameter n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(UnaryExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(UnionType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(UnknownType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(VariableDeclarationExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(VariableDeclarator n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(VoidType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(WhileStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(WildcardType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ModuleDeclaration n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ModuleRequiresDirective n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ModuleExportsDirective n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ModuleProvidesDirective n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ModuleUsesDirective n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ModuleOpensDirective n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(UnparsableStmt n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(ReceiverParameter n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(VarType n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(Modifier n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(SwitchExpr switchExpr)
 	{
-		genericVisit(switchExpr);
-		
+		if (!genericVisit(switchExpr))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(TextBlockLiteralExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(YieldStmt yieldStmt)
 	{
-		genericVisit(yieldStmt);
-		
+		if (!genericVisit(yieldStmt))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(TypePatternExpr n)
 	{
-		genericVisit(n);
-		
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
 	@Override
 	public void visit(RecordPatternExpr n)
 	{
-		genericVisit(n);
+		if (!genericVisit(n))
+			m_shouldStop = true;
 	}
 
-	protected void genericVisit(Node n)
+	protected boolean genericVisit(Node n)
 	{
-		String iri = AstIds.iriFor("", n);
+		String iri = AstIds.iriFor(m_filename, n);
+		if (m_index.containsIri(iri))
+		{
+			// Node already visited
+			return false;
+		}
 		Resource rdf_node = m_model.createResource(iri);
 		Resource rdf_parent = m_parents.isEmpty() ? null : m_parents.peek();
 		// If this is the first node, set it as root
@@ -1627,6 +1664,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 			Literal namenode = m_model.createLiteral(n.getClass().getSimpleName());
 			m_model.add(rdf_node, NODETYPE, namenode);
 		}
+		return true;
 	}
 
 	protected void genericleave(Node n)
@@ -1646,22 +1684,53 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	public void leave(PushPopVisitableNode n)
 	{
 	}
-	
+
 	@Override
 	public boolean shouldStop()
 	{
 		return m_shouldStop;
 	}
-	
+
 	@Override
 	public void stop()
-  {
+	{
 		m_shouldStop = true;
-  }
-	
+	}
+
 	@Override
 	public void reset()
 	{
 		m_shouldStop = false;
+	}
+
+	/**
+	 * Attempts to find the source file in which a method call expression is declared.
+	 * @param callExpr The method call expression
+	 * @return An optional containing the file name if found, or an empty optional
+	 * otherwise
+	 */
+	protected static Optional<String> getDeclaringFileName(MethodCallExpr callExpr)
+	{
+		try
+		{
+			ResolvedMethodDeclaration rmd = callExpr.resolve();
+			if (rmd instanceof JavaParserMethodDeclaration)
+			{
+				JavaParserMethodDeclaration jpmd = (JavaParserMethodDeclaration) rmd;
+				MethodDeclaration md = jpmd.getWrappedNode();
+				return md.findCompilationUnit().flatMap(CompilationUnit::getStorage)
+						.map(storage -> storage.getPath().toString());
+			}
+			else
+			{
+				// method comes from JDK / library; no source file available
+				return Optional.empty();
+			}
+		}
+		catch (Exception e)
+		{
+			// resolution failed
+			return Optional.empty();
+		}
 	}
 }

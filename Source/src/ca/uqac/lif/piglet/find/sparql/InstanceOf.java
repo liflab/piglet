@@ -9,7 +9,6 @@ import org.apache.jena.sparql.util.IterLib;
 
 import com.github.javaparser.resolution.TypeSolver;
 
-import ca.uqac.lif.piglet.util.TypeChecks;
 import ca.uqac.lif.piglet.util.TypeRdf;
 
 /**

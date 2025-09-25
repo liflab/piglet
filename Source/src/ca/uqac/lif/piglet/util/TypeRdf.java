@@ -45,7 +45,7 @@ public final class TypeRdf
 	 */
 	public static String resolveTypeToString(Object symbolOrType, TypeSolver ts)
 	{
-		configure(ts);
+		//configure(ts);
 		try
 		{
 			ResolvedType rt = toResolvedType(symbolOrType, ts);
@@ -60,7 +60,7 @@ public final class TypeRdf
 	/** Generic-aware: returns true iff subSig <: superSig (assignable to). */
 	public static boolean isSubtypeOf(String subSig, String superSig, TypeSolver ts)
 	{
-		configure(ts);
+		//configure(ts);
 
 		try
 		{

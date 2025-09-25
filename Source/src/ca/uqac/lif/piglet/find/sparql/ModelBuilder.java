@@ -24,14 +24,19 @@ import com.github.javaparser.ast.Node;
 import ca.uqac.lif.piglet.find.TokenFinderContext;
 import ca.uqac.lif.piglet.find.visitor.PushPopVisitableNode;
 
+/**
+ * A utility class to build an RDF model from a Java AST.
+ * It uses the {@link JavaAstToRdfVisitor} to traverse the AST and populate
+ * the model.
+ */
 public class ModelBuilder
 {
 	/** Namespace for the vocabulary */
 	public static final String NS = "http://liflab.uqac.ca/codefinder#";
 
-	public static ModelBuilderResult buildModel(PushPopVisitableNode n, int follow, TokenFinderContext context)
+	public static ModelBuilderResult buildModel(PushPopVisitableNode n, int follow, TokenFinderContext context, String filename)
 	{
-		JavaAstToRdfVisitor visitor = new JavaAstToRdfVisitor(follow, context);
+		JavaAstToRdfVisitor visitor = new JavaAstToRdfVisitor(follow, context, filename);
 		n.accept(visitor);
 		return new ModelBuilderResult(visitor.getModel(), visitor.getIndex());
 	}

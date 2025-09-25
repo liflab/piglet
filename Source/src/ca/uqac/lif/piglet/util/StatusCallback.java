@@ -19,7 +19,8 @@ package ca.uqac.lif.piglet.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ca.uqac.lif.piglet.util.AnsiPrinter.Color;
+import ca.uqac.lif.util.AnsiPrinter;
+import ca.uqac.lif.util.AnsiPrinter.Color;
 
 /**
  * A callback to report status of a long operation in the console.

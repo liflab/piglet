@@ -15,39 +15,17 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ca.uqac.lif.piglet.find.sparql;
+package ca.uqac.lif.util;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-public class LazyNodeIndex<T,U>
+/**
+ * An object providing time in milliseconds.
+ * @author Sylvain Hallé
+ */
+public interface Clock
 {
-	Map<String, T> nodesByIri = new ConcurrentHashMap<>();
-	Map<String, U> typeCache = new ConcurrentHashMap<>(); // iri -> type IRI
-	
-	public void put(String iri, T node)
-	{
-		nodesByIri.put(iri, node);
-	}
-	
-	public T get(String iri)
-	{
-		return nodesByIri.get(iri);
-	}
-	
-	public Set<String> allIris()
-	{
-		return nodesByIri.keySet();
-	}
-	
 	/**
-	 * Determines whether the index contains a node with the given IRI.
-	 * @param key The IRI to look for
-	 * @return true if the index contains a node with the given IRI, false otherwise
+	 * Gets the clock's current displayed time.
+	 * @return The time in milliseconds
 	 */
-	public boolean containsIri(String key)
-	{
-		return nodesByIri.containsKey(key);
-	}
+	public long getCurrentTimeMillis();
 }

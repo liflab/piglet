@@ -61,10 +61,10 @@ import ca.uqac.lif.piglet.report.Report;
 import ca.uqac.lif.piglet.report.Report.MapReport;
 import ca.uqac.lif.piglet.report.Report.ObjectReport;
 import ca.uqac.lif.piglet.report.Reporter.ReporterException;
-import ca.uqac.lif.piglet.util.AnsiPrinter;
 import ca.uqac.lif.piglet.util.Solvers;
 import ca.uqac.lif.piglet.util.StatusCallback;
 import ca.uqac.lif.piglet.util.Terminal;
+import ca.uqac.lif.util.AnsiPrinter;
 import ca.uqac.lif.util.CliParser;
 
 /**

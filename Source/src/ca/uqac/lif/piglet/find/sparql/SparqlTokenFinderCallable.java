@@ -97,7 +97,7 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			//System.out.println("Building model");
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
-			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context);	    
+			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context, file);	    
 			LazyNodeIndex<Node,String> globalAstIndex = r.getIndex();
 			//System.out.println("Running finders");
 			for (SparqlTokenFinderFactory fac : localFinders)

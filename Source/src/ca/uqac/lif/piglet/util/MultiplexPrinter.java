@@ -3,6 +3,7 @@ package ca.uqac.lif.piglet.util;
 import java.util.IdentityHashMap;
 
 import ca.uqac.lif.piglet.Analysis;
+import ca.uqac.lif.util.AnsiPrinter;
 
 public class MultiplexPrinter
 {

@@ -25,8 +25,8 @@ import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.piglet.report.Report.MapReport;
 import ca.uqac.lif.piglet.report.Report.ObjectReport;
-import ca.uqac.lif.piglet.util.AnsiPrinter;
-import ca.uqac.lif.piglet.util.AnsiPrinter.Color;
+import ca.uqac.lif.util.AnsiPrinter;
+import ca.uqac.lif.util.AnsiPrinter.Color;
 
 public class CliReporter implements Reporter
 {
