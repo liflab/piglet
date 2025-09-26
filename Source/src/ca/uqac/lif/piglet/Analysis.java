@@ -553,6 +553,16 @@ public class Analysis implements Comparable<Analysis>
 	{
 		this.m_quiet = quiet;
 	}
+	
+	/**
+	 * Determines if a finder has cached results.
+	 * @param name The name of the finder
+	 * @return true if the finder has cached results, false otherwise
+	 */
+	public boolean isCached(String name)
+	{
+		return m_cachedFinders.stream().anyMatch(f -> f.getName().equals(name));
+	}
 
 	public String[] getRoots()
 	{

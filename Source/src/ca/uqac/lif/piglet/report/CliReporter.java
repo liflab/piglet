@@ -48,7 +48,7 @@ public class CliReporter implements Reporter
 		switch (level)
 		{
 			case 0:
-				m_out.setForegroundColor(Color.PURPLE);
+				m_out.setForegroundColor(Color.LIGHT_PURPLE);
 				m_out.underline();
 				break;
 			case 1:
@@ -81,6 +81,7 @@ public class CliReporter implements Reporter
 		{
 			String key = e.getKey();
 			Report value = e.getValue();
+			m_out.clearLine();
 			setTitle(level);
 			m_out.print(indent);
 			if (level > 0)

@@ -118,6 +118,10 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 	@Override
 	public final CallableFuture call()
 	{
+		if (m_callback != null)
+		{
+			m_callback.setCurrentProject(m_project);
+		}
 		TokenFinderContext context = Main.CTX.get();
 		InputStream is;
 		String code = "";

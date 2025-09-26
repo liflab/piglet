@@ -45,6 +45,9 @@ public class StatusCallback implements Runnable
 	/** The start time of the operation */
 	protected long m_startTime = 0;
 	
+	/** The current project being processed */
+	protected String m_currentProject = "";
+	
 	/**
 	 * Creates a new status callback.
 	 * @param out The output printer
@@ -88,6 +91,15 @@ public class StatusCallback implements Runnable
 		}
 	}
 	
+	/**
+	 * Sets the name of the current project being processed.
+	 * @param project The name of the project
+	 */
+	public void setCurrentProject(String project)
+	{
+		m_currentProject = project;
+	}
+	
 	public void cleanup()
 	{
 		m_out.moveBeginningLine().clearLine().moveStartLastLine().clearLine();
@@ -116,6 +128,10 @@ public class StatusCallback implements Runnable
 	{
 		int timeouts = m_resolutionTimeouts.get();
 		m_out.clearLine();
+		m_out.print("Project: ");
+		m_out.fg(Color.LIGHT_PURPLE);
+		m_out.print(AnsiPrinter.padToLength(m_currentProject, 16, true) + " ");
+		m_out.resetColors();
 		m_out.println("Timeouts: " + String.format("%3d", timeouts) + " ");
 		int done = m_currentlyDone.get();
 		m_out.clearLine();

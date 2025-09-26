@@ -26,7 +26,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
@@ -81,6 +83,10 @@ import ca.uqac.lif.util.CliParser;
  */
 public class Main
 {
+	//Per-project snapshot of found tokens
+	private static final Map<String, Set<FoundToken>> PER_PROJECT =
+			Collections.synchronizedMap(new LinkedHashMap<>());
+
 	/**
 	 * Return code indicating "no return"
 	 */
@@ -115,7 +121,7 @@ public class Main
 	 * Return code indicating an unclassified error
 	 */
 	public static final int RET_OTHER = 5;
-	
+
 	/**
 	 * Return code indicating a timeout
 	 */
@@ -207,6 +213,7 @@ public class Main
 			try
 			{
 				s_stderr.println();
+				s_stderr.clearLine();
 				s_stderr.bg(Color.RED).fg(Color.WHITE);
 				s_stderr.println("Interrupted: harvesting completed tasks and generating partial results...");
 				s_stderr.resetColors();
@@ -239,6 +246,12 @@ public class Main
 						}
 					}
 				}
+				Analysis an = CURRENT_ANALYSIS;
+				if (an != null) {
+				  synchronized (found) {
+				    PER_PROJECT.put(an.getProjectName(), new TreeSet<>(found));
+				  }
+				}
 
 				// 3) Same finalization path as normal completion
 				MapReport global = new MapReport();
@@ -267,14 +280,19 @@ public class Main
 			}
 		}, "piglet-shutdown");
 		Runtime.getRuntime().addShutdownHook(printingHook);
-		for (Analysis a : analyses)
-		{
-			int ret = runAnalysis(a);
-			if (ret != RET_OK)
-			{
-				return ret;
-			}
+		for (Analysis a : analyses) {
+		  // Start this analysis with a clean bag
+		  synchronized (found) { found.clear(); }
+
+		  int ret = runAnalysis(a);
+		  if (ret != RET_OK) return ret;
+
+		  // Snapshot results for THIS project
+		  synchronized (found) {
+		    PER_PROJECT.put(a.getProjectName(), new TreeSet<>(found));
+		  }
 		}
+
 		// Remove the shutdown hook, we are done
 		Runtime.getRuntime().removeShutdownHook(printingHook);
 		MapReport global = new MapReport();
@@ -516,6 +534,11 @@ public class Main
 			MapReport entries = (MapReport) r.get(project);
 			for (TokenFinderFactory tf : a.getAstFinders())
 			{
+				if (a.m_cache && a.isCached(tf.getName()))
+				{
+					// Already cached, skip
+					continue;
+				}
 				ObjectReport or = (ObjectReport) entries.get(tf.getName());
 				List<FoundToken> list = null;
 				if (or != null)
@@ -535,6 +558,11 @@ public class Main
 			}
 			for (TokenFinderFactory tf : a.getSparqlFinders())
 			{
+				if (a.m_cache && a.isCached(tf.getName()))
+				{
+					// Already cached, skip
+					continue;
+				}
 				ObjectReport or = (ObjectReport) entries.get(tf.getName());
 				List<FoundToken> list = null;
 				if (or != null)
@@ -754,9 +782,10 @@ public class Main
 		{
 			for (Analysis analysis : analyses)
 			{
+		    Set<FoundToken> per = PER_PROJECT.getOrDefault(analysis.getProjectName(), Collections.emptySet());
 				try
 				{
-					finish(new Report.MapReport(), global, analysis, found);
+					finish(new Report.MapReport(), global, analysis, per);
 				}
 				catch (IOException | PrintException e)
 				{
