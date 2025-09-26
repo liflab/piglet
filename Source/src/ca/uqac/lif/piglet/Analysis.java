@@ -146,6 +146,8 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Do not reuse cached analysis results"));
 		cli.addArgument(new Argument().withShortName("p").withLongName("project").withArgument("name")
 				.withDescription("Set the project name (used for caching)"));
+		cli.addArgument(new Argument().withShortName("f").withLongName("force-cache")
+				.withDescription("Skips the cache integrity check (use with care!)"));
 		cli.addArgument(new Argument().withShortName("i").withLongName("ignore").withArgument("filespec")
 				.withDescription("Ignore files"));
 		cli.addArgument(new Argument().withShortName("1").withLongName("halt-on-first")
@@ -170,6 +172,10 @@ public class Analysis implements Comparable<Analysis>
 			a.m_haltOnFirst = true;
 		}
 		a.setCache(!map.containsKey("no-cache"));
+		if (map.containsKey("force-cache"))
+		{
+			a.m_forceCache = true;
+		}
 		if (map.containsKey("project"))
 		{
 			a.setProjectName(map.getOptionValue("project"));
@@ -391,6 +397,11 @@ public class Analysis implements Comparable<Analysis>
 	 * The set of assertion finders with cached results
 	 */
 	protected Set<TokenFinderFactory> m_cachedFinders = new HashSet<>();
+	
+	/**
+	 * Whether to skip the cache integrity check (use with care!)
+	 */
+	protected boolean m_forceCache = false;
 
 	/**
 	 * Printer for standard output
@@ -704,7 +715,7 @@ public class Analysis implements Comparable<Analysis>
 					if (f.isCached(hd, m_projectName))
 					{
 						// Verify cache integrity by trying to read it
-						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName);
+						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName, m_forceCache);
 						if (cached_tokens == null)
 						{
 							// Cache is corrupt, ignore it
@@ -727,7 +738,7 @@ public class Analysis implements Comparable<Analysis>
 					if (f.isCached(hd, m_projectName))
 					{
 						// Verify cache integrity by trying to read it
-						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName);
+						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName, m_forceCache);
 						if (cached_tokens == null)
 						{
 							// Cache is corrupt, ignore it
