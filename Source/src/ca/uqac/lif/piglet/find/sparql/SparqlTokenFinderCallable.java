@@ -17,9 +17,7 @@
  */
 package ca.uqac.lif.piglet.find.sparql;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -101,11 +99,17 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
 			//System.out.println("Building model");
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
-			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context, file);	    
+			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context, file);
+			if(Thread.currentThread().isInterrupted()) { 
+				return found;
+			}
 			LazyNodeIndex<Node,String> globalAstIndex = r.getIndex();
 			//System.out.println("Running finders");
 			for (SparqlTokenFinderFactory fac : localFinders)
 			{
+				if(Thread.currentThread().isInterrupted()) { 
+					return found;
+				}
 				SparqlTokenFinder f = fac.newFinder();
 				//System.out.println("Using finder " + f.getName());
 				f.setModel(r.getModel());
@@ -129,25 +133,6 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 			}
 		}
 		return found;
-	}
-
-	/**
-	 * Gets the list of test cases in a compilation unit.
-	 * @param u The compilation unit
-	 * @return The list of test cases
-	 */
-	protected static List<MethodDeclaration> getTestCases(CompilationUnit u)
-	{
-		List<MethodDeclaration> list = new ArrayList<MethodDeclaration>();
-		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
-		for (MethodDeclaration m : methods)
-		{
-			//if (isTest(m))
-			{
-				list.add(m);
-			}
-		}
-		return list;
 	}
 
 	/**

@@ -162,8 +162,14 @@ public class SparqlTokenFinder implements TokenFinder
 		local.put(IO, uri -> new InstanceOf(m_context.getTypeSolver()));
 		ctx.set(ARQConstants.registryPropertyFunctions, local);
 		ResultSet resultSet1 = qe.execSelect();
+		if(Thread.currentThread().isInterrupted()) { 
+			return;
+		}
 		while (resultSet1.hasNext())
 		{
+			if(Thread.currentThread().isInterrupted()) { 
+				return;
+			}
 			QuerySolution soln = resultSet1.next();
 			Resource n = soln.getResource("n");
 			String iri = n.getURI();

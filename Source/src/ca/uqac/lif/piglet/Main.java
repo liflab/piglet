@@ -52,6 +52,7 @@ import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.piglet.Analysis.AnalysisCliException;
 import ca.uqac.lif.piglet.find.FoundToken;
+import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderContext;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
 import ca.uqac.lif.piglet.find.TokenFinderCallable.CallableFuture;
@@ -126,11 +127,6 @@ public class Main
 	 * Thread-local context (parser, type solver, etc.)
 	 */
 	public static ThreadLocal<TokenFinderContext> CTX;
-
-	/**
-	 * Default timeout for task execution, in seconds
-	 */
-	public static final long DEFAULT_TIMEOUT = 15;
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -273,8 +269,17 @@ public class Main
 		status_thread.start();
 		try
 		{
-			List<Future<CallableFuture>> futures = analysis.processBatch(executor, fsp, found);
-			waitForEnd(status, analysis, futures, found);
+			Set<TokenFinderCallable> tasks = analysis.processBatch(fsp, found);
+			List<Future<CallableFuture>> futures;
+			if (analysis.m_globalTimeout > 0)
+			{
+				futures = executor.invokeAll(tasks, analysis.m_globalTimeout, TimeUnit.SECONDS);
+			}
+			else
+			{
+				futures = executor.invokeAll(tasks);
+			}
+			waitForEnd(analysis, futures, found);
 			executor.shutdown();
 		}
 		catch (IOException e)
@@ -291,10 +296,10 @@ public class Main
 		}
 		try
 		{
-			if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
+			if (!executor.awaitTermination(analysis.m_fileTimeout, TimeUnit.SECONDS))
 			{
 				executor.shutdownNow();
-				if (!executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS))
+				if (!executor.awaitTermination(analysis.m_fileTimeout, TimeUnit.SECONDS))
 				{
 					s_stderr.println("Cannot terminate process");
 				}
@@ -541,7 +546,7 @@ public class Main
 		{
 			try
 			{
-				CallableFuture cf = f.get(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+				CallableFuture cf = f.get(a.m_fileTimeout, TimeUnit.SECONDS);
 				found.addAll(cf.getFoundTokens());
 			}
 			catch (TimeoutException te)

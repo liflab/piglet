@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import ca.uqac.lif.fs.FilePath;
@@ -41,7 +40,6 @@ import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
-import ca.uqac.lif.piglet.find.TokenFinderCallable.CallableFuture;
 import ca.uqac.lif.piglet.find.TokenFinderFactory.TokenFinderFactoryException;
 import ca.uqac.lif.piglet.find.sparql.SparqlTokenFinderCallable;
 import ca.uqac.lif.piglet.find.sparql.SparqlTokenFinderFactory;
@@ -152,6 +150,10 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Ignore files"));
 		cli.addArgument(new Argument().withShortName("1").withLongName("halt-on-first")
 				.withDescription("Halt on first match"));
+		cli.addArgument(new Argument().withShortName("t").withLongName("timeout").withArgument("s")
+				.withDescription("Set timeout for individual file analysis (in s, default: 15)"));
+		cli.addArgument(new Argument().withShortName("T").withLongName("global-timeout").withArgument("s")
+				.withDescription("Set timeout for individual file analysis (in s, default: -1 (no timeout))"));
 		return cli;
 	}
 
@@ -201,6 +203,30 @@ public class Analysis implements Comparable<Analysis>
 			try
 			{
 				a.setResolutionTimeout(Long.parseLong(map.getOptionValue("resolution-timeout").trim()));
+			}
+			catch (NumberFormatException e)
+			{
+				throw new AnalysisCliException(e);
+			}
+		}
+		if (map.containsKey("timeout"))
+		{
+			try
+			{
+				long to = Long.parseLong(map.getOptionValue("timeout").trim());
+				a.m_fileTimeout = to * 1000;
+			}
+			catch (NumberFormatException e)
+			{
+				throw new AnalysisCliException(e);
+			}
+		}
+		if (map.containsKey("global-timeout"))
+		{
+			try
+			{
+				long to = Long.parseLong(map.getOptionValue("global-timeout").trim());
+				a.m_globalTimeout = to * 1000;
 			}
 			catch (NumberFormatException e)
 			{
@@ -334,7 +360,7 @@ public class Analysis implements Comparable<Analysis>
 	/**
 	 * Whether to only show a summary at the command line
 	 */
-	protected static boolean m_summary = false;
+	protected boolean m_summary = false;
 
 	/**
 	 * Limit to the number of files to process (for testing purposes). A negative
@@ -356,6 +382,18 @@ public class Analysis implements Comparable<Analysis>
 	 * Timeout for type resolution operations (in milliseconds)
 	 */
 	protected long m_resolutionTimeout = 100;
+	
+	/**
+	 * Global timeout for the analysis (in milliseconds). A negative value means no
+	 * timeout.
+	 */
+	protected long m_fileTimeout = 15000;
+	
+	/**
+	 * Timeout for individual file analysis (in milliseconds). A negative value
+	 * means no timeout.
+	 */
+	protected long m_globalTimeout = -1;
 
 	/**
 	 * Other command line arguments (not parsed)
@@ -657,13 +695,12 @@ public class Analysis implements Comparable<Analysis>
 		return m_others;
 	}
 
-	public List<Future<CallableFuture>> processBatch(ExecutorService e, FileProvider provider,
+	public Set<TokenFinderCallable> processBatch(FileProvider provider,
 			Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
 	{
 		found.addAll(checkCachedFinders());
 		int count = 0;
 		Set<TokenFinderCallable> tasks = new HashSet<>();
-		List<Future<CallableFuture>> futures = new ArrayList<>();
 		while (provider.hasNext() && (m_limit == -1 || count < m_limit))
 		{
 			count++;
@@ -678,21 +715,15 @@ public class Analysis implements Comparable<Analysis>
 				VisitorAssertionFinderCallable r = new VisitorAssertionFinderCallable(m_projectName, f_source,
 						m_visitorFinders, m_quiet, m_callback);
 				tasks.add(r);
-				Future<CallableFuture> fu = e.submit(r);
-				m_futureToFile.put(fu, getFilename(f_source.getFilename()));
-				futures.add(fu);
 			}
 			if (!m_sparqlFinders.isEmpty())
 			{
 				SparqlTokenFinderCallable r = new SparqlTokenFinderCallable(m_projectName, f_source,
 						m_sparqlFinders, m_quiet, m_callback, m_follow);
 				tasks.add(r);
-				Future<CallableFuture> fu = e.submit(r);
-				m_futureToFile.put(fu, getFilename(f_source.getFilename()));
-				futures.add(fu);
 			}
 		}
-		return futures;
+		return tasks;
 	}
 
 	protected List<FoundToken> checkCachedFinders() throws FileSystemException, TokenFinderFactoryException
