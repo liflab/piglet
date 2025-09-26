@@ -180,6 +180,28 @@ public class AnsiPrinter extends PrintStream
 	{
 		return setForegroundColor(c);
 	}
+	
+	/**
+	 * Sets the text to italics.
+	 * @return This printer
+	 */
+	public AnsiPrinter italics()
+	{
+		if (m_enabled)
+			printBytes("\u001B[3m");
+		return this;
+	}
+	
+	/**
+	 * Stops italics.
+	 * @return This printer
+	 */
+	public AnsiPrinter unitalics()
+	{
+		if (m_enabled)
+			printBytes("\u001B[23m");
+		return this;
+	}
 
 	/**
 	 * Sets the foreground color based on its RGB components.

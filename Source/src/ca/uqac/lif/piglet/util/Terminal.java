@@ -91,9 +91,7 @@ public class Terminal
 		{
 			return false;
 		}
-		term = term.toLowerCase();
-		System.out.println("TERM=" + term);
-		
+		term = term.toLowerCase();		
 		/*
 		// User override
 		String force = System.getenv("FORCE_SIXEL");
@@ -123,7 +121,6 @@ public class Terminal
 		{
 			if (term.contains(hint.toLowerCase(Locale.ROOT)))
 			{
-				System.out.println("Detected SIXEL-capable terminal via TERM hint: " + hint);
 				return true;
 			}
 		}

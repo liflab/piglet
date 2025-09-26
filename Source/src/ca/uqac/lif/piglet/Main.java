@@ -68,6 +68,7 @@ import ca.uqac.lif.piglet.util.Solvers;
 import ca.uqac.lif.piglet.util.StatusCallback;
 import ca.uqac.lif.piglet.util.Terminal;
 import ca.uqac.lif.util.AnsiPrinter;
+import ca.uqac.lif.util.AnsiPrinter.Color;
 import ca.uqac.lif.util.CliParser;
 
 /**
@@ -273,7 +274,7 @@ public class Main
 		try
 		{
 			List<Future<CallableFuture>> futures = analysis.processBatch(executor, fsp, found);
-			waitForEnd(analysis, futures, found);
+			waitForEnd(status, analysis, futures, found);
 			executor.shutdown();
 		}
 		catch (IOException e)
@@ -534,7 +535,7 @@ public class Main
 	 * @param futures
 	 *          The list of futures to wait for
 	 */
-	public static boolean waitForEnd(Analysis a, List<Future<CallableFuture>> futures, Set<FoundToken> found)
+	public static boolean waitForEnd(StatusCallback callback, Analysis a, List<Future<CallableFuture>> futures, Set<FoundToken> found)
 	{
 		for (Future<CallableFuture> f : futures)
 		{
@@ -546,9 +547,10 @@ public class Main
 			catch (TimeoutException te)
 			{
 				f.cancel(true);
-				s_stderr.fg(AnsiPrinter.Color.RED);
-				s_stderr.println("Timeout expired for task analyzing: " + a.getFileForFuture(f));
-				s_stderr.resetColors();
+				callback.resolutionTimeout();
+				//s_stderr.fg(AnsiPrinter.Color.RED);
+				//s_stderr.println("Timeout expired for task analyzing: " + a.getFileForFuture(f));
+				//s_stderr.resetColors();
 			}
 			catch (InterruptedException ie)
 			{
@@ -580,6 +582,17 @@ public class Main
 	 */
 	protected static void printGreeting()
 	{
+		s_stdout.fg(Color.LIGHT_PURPLE);
+		s_stdout.italics();
+		s_stdout.print("Piglet");
+		s_stdout.fg(Color.PURPLE);
+		s_stdout.print(" v1.0");
+		s_stdout.unitalics();
+		s_stdout.resetColors();
+		s_stdout.println(" - Analysis of Java source code");
+		s_stdout.println("\u00A9 2025 Laboratoire d'informatique formelle, Universit\u00E9 du Qu\u00E9bec \u00E0 Chicoutimi");
+		
+		/*
 		if (Terminal.likelySupportsSixel())
 		{
 			try
@@ -592,6 +605,7 @@ public class Main
 				// Don't care, this is cosmetic
 			}
 		}
+		*/
 	}
 
 	/**
