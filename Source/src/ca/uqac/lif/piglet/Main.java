@@ -24,9 +24,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +37,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.jena.query.QueryParseException;
@@ -67,7 +71,6 @@ import ca.uqac.lif.piglet.report.Report.ObjectReport;
 import ca.uqac.lif.piglet.report.Reporter.ReporterException;
 import ca.uqac.lif.piglet.util.Solvers;
 import ca.uqac.lif.piglet.util.StatusCallback;
-import ca.uqac.lif.piglet.util.Terminal;
 import ca.uqac.lif.util.AnsiPrinter;
 import ca.uqac.lif.util.AnsiPrinter.Color;
 import ca.uqac.lif.util.CliParser;
@@ -112,6 +115,11 @@ public class Main
 	 * Return code indicating an unclassified error
 	 */
 	public static final int RET_OTHER = 5;
+	
+	/**
+	 * Return code indicating a timeout
+	 */
+	public static final int RET_TIMEOUT = 6;
 
 	/**
 	 * Standard output
@@ -123,10 +131,23 @@ public class Main
 	 */
 	protected static final AnsiPrinter s_stderr = new AnsiPrinter(System.err);
 
-	/** 
+	/**
 	 * Thread-local context (parser, type solver, etc.)
 	 */
 	public static ThreadLocal<TokenFinderContext> CTX;
+
+	/**
+	 * The set of found tokens (shared by all threads)
+	 */
+	static final Set<FoundToken> found = Collections.synchronizedSortedSet(new TreeSet<>());
+
+	// Runs-at-most-once guard for final reporting
+	private static final AtomicBoolean FINALIZED = new AtomicBoolean(false);
+
+	// Hold current run state (visible to the shutdown hook)
+	private static volatile ExecutorService CURRENT_EXECUTOR;
+	private static volatile Analysis CURRENT_ANALYSIS;
+	private static volatile List<Future<CallableFuture>> CURRENT_FUTURES;
 
 	/**
 	 * Main entry point of the application. This method simply calls
@@ -166,43 +187,105 @@ public class Main
 		catch (Throwable ignored)
 		{
 		}
-		
+
 		/* Print greeting */
 		printGreeting();
 
 		/* Setup command line options */
 		CliParser cli = Analysis.setupCli();
-		Set<Analysis> analyses = null;
+		final Set<Analysis> analyses = new TreeSet<>();
 		try
 		{
-			analyses = Analysis.read(cli,  cli.parse(args), s_stdout, s_stderr);	
+			Analysis.read(analyses, cli, cli.parse(args), s_stdout, s_stderr);
 		}
 		catch (AnalysisCliException e)
 		{
 			return handleException(e);
 		}
-		MapReport global = new MapReport();
+		/* Adding a shutdown hook to display/save partial results if interrupted */
+		Thread printingHook = new Thread(() -> {
+			try
+			{
+				s_stderr.println();
+				s_stderr.bg(Color.RED).fg(Color.WHITE);
+				s_stderr.println("Interrupted: harvesting completed tasks and generating partial results...");
+				s_stderr.resetColors();
+
+				// 1) Stop executor promptly (best effort)
+				ExecutorService ex = CURRENT_EXECUTOR;
+				if (ex != null)
+				{
+					ex.shutdownNow(); // don't block
+				}
+
+				// 2) Harvest whatever is already done (no blocking)
+				List<Future<CallableFuture>> fs = CURRENT_FUTURES;
+				Analysis a = CURRENT_ANALYSIS;
+				if (fs != null && a != null)
+				{
+					for (Future<CallableFuture> f : fs)
+					{
+						if (f.isDone() && !f.isCancelled())
+						{
+							try
+							{
+								CallableFuture cf = f.get(); // safe: already done
+								found.addAll(cf.getFoundTokens());
+							}
+							catch (Throwable t)
+							{
+								// ignore in shutdown
+							}
+						}
+					}
+				}
+
+				// 3) Same finalization path as normal completion
+				MapReport global = new MapReport();
+				finalizeAndReport(analyses, global, /* summary */ true);
+			}
+			catch (Throwable ignored)
+			{
+				// best-effort only
+			}
+			finally
+			{
+				try
+				{
+					s_stdout.flush();
+				}
+				catch (Throwable ignored)
+				{
+				}
+				try
+				{
+					s_stderr.flush();
+				}
+				catch (Throwable ignored)
+				{
+				}
+			}
+		}, "piglet-shutdown");
+		Runtime.getRuntime().addShutdownHook(printingHook);
 		for (Analysis a : analyses)
 		{
-			int ret = runAnalysis(a, global);
+			int ret = runAnalysis(a);
 			if (ret != RET_OK)
 			{
 				return ret;
 			}
 		}
-		CliReporter cli_reporter = new CliReporter(s_stdout, true);
-		try
-		{
-			cli_reporter.report(null, global);
-		}
-		catch (ReporterException e)
-		{
-			return handleException(e);
-		}
+		// Remove the shutdown hook, we are done
+		Runtime.getRuntime().removeShutdownHook(printingHook);
+		MapReport global = new MapReport();
+		// Normal completion: do the same finalization as the hook, but feel free to
+		// show full output
+		finalizeAndReport(analyses, global, true);
 		return RET_OK;
 	}
 
-	protected static int runAnalysis(Analysis analysis, MapReport global) throws FileSystemException, IOException, InterruptedException, ExecutionException, PrintException
+	protected static int runAnalysis(Analysis analysis) throws FileSystemException, IOException,
+	InterruptedException, ExecutionException, PrintException
 	{
 		/* Setup the file provider */
 		FileSystemProvider[] providers = new FileSystemProvider[analysis.getSourcePaths().size()];
@@ -224,7 +307,6 @@ public class Main
 		int total = fsp.filesProvided();
 		Report.MapReport categorized = new Report.MapReport();
 		categorized.put(analysis.getProjectName(), new MapReport());
-		Set<FoundToken> found = new HashSet<>();
 		final List<String> source_paths = analysis.getSourcePaths();
 		final String[] root = analysis.getRoots();
 		final Set<String> jar_paths = analysis.getJarPaths();
@@ -253,6 +335,12 @@ public class Main
 		StatusCallback status = new StatusCallback(s_stdout,
 				(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total));
 		analysis.setCallback(status);
+		if (analysis.m_globalTimeout > 0)
+		{
+			s_stdout.bg(Color.YELLOW).fg(Color.BLACK);
+			s_stdout.println("Global timeout: " + analysis.m_globalTimeout + " seconds");
+			s_stdout.resetColors();
+		}
 		Thread status_thread = new Thread(status);
 		AtomicInteger THREAD_ID = new AtomicInteger(1);
 		ThreadFactory tf = r -> {
@@ -270,29 +358,42 @@ public class Main
 		try
 		{
 			Set<TokenFinderCallable> tasks = analysis.processBatch(fsp, found);
-			List<Future<CallableFuture>> futures;
+			// Submit tasks one by one so we can expose futures *immediately*
+			List<Future<CallableFuture>> futures = new java.util.ArrayList<>(tasks.size());
+			for (TokenFinderCallable task : tasks)
+			{
+				futures.add(executor.submit(task));
+			}
+			// Expose futures so the hook can harvest completed ones
+			CURRENT_EXECUTOR = executor;
+			CURRENT_ANALYSIS = analysis;
+			CURRENT_FUTURES = futures;
 			if (analysis.m_globalTimeout > 0)
 			{
-				futures = executor.invokeAll(tasks, analysis.m_globalTimeout, TimeUnit.SECONDS);
+				// Cancels any still-running futures after the global window
+				Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+					for (Future<?> f : futures)
+					{
+						if (!f.isDone())
+							f.cancel(true);
+					}
+					executor.shutdownNow();
+				}, analysis.m_globalTimeout, TimeUnit.SECONDS);
 			}
-			else
-			{
-				futures = executor.invokeAll(tasks);
-			}
-			waitForEnd(analysis, futures, found);
+			waitForEnd(status, analysis, futures, found);
 			executor.shutdown();
 		}
 		catch (IOException e)
 		{
-			handleException(e);
+			return handleException(e);
 		}
 		catch (FileSystemException e)
 		{
-			handleException(e);
+			return handleException(e);
 		}
 		catch (TokenFinderFactoryException e)
 		{
-			handleException(e);
+			return handleException(e);
 		}
 		try
 		{
@@ -313,15 +414,39 @@ public class Main
 			Thread.currentThread().interrupt();
 		}
 		end_time = System.currentTimeMillis();
-		//end_callback.setTotal(found.size());
+		// end_callback.setTotal(found.size());
 		long duration = end_time - start_time;
+		// After finishing this analysis, clear the pointers (normal path)
+		CURRENT_FUTURES = null;
+		CURRENT_ANALYSIS = null;
+		CURRENT_EXECUTOR = null;
 		status.cleanup();
-		s_stdout.println((analysis.getLimit() >= 0 ? analysis.getLimit() : total) + " file(s) analyzed");
+		s_stdout
+		.println((analysis.getLimit() >= 0 ? analysis.getLimit() : total) + " file(s) analyzed");
 		s_stdout.println(found.size() + " token" + (found.size() > 1 ? "s" : "") + " found");
 		s_stdout.clearLine();
 		s_stdout.println("Analysis time: " + AnsiPrinter.formatDuration(duration));
 		s_stdout.println();
+		return RET_OK;
+	}
 
+	/**
+	 * Takes care of the final steps of the analysis: categorization of results,
+	 * report generation, and serialization of results. This step is done even if
+	 * the analysis was interrupted. In that case, only the results accumulated so
+	 * far are processed.
+	 * 
+	 * @param categorized
+	 * @param global
+	 * @param analysis
+	 * @param found
+	 * @return A return code, typically {@link #RET_OK}
+	 * @throws IOException
+	 * @throws PrintException
+	 */
+	protected static int finish(MapReport categorized, MapReport global, Analysis analysis,
+			Set<FoundToken> found) throws IOException, PrintException
+	{
 		/* Categorize results and produce report */
 		categorize(analysis.getProjectName(), categorized, found);
 		// TODO: eventually merge with global results
@@ -352,14 +477,21 @@ public class Main
 		{
 			return handleException(e);
 		}
+		catch (FileSystemException e)
+		{
+			return handleException(e);
+		}
 		return RET_OK;
 	}
 
 	/**
 	 * Categorizes the found tokens by assertion name (i.e., the name of the
 	 * assertion that produced them).
-	 * @param map The map to populate
-	 * @param found The set of found tokens
+	 * 
+	 * @param map
+	 *          The map to populate
+	 * @param found
+	 *          The set of found tokens
 	 */
 	protected static void categorize(String project, MapReport r, Set<FoundToken> found)
 	{
@@ -380,7 +512,7 @@ public class Main
 			{
 				fs.mkdir(project);
 			}
-			//fs.pushd(project);
+			// fs.pushd(project);
 			MapReport entries = (MapReport) r.get(project);
 			for (TokenFinderFactory tf : a.getAstFinders())
 			{
@@ -420,14 +552,16 @@ public class Main
 				String s = xp.print(to_serialize).toString();
 				FileUtils.writeStringTo(fs, s, tf.getCacheFileName(project));
 			}
-			//fs.popd();
+			// fs.popd();
 		}
 	}
 
 	/**
 	 * Handles an exception by printing an appropriate message to standard error and
 	 * returning an appropriate return code.
-	 * @param e The exception to handle
+	 * 
+	 * @param e
+	 *          The exception to handle
 	 * @return An appropriate return code
 	 */
 	protected static int handleException(TokenFinderFactoryException e)
@@ -437,9 +571,11 @@ public class Main
 	}
 
 	/**
-	 * Handles an I/O exception by printing an appropriate message to standard error and
-	 * returning an appropriate return code.
-	 * @param e The exception to handle
+	 * Handles an I/O exception by printing an appropriate message to standard error
+	 * and returning an appropriate return code.
+	 * 
+	 * @param e
+	 *          The exception to handle
 	 * @return An appropriate return code
 	 */
 	protected static int handleException(IOException e)
@@ -449,9 +585,11 @@ public class Main
 	}
 
 	/**
-	 * Handles a reporting exception by printing an appropriate message to standard error and
-	 * returning an appropriate return code.
-	 * @param e The exception to handle
+	 * Handles a reporting exception by printing an appropriate message to standard
+	 * error and returning an appropriate return code.
+	 * 
+	 * @param e
+	 *          The exception to handle
 	 * @return An appropriate return code
 	 */
 	protected static int handleException(ReporterException e)
@@ -461,9 +599,11 @@ public class Main
 	}
 
 	/**
-	 * Handles a cause exception by printing an appropriate message to standard error and
-	 * returning an appropriate return code.
-	 * @param t The exception to handle
+	 * Handles a cause exception by printing an appropriate message to standard
+	 * error and returning an appropriate return code.
+	 * 
+	 * @param t
+	 *          The exception to handle
 	 * @return An appropriate return code
 	 */
 	protected static int handleCause(Throwable t)
@@ -491,9 +631,11 @@ public class Main
 	}
 
 	/**
-	 * Handles an analysis exception by printing an appropriate message to standard error and
-	 * returning an appropriate return code.
-	 * @param e The exception to handle
+	 * Handles an analysis exception by printing an appropriate message to standard
+	 * error and returning an appropriate return code.
+	 * 
+	 * @param e
+	 *          The exception to handle
 	 * @return An appropriate return code
 	 */
 	protected static int handleException(AnalysisCliException e)
@@ -522,9 +664,11 @@ public class Main
 	}
 
 	/**
-	 * Handles a file system exception by printing an appropriate message to standard error and
-	 * returning an appropriate return code.
-	 * @param e The exception to handle
+	 * Handles a file system exception by printing an appropriate message to
+	 * standard error and returning an appropriate return code.
+	 * 
+	 * @param e
+	 *          The exception to handle
 	 * @return An appropriate return code
 	 */
 	protected static int handleException(FileSystemException e)
@@ -540,10 +684,13 @@ public class Main
 	 * @param futures
 	 *          The list of futures to wait for
 	 */
-	public static boolean waitForEnd(StatusCallback callback, Analysis a, List<Future<CallableFuture>> futures, Set<FoundToken> found)
+	public static boolean waitForEnd(StatusCallback callback, Analysis a,
+			List<Future<CallableFuture>> futures, Set<FoundToken> found)
 	{
-		for (Future<CallableFuture> f : futures)
+		Iterator<Future<CallableFuture>> it = futures.iterator();
+		while (it.hasNext())
 		{
+			Future<CallableFuture> f = it.next();
 			try
 			{
 				CallableFuture cf = f.get(a.m_fileTimeout, TimeUnit.SECONDS);
@@ -552,10 +699,8 @@ public class Main
 			catch (TimeoutException te)
 			{
 				f.cancel(true);
+				it.remove();
 				callback.resolutionTimeout();
-				//s_stderr.fg(AnsiPrinter.Color.RED);
-				//s_stderr.println("Timeout expired for task analyzing: " + a.getFileForFuture(f));
-				//s_stderr.resetColors();
 			}
 			catch (InterruptedException ie)
 			{
@@ -565,7 +710,13 @@ public class Main
 				{
 					other.cancel(true);
 				}
-				s_stderr.println("Analysis interrupted");
+				break;
+			}
+			catch (CancellationException ce)
+			{
+				// Task was cancelled, probably due to global timeout
+				// This should trigger the shutdown hook, which will do the final reporting
+				System.exit(RET_TIMEOUT);
 			}
 			catch (QueryParseException qpe)
 			{
@@ -581,7 +732,67 @@ public class Main
 		}
 		return true;
 	}
-	
+
+	private static void finalizeAndReport(Set<Analysis> analyses, Report.MapReport global,
+			boolean summary)
+	{
+		if (!FINALIZED.compareAndSet(false, true))
+			return;
+
+		// Stop status line and make room
+		try
+		{
+			s_stdout.clearLine();
+		}
+		catch (Throwable ignored)
+		{
+		}
+
+		// Build reports using whatever is in 'found' right now
+		s_stdout.println(found.size() + " token" + (found.size() != 1 ? "s" : "") + " found total");
+		synchronized (found)
+		{
+			for (Analysis analysis : analyses)
+			{
+				try
+				{
+					finish(new Report.MapReport(), global, analysis, found);
+				}
+				catch (IOException | PrintException e)
+				{
+					handleException(e instanceof IOException ? (IOException) e : new IOException(e));
+				}
+			}
+		}
+
+		try
+		{
+			// Print the CLI report to stderr (more reliable in shutdown)
+			CliReporter cli = new CliReporter(s_stdout, summary);
+			cli.report(null, global);
+		}
+		catch (ReporterException e)
+		{
+			handleException(e);
+		}
+
+		// Strong flush at the very end
+		try
+		{
+			s_stdout.flush();
+		}
+		catch (Throwable ignored)
+		{
+		}
+		try
+		{
+			s_stderr.flush();
+		}
+		catch (Throwable ignored)
+		{
+		}
+	}
+
 	/**
 	 * Prints a greeting to standard output, if the terminal supports it.
 	 */
@@ -595,58 +806,15 @@ public class Main
 		s_stdout.unitalics();
 		s_stdout.resetColors();
 		s_stdout.println(" - Analysis of Java source code");
-		s_stdout.println("\u00A9 2025 Laboratoire d'informatique formelle, Universit\u00E9 du Qu\u00E9bec \u00E0 Chicoutimi");
-		
+		s_stdout.println(
+				"\u00A9 2025 Laboratoire d'informatique formelle, Universit\u00E9 du Qu\u00E9bec \u00E0 Chicoutimi");
+
 		/*
-		if (Terminal.likelySupportsSixel())
-		{
-			try
-			{
-				String sixel_data = new String(FileUtils.toBytes(Main.class.getResourceAsStream("Piglet_crop.sixel")));
-				s_stdout.printBytes(sixel_data);
-			}
-			catch (FileSystemException e)
-			{
-				// Don't care, this is cosmetic
-			}
-		}
-		*/
+		 * if (Terminal.likelySupportsSixel()) { try { String sixel_data = new
+		 * String(FileUtils.toBytes(Main.class.getResourceAsStream("Piglet_crop.sixel"))
+		 * ); s_stdout.printBytes(sixel_data); } catch (FileSystemException e) { //
+		 * Don't care, this is cosmetic } }
+		 */
 	}
 
-	/**
-	 * Runnable that displays the results at the end of the analysis.
-	 */
-	protected static class EndRunnable implements Runnable
-	{
-		private final Report m_found;
-
-		private final boolean m_summary;
-
-		public EndRunnable(Report found, boolean summary)
-		{
-			super();
-			m_found = found;
-			m_summary = summary;
-		}
-
-		@Override
-		public void run()
-		{
-			displayResults();
-		}
-
-		protected void displayResults()
-		{
-			CliReporter cli_reporter = new CliReporter(s_stdout, m_summary);
-			try
-			{
-				cli_reporter.report(null, m_found);
-			}
-			catch (ReporterException e)
-			{
-				// Ignore for the moment
-			}
-		}
-	}
-	
 }

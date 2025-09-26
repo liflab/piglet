@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Future;
 
 import ca.uqac.lif.fs.FilePath;
@@ -79,17 +78,15 @@ public class Analysis implements Comparable<Analysis>
 
 	/**
 	 * Reads command line arguments and returns a set of analysis objects
-	 * 
+	 * @param analyses The set to populate with analysis objects
 	 * @param cli    The command line parser
 	 * @param map    The argument map
 	 * @param stdout Printer for standard output
 	 * @param stderr Printer for error output
-	 * @return The set of analyses
 	 * @throws AnalysisCliException If an error occurs while reading the arguments
 	 */
-	public static Set<Analysis> read(CliParser cli, ArgumentMap map, AnsiPrinter stdout, AnsiPrinter stderr) throws AnalysisCliException
+	public static void read(Set<Analysis> analyses, CliParser cli, ArgumentMap map, AnsiPrinter stdout, AnsiPrinter stderr) throws AnalysisCliException
 	{
-		Set<Analysis> analyses = new TreeSet<>();
 		for (String profile : map.getOthers())
 		{
 			Analysis a = new Analysis();
@@ -99,7 +96,6 @@ public class Analysis implements Comparable<Analysis>
 			read(cli, map, a);
 			analyses.add(a);
 		}
-		return analyses;
 	}
 
 	/**
@@ -214,7 +210,7 @@ public class Analysis implements Comparable<Analysis>
 			try
 			{
 				long to = Long.parseLong(map.getOptionValue("timeout").trim());
-				a.m_fileTimeout = to * 1000;
+				a.m_fileTimeout = to;
 			}
 			catch (NumberFormatException e)
 			{
@@ -226,7 +222,7 @@ public class Analysis implements Comparable<Analysis>
 			try
 			{
 				long to = Long.parseLong(map.getOptionValue("global-timeout").trim());
-				a.m_globalTimeout = to * 1000;
+				a.m_globalTimeout = to;
 			}
 			catch (NumberFormatException e)
 			{
