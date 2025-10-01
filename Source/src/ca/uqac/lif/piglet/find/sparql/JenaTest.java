@@ -100,7 +100,7 @@ public class JenaTest
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
     		+ "}");*/
-		FileInputStream fis = new FileInputStream("/home/sylvain/MyClass.java");
+		FileInputStream fis = new FileInputStream("/home/sylvain/Test.java");
 		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
 		fis.close();
     if (!cu.isSuccessful())
@@ -130,14 +130,8 @@ public class JenaTest
 		
 		ResultSet resultSet1 = QueryExecution.model(r.getModel())
 				//.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
-				.query(prefixes + ""
-						+ "SELECT DISTINCT ?t WHERE {\n"
-						+ "  ?n :nodetype \"MethodCallExpr\" ;\n"
-						+ "     :name ?an .\n"
-						+ "  ?n :params/:arg1/:resolvedtype ?t .\n"
-						+ "  ?t :instanceof \"java.util.List\" .\n"
-						+ "  FILTER (CONTAINS(?an, \"assert\"))\n"
-						+ "}\n"
+				.query(prefixes + "SELECT ?n WHERE { ?t :annotations/:name \"Test\" ; :nodetype \"MethodDeclaration\" ; :in/(:in|:next)+ ?n . ?n :nodetype \"ReturnStmt\" .} "
+						+ ""
 						).select();
     ResultSetFormatter.out(resultSet1);
     
