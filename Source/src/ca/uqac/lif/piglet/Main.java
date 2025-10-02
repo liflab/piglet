@@ -726,6 +726,7 @@ public class Main
 			}
 			catch (TimeoutException te)
 			{
+				System.err.println("Timeout processing " + a.getFileForFuture(f));
 				f.cancel(true);
 				it.remove();
 				callback.resolutionTimeout();
@@ -831,7 +832,7 @@ public class Main
 		s_stdout.italics();
 		s_stdout.print("Piglet");
 		s_stdout.fg(Color.PURPLE);
-		s_stdout.print(" v1.0");
+		s_stdout.print(" v1.1.1");
 		s_stdout.unitalics();
 		s_stdout.resetColors();
 		s_stdout.println(" - Analysis of Java source code");

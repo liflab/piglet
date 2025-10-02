@@ -106,52 +106,121 @@ public class Analysis implements Comparable<Analysis>
 	public static CliParser setupCli()
 	{
 		CliParser cli = new CliParser();
-		cli.addArgument(new Argument().withShortName("o").withLongName("output")
-				.withDescription("Output file (default: report.html)").withArgument("file"));
-		cli.addArgument(new Argument().withShortName("s").withLongName("source")
-				.withDescription("Additional source in path").withArgument("path"));
-		cli.addArgument(new Argument().withShortName("j").withLongName("jar")
-				.withDescription("Additional jar file(s) in path").withArgument("path"));
-		cli.addArgument(new Argument().withShortName("t").withLongName("threads").withArgument("n")
-				.withDescription("Use up to n threads"));
-		cli.addArgument(new Argument().withShortName("q").withLongName("quiet")
-				.withDescription("Do not show error messages"));
-		cli.addArgument(new Argument().withShortName("m").withLongName("summary")
-				.withDescription("Only show a summary at the CLI"));
-		cli.addArgument(new Argument().withShortName("c").withLongName("no-color")
-				.withDescription("Disable colored output"));
-		cli.addArgument(new Argument().withShortName("l").withLongName("limit").withArgument("n")
-				.withDescription("Stop after n files (for testing purposes)"));
-		cli.addArgument(new Argument().withShortName("h").withLongName("help")
-				.withDescription("Display this help message"));
-		cli.addArgument(new Argument().withShortName("u").withLongName("unresolved")
-				.withDescription("Show unresolved symbols"));
-		cli.addArgument(new Argument().withShortName("r").withLongName("root").withArgument("p")
-				.withDescription("Search in source tree for package p"));
-		cli.addArgument(new Argument().withShortName("l").withLongName("sample").withArgument("p")
-				.withDescription("Sample code snippets with probability p"));
-		cli.addArgument(new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
-				.withDescription("Set timeout for type resolution operations (in ms, default: 100)"));
-		cli.addArgument(new Argument().withShortName("y").withLongName("query").withArgument("x")
-				.withDescription("Read queries from x (file or folder)"));
-		cli.addArgument(new Argument().withShortName("f").withLongName("follow").withArgument("d")
-				.withDescription("Follow method calls up to depth d (default: 0)"));
-		cli.addArgument(new Argument().withLongName("no-cache")
-				.withDescription("Do not reuse cached analysis results"));
-		cli.addArgument(new Argument().withShortName("p").withLongName("project").withArgument("name")
-				.withDescription("Set the project name (used for caching)"));
-		cli.addArgument(new Argument().withShortName("f").withLongName("force-cache")
-				.withDescription("Skips the cache integrity check (use with care!)"));
-		cli.addArgument(new Argument().withShortName("i").withLongName("ignore").withArgument("filespec")
-				.withDescription("Ignore files"));
-		cli.addArgument(new Argument().withShortName("1").withLongName("halt-on-first")
-				.withDescription("Halt on first match"));
-		cli.addArgument(new Argument().withShortName("t").withLongName("timeout").withArgument("s")
-				.withDescription("Set timeout for individual file analysis (in s, default: 15)"));
-		cli.addArgument(new Argument().withShortName("T").withLongName("global-timeout").withArgument("s")
-				.withDescription("Set timeout for individual file analysis (in s, default: -1 (no timeout))"));
-		cli.addArgument(new Argument().withShortName("R").withLongName("rdf").withArgument("file")
-				.withDescription("Export file to RDF"));
+		{
+			Argument arg = new Argument().withShortName("o").withLongName("output")
+				.withDescription("Output file (default: report.html)").withArgument("file");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("s").withLongName("source")
+				.withDescription("Additional source in path").withArgument("path");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("j").withLongName("jar")
+				.withDescription("Additional jar file(s) in path").withArgument("path");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("t").withLongName("threads").withArgument("n")
+				.withDescription("Use up to n threads");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("q").withLongName("quiet")
+				.withDescription("Do not show error messages");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("m").withLongName("summary")
+				.withDescription("Only show a summary at the CLI");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("c").withLongName("no-color")
+				.withDescription("Disable colored output");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("l").withLongName("limit").withArgument("n")
+				.withDescription("Stop after n files (for testing purposes)");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("h").withLongName("help")
+				.withDescription("Display this help message");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("u").withLongName("unresolved")
+				.withDescription("Show unresolved symbols");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("r").withLongName("root").withArgument("p")
+				.withDescription("Search in source tree for package p");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("l").withLongName("sample").withArgument("p")
+				.withDescription("Sample code snippets with probability p");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("d").withLongName("resolution-timeout").withArgument("ms")
+				.withDescription("Set timeout for type resolution operations (in ms, default: 100)");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("y").withLongName("query").withArgument("x")
+				.withDescription("Read queries from x (file or folder)");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("f").withLongName("follow").withArgument("d")
+				.withDescription("Follow method calls up to depth d (default: 0)");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withLongName("no-cache")
+				.withDescription("Do not reuse cached analysis results");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("p").withLongName("project").withArgument("name")
+				.withDescription("Set the project name (used for caching)");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("f").withLongName("force-cache")
+				.withDescription("Skips the cache integrity check (use with care!)");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("i").withLongName("ignore").withArgument("filespec")
+				.withDescription("Ignore files");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("1").withLongName("halt-on-first")
+				.withDescription("Halt on first match");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withLongName("timeout").withArgument("s")
+				.withDescription("Set timeout for individual file analysis (in s, default: 15)");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("T").withLongName("global-timeout").withArgument("s")
+				.withDescription("Set timeout for global file analysis (in s, default: -1 (no timeout))");
+			cli.addArgument(arg);
+		}
+		{
+			Argument arg = new Argument().withShortName("R").withLongName("rdf").withArgument("file")
+				.withDescription("Export file to RDF");
+			cli.addArgument(arg);
+		}
 		return cli;
 	}
 
@@ -416,7 +485,7 @@ public class Analysis implements Comparable<Analysis>
 	/**
 	 * The name of the folder to use for caching
 	 */
-	protected String m_cacheFolder = ".codefinder_cache";
+	protected String m_cacheFolder = ".cache";
 
 	/**
 	 * The set of assertion finders working on the AST using

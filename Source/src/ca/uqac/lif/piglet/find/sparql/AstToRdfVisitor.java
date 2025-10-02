@@ -1687,6 +1687,13 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 
 	protected void genericleave(Node n)
 	{
+		if (m_parents.isEmpty())
+		{
+			// This is possible in the case genericVisit
+			// returns false (and thus we do not push anything
+			// onto the stack)
+			return;
+		}
 		m_parents.pop();
 	}
 
