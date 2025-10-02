@@ -100,7 +100,7 @@ public class JenaTest
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
     		+ "}");*/
-		FileInputStream fis = new FileInputStream("/home/sylvain/MyTest.java");
+		FileInputStream fis = new FileInputStream("/home/sylvain/MyClass.java");
 		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
 		fis.close();
     if (!cu.isSuccessful())

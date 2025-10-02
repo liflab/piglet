@@ -48,11 +48,13 @@ public class PushPopVisitableNode implements PushPopVisitable
 		if (v.shouldStop())
 		{
 			v.reset();
-			return;
 		}
-		for (Node child : n.getChildNodes())
+		else
 		{
-			go(child, v);
+			for (Node child : n.getChildNodes())
+			{
+				go(child, v);
+			}
 		}
 		leaveWithType(n, v);
 	}

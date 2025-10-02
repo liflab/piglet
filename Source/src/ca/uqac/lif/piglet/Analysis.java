@@ -150,6 +150,8 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Set timeout for individual file analysis (in s, default: 15)"));
 		cli.addArgument(new Argument().withShortName("T").withLongName("global-timeout").withArgument("s")
 				.withDescription("Set timeout for individual file analysis (in s, default: -1 (no timeout))"));
+		cli.addArgument(new Argument().withShortName("R").withLongName("rdf").withArgument("file")
+				.withDescription("Export file to RDF"));
 		return cli;
 	}
 
