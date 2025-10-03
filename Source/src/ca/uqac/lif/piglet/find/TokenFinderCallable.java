@@ -65,55 +65,6 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 		NOT_STARTED, RUNNING, DONE, FAILED, CANCELLED
 	}
 
-	public static final class FinderProgress
-	{
-		private final java.util.concurrent.ConcurrentHashMap<String, FinderStatus> status = new java.util.concurrent.ConcurrentHashMap<>();
-		private final java.util.concurrent.ConcurrentHashMap<String, Throwable> errors = new java.util.concurrent.ConcurrentHashMap<>();
-
-		public FinderProgress(Iterable<TokenFinderFactory> finders)
-		{
-			for (TokenFinderFactory tf : finders)
-			{
-				status.put(tf.getName(), FinderStatus.NOT_STARTED);
-			}
-		}
-
-		public void markRunning(String name)
-		{
-			status.replace(name, FinderStatus.RUNNING);
-		}
-
-		public void markDone(String name)
-		{
-			status.replace(name, FinderStatus.DONE);
-		}
-
-		public void markFailed(String name, Throwable t)
-		{
-			status.replace(name, FinderStatus.FAILED);
-			errors.put(name, t);
-		}
-
-		public void markCancelledRemainingFrom(java.util.Set<String> remaining)
-		{
-			for (String n : remaining)
-				status.replace(n, FinderStatus.CANCELLED);
-		}
-
-		public java.util.Map<String, FinderStatus> snapshot()
-		{
-			return java.util.Collections.unmodifiableMap(status);
-		}
-
-		public java.util.Map<String, Throwable> errors()
-		{
-			return java.util.Collections.unmodifiableMap(errors);
-		}
-	}
-
-	// Global, readable from Main.waitForEnd and from the shutdown hook
-	public static final java.util.concurrent.ConcurrentMap<String, FinderProgress> PROGRESS_REGISTRY = new java.util.concurrent.ConcurrentHashMap<>();
-
 	/**
 	 * Creates a new callable.
 	 * 

@@ -32,7 +32,6 @@ import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderContext;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
 import ca.uqac.lif.piglet.find.TokenFinder.TokenFinderException;
-import ca.uqac.lif.piglet.find.TokenFinderCallable.FinderProgress;
 import ca.uqac.lif.piglet.find.visitor.PushPopVisitableNode;
 import ca.uqac.lif.piglet.provider.FileSource;
 import ca.uqac.lif.piglet.util.StatusCallback;
@@ -88,38 +87,34 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 			if (fac instanceof SparqlTokenFinderFactory)
 			{
 				localFinders.add((SparqlTokenFinderFactory) fac);
+				fac.registerExpected();
 			}
 		}
 		if (localFinders.isEmpty())
 		{
 			return found;
 		}
-		FinderProgress prog = new FinderProgress(localFinders);
-    PROGRESS_REGISTRY.put(fileKey, prog);
 		try
 		{
-			//System.out.println("Parsing");
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
-			//System.out.println("Building model");
 			PushPopVisitableNode pm = new PushPopVisitableNode(u);
 			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context, file);
 			if(Thread.currentThread().isInterrupted()) { 
 				return found;
 			}
 			LazyNodeIndex<Node,String> globalAstIndex = r.getIndex();
-			//System.out.println("Running finders");
 			for (SparqlTokenFinderFactory fac : localFinders)
 			{
 				if(Thread.currentThread().isInterrupted()) { 
 					return found;
 				}
-				SparqlTokenFinder f = fac.newFinder();
-				//System.out.println("Using finder " + f.getName());
+				SparqlTokenFinder f = (SparqlTokenFinder) fac.newFinder();
 				f.setModel(r.getModel());
 				f.setIndex(globalAstIndex);
 				f.setFilename(file);
 				f.setContext(context);
 				f.process();
+				fac.registerFinished();
 				found.addAll(f.getFoundTokens());
 			}
 		}
