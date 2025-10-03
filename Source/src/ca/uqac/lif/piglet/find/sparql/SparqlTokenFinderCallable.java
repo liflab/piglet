@@ -32,6 +32,7 @@ import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderContext;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
 import ca.uqac.lif.piglet.find.TokenFinder.TokenFinderException;
+import ca.uqac.lif.piglet.find.TokenFinderCallable.FinderProgress;
 import ca.uqac.lif.piglet.find.visitor.PushPopVisitableNode;
 import ca.uqac.lif.piglet.provider.FileSource;
 import ca.uqac.lif.piglet.util.StatusCallback;
@@ -93,6 +94,8 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 		{
 			return found;
 		}
+		FinderProgress prog = new FinderProgress(localFinders);
+    PROGRESS_REGISTRY.put(fileKey, prog);
 		try
 		{
 			//System.out.println("Parsing");

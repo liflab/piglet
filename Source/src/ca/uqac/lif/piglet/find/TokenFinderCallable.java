@@ -43,32 +43,95 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 {
 	/** The file name */
 	protected final String m_file;
-	
+
 	/** The project name */
 	protected final String m_project;
-	
+
 	/** The file source from which to read */
 	protected final FileSource m_fSource;
-	
+
 	/** Whether to suppress warnings */
 	protected final boolean m_quiet;
-	
+
 	/** A callback to report status */
 	protected final StatusCallback m_callback;
-	
+
 	/** The set of finders to use */
 	protected final Set<? extends TokenFinderFactory> m_finders;
-	
+
+	// In TokenFinderCallable.java (or a small new file)
+	public enum FinderStatus
+	{
+		NOT_STARTED, RUNNING, DONE, FAILED, CANCELLED
+	}
+
+	public static final class FinderProgress
+	{
+		private final java.util.concurrent.ConcurrentHashMap<String, FinderStatus> status = new java.util.concurrent.ConcurrentHashMap<>();
+		private final java.util.concurrent.ConcurrentHashMap<String, Throwable> errors = new java.util.concurrent.ConcurrentHashMap<>();
+
+		public FinderProgress(Iterable<TokenFinderFactory> finders)
+		{
+			for (TokenFinderFactory tf : finders)
+			{
+				status.put(tf.getName(), FinderStatus.NOT_STARTED);
+			}
+		}
+
+		public void markRunning(String name)
+		{
+			status.replace(name, FinderStatus.RUNNING);
+		}
+
+		public void markDone(String name)
+		{
+			status.replace(name, FinderStatus.DONE);
+		}
+
+		public void markFailed(String name, Throwable t)
+		{
+			status.replace(name, FinderStatus.FAILED);
+			errors.put(name, t);
+		}
+
+		public void markCancelledRemainingFrom(java.util.Set<String> remaining)
+		{
+			for (String n : remaining)
+				status.replace(n, FinderStatus.CANCELLED);
+		}
+
+		public java.util.Map<String, FinderStatus> snapshot()
+		{
+			return java.util.Collections.unmodifiableMap(status);
+		}
+
+		public java.util.Map<String, Throwable> errors()
+		{
+			return java.util.Collections.unmodifiableMap(errors);
+		}
+	}
+
+	// Global, readable from Main.waitForEnd and from the shutdown hook
+	public static final java.util.concurrent.ConcurrentMap<String, FinderProgress> PROGRESS_REGISTRY = new java.util.concurrent.ConcurrentHashMap<>();
+
 	/**
 	 * Creates a new callable.
-	 * @param project The project name
-	 * @param file The file name
-	 * @param source The file source from which to read
-	 * @param found The set of found tokens
-	 * @param quiet Whether to suppress warnings
-	 * @param status A callback to report status
+	 * 
+	 * @param project
+	 *          The project name
+	 * @param file
+	 *          The file name
+	 * @param source
+	 *          The file source from which to read
+	 * @param found
+	 *          The set of found tokens
+	 * @param quiet
+	 *          Whether to suppress warnings
+	 * @param status
+	 *          A callback to report status
 	 */
-	public TokenFinderCallable(String project, String file, FileSource source, boolean quiet, StatusCallback status, Set<? extends TokenFinderFactory> finders)
+	public TokenFinderCallable(String project, String file, FileSource source, boolean quiet,
+			StatusCallback status, Set<? extends TokenFinderFactory> finders)
 	{
 		super();
 		m_project = project;
@@ -78,10 +141,12 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 		m_callback = status;
 		m_finders = new HashSet<TokenFinderFactory>(finders);
 	}
-	
+
 	/**
 	 * Gets the list of test cases in a compilation unit.
-	 * @param u The compilation unit
+	 * 
+	 * @param u
+	 *          The compilation unit
 	 * @return The list of test cases
 	 */
 	protected static List<MethodDeclaration> getTestCases(CompilationUnit u)
@@ -90,7 +155,7 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
 		for (MethodDeclaration m : methods)
 		{
-			//if (isTest(m))
+			// if (isTest(m))
 			{
 				list.add(m);
 			}
@@ -100,7 +165,9 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 
 	/**
 	 * Determines whether a method is a test case.
-	 * @param m The method
+	 * 
+	 * @param m
+	 *          The method
 	 * @return <tt>true</tt> if the method is a test case, <tt>false</tt> otherwise
 	 */
 	protected static boolean isTest(MethodDeclaration m)
@@ -114,7 +181,7 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 		}
 		return false;
 	}
-	
+
 	@Override
 	public final CallableFuture call()
 	{
@@ -141,6 +208,7 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 		Set<FoundToken> found = new HashSet<FoundToken>();
 		try
 		{
@@ -160,18 +228,20 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 		}
 		return new CallableFuture(m_file, found);
 	}
-	
+
 	/**
 	 * Gets the file name.
+	 * 
 	 * @return The file name
 	 */
 	public String getFileName()
 	{
 		return m_file;
 	}
-	
-	protected abstract void doRun(TokenFinderContext context, String code, Set<FoundToken> found) throws TokenFinderException;
-	
+
+	protected abstract void doRun(TokenFinderContext context, String code, Set<FoundToken> found)
+			throws TokenFinderException;
+
 	/**
 	 * The result of a callable.
 	 */
@@ -179,33 +249,38 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 	{
 		/** The file name */
 		protected final String m_filename;
-		
+
 		/** The set of found tokens */
 		protected final Set<FoundToken> m_found;
-		
+
 		/**
 		 * Creates a new callable future.
-		 * @param filename The file name
-		 * @param found The set of found tokens
+		 * 
+		 * @param filename
+		 *          The file name
+		 * @param found
+		 *          The set of found tokens
 		 */
-		CallableFuture(String filename, Set<FoundToken> found) 
+		CallableFuture(String filename, Set<FoundToken> found)
 		{
 			super();
 			m_filename = filename;
 			m_found = found;
 		}
-		
+
 		/**
 		 * Gets the file name.
+		 * 
 		 * @return The file name
 		 */
 		public String getFileName()
 		{
 			return m_filename;
 		}
-		
+
 		/**
 		 * Gets the set of found tokens.
+		 * 
 		 * @return The set of found tokens
 		 */
 		public Set<FoundToken> getFoundTokens()
