@@ -23,12 +23,13 @@ Usage
 Assuming you have a compiled version of the tool (if not, see below), you can
 run it at the command line as follows:
 
-    java -jar codefinder-1.0.jar [options] <profiles>
+    java -jar piglet-x.x.x.jar [options] <profiles>
 
 Where `<profiles>` is to be replaced by a list of profiles describing the analysis
-of a particular project.
+of a particular project, and `x.x.x` is to be replaced by the actual version
+number.
 
-In the following, we shall simply write `codefinder` instead of the whole
+In the following, we shall simply write `piglet` instead of the whole
 `java -jar ...` prefix.
 
 Suggested setup
@@ -87,11 +88,16 @@ The full list of command line option is given below.
 `-s <path>`, `--source <path>`
 : Additional source in path
 
+`-y <path>`, `--query <path>`
+: Read files in `path` and use them as token finders. You can specify a folder
+  or a single file name.
+
+`-r <file>`, `--report <file>`
+: Write an HTML report to `file`. If not specified, defaults to
+  `projectname.html`.
+
 `-t <n>`, `--threads <n>`
-: Use up to `n` threads (default: number of cores minus 1). Note that
-  the use of multi-threading provides disputable speed-up, since each
-  thread must instantiate and update its own `JavaParser` object.
-  [YMMV](https://dictionary.cambridge.org/dictionary/english/ymmv).
+: Use up to `n` threads (default: number of cores minus 1).
 
 `-q`, `--quiet`
 : Do not show error messages
@@ -107,6 +113,12 @@ The full list of command line option is given below.
 
 `-l <n>`, `--limit <n>`
 : Stop analysis after the first `n` files
+
+`-T <n>`, `--global-timeout <n>`
+: Sets the global timeout for the analysis to `n` seconds.
+
+`--timeout <n>`
+: Sets the timeout for the analysis of each file to `n` seconds.
 
 `-c`, `--no-color`
 : Disable colored output
@@ -137,14 +149,14 @@ Caching
 -------
 
 By default, the tool serializes the results of a search in a cache file
-located in the `.codefinder_cache` folder. If an analysis is run when such a file
+located in the `.cache` folder. If an analysis is run when such a file
 exists for a given project and a given token finder, the analysis will not
 proceed and the results already found by a preivous run of the token finder will
 be fetched instead. This feature can save precious time when re-running a
 previous analysis with new finders, or new projects (as already-analyzed
 projects will not be handled once again).
 
-To discard the cached results, simply delete the `.codefinder_cache` folder
+To discard the cached results, simply delete the `.cache` folder
 and everything will be recomputed from scratch.
 
 Compiling and Installing
@@ -156,11 +168,11 @@ First make sure you have the following installed:
   with Java version **17**; it is probably safe to use any later version.
 - [Ant](http://ant.apache.org) to automate the compilation and build process
 
-Download the sources for CodeFinder from
-[GitHub](https://github.com/liflab/codefinder) or clone the
+Download the sources for Piglet from
+[GitHub](https://github.com/liflab/piglet) or clone the
 repository using Git:
 
-    git@github.com:liflab/codefinder.git
+    git@github.com:liflab/piglet.git
 
 If the project you want to compile has dependencies,
 you can automatically download any libraries missing from your
@@ -177,7 +189,7 @@ Compile the sources by simply typing:
 
     ant
 
-This will produce a file called `codefinder-x.x.jar` in the folder
+This will produce a file called `piglet-x.x.jar` in the folder
 (where `x.x` is the version number). This file
 is runnable and stand-alone, or can be used as a library, so it can be moved
 around to the location of your choice.
@@ -194,6 +206,6 @@ If you wish to develop the tool in [Eclipse](https://eclipse.org):
 In short:
 
 - Create a new empty workspace (preferably in a new, empty folder).
-- Create a new projects for the folder `Source`.
+- Create a new project using the folder `Source` as its root.
 
 If imported from Ant, all dependencies should already been included.
