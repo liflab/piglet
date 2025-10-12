@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,6 +58,7 @@ import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.piglet.Analysis.AnalysisCliException;
+import ca.uqac.lif.piglet.find.FactoryCache;
 import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderContext;
@@ -255,7 +257,7 @@ public class Main
 
 				// 3) Same finalization path as normal completion
 				MapReport global = new MapReport();
-				finalizeAndReport(analyses, global, /* summary */ true);
+				finalizeAndReport(analyses, global, new HashMap<String,Long>(), /* summary */ true);
 			}
 			catch (Throwable ignored)
 			{
@@ -298,7 +300,7 @@ public class Main
 		MapReport global = new MapReport();
 		// Normal completion: do the same finalization as the hook, but feel free to
 		// show full output
-		finalizeAndReport(analyses, global, true);
+		finalizeAndReport(analyses, global, new HashMap<String,Long>(), true);
 		return RET_OK;
 	}
 
@@ -454,21 +456,39 @@ public class Main
 	 * the analysis was interrupted. In that case, only the results accumulated so
 	 * far are processed.
 	 * 
-	 * @param categorized
-	 * @param global
+	 * @param tok_categorized
+	 * @param tok_global
 	 * @param analysis
 	 * @param found
 	 * @return A return code, typically {@link #RET_OK}
 	 * @throws IOException
 	 * @throws PrintException
 	 */
-	protected static int finish(MapReport categorized, MapReport global, Analysis analysis,
+	protected static int finish(MapReport tok_global, Analysis analysis,
+			Map<String,Long> timeouts,
 			Set<FoundToken> found) throws IOException, PrintException
 	{
 		/* Categorize results and produce report */
-		categorize(analysis.getProjectName(), categorized, found);
+		MapReport tok_categorized = new MapReport();
+		categorize(analysis.getProjectName(), tok_categorized, found);
 		// TODO: eventually merge with global results
-		categorize(analysis.getProjectName(), global, found);
+		categorize(analysis.getProjectName(), tok_global, found);
+		// Fetch number of timeouts
+		for (TokenFinderFactory tff : analysis.m_visitorFinders)
+		{
+			long nb = tff.expectedCount() - tff.finishedCount();
+			timeouts.put(tff.getName(), nb);
+		}
+		for (TokenFinderFactory tff : analysis.m_sparqlFinders)
+		{
+			long nb = tff.expectedCount() - tff.finishedCount();
+			timeouts.put(tff.getName(), nb);
+		}
+		for (FactoryCache fc : analysis.m_caches)
+		{
+			long nb = fc.getExpected() - fc.getFinished();
+			timeouts.put(fc.getName(), nb);
+		}
 		FilePath output_path = analysis.getHomePath().chdir(getPathOfFile(analysis.getOutputFile()));
 		String s_source_path = analysis.getSourcePaths().get(0);
 		Path p = Paths.get(s_source_path).toAbsolutePath().normalize();
@@ -479,7 +499,7 @@ public class Main
 			hd = new HardDisk(output_path.toString()).open();
 			HtmlReporter reporter = new HtmlReporter(
 					new PrintStream(hd.writeTo(getFilename(analysis.getOutputFile())), true, "UTF-8"));
-			reporter.report(reverse_path, categorized);
+			reporter.report(reverse_path, tok_categorized, timeouts);
 			hd.close();
 			hd = new HardDisk(analysis.getHomePath().toString()).open();
 			if (!hd.isDirectory(analysis.getCacheFolder()))
@@ -488,7 +508,7 @@ public class Main
 			}
 			hd.close();
 			hd = new HardDisk(analysis.getCacheFolder()).open();
-			serializeResults(hd, analysis, categorized);
+			serializeResults(hd, analysis, tok_categorized);
 			hd.close();
 		}
 		catch (ReporterException e)
@@ -552,6 +572,7 @@ public class Main
 				JsonPrinter xp = new JsonPrinter();
 				List<Object> to_serialize = new java.util.ArrayList<>();
 				to_serialize.add(tf.getId());
+				to_serialize.add(tf.notFinishedCount());
 				to_serialize.add(list);
 				String s = xp.print(to_serialize).toString();
 				FileUtils.writeStringTo(fs, s, tf.getCacheFileName(project));
@@ -762,8 +783,7 @@ public class Main
 		return true;
 	}
 
-	private static void finalizeAndReport(Set<Analysis> analyses, Report.MapReport global,
-			boolean summary)
+	private static void finalizeAndReport(Set<Analysis> analyses, Report.MapReport global, Map<String,Long> timeouts, boolean summary)
 	{
 		if (!FINALIZED.compareAndSet(false, true))
 			return;
@@ -786,7 +806,7 @@ public class Main
 		    Set<FoundToken> per = PER_PROJECT.getOrDefault(analysis.getProjectName(), Collections.emptySet());
 				try
 				{
-					finish(new Report.MapReport(), global, analysis, per);
+					finish(global, analysis, timeouts, per);
 				}
 				catch (IOException | PrintException e)
 				{
@@ -799,7 +819,7 @@ public class Main
 		{
 			// Print the CLI report to stderr (more reliable in shutdown)
 			CliReporter cli = new CliReporter(s_stdout, summary);
-			cli.report(null, global);
+			cli.report(null, global, timeouts);
 		}
 		catch (ReporterException e)
 		{

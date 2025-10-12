@@ -52,7 +52,7 @@ public class HtmlReporter implements Reporter
 	}
 
 	@Override
-	public void report(FilePath root, Report r) throws ReporterException
+	public void report(FilePath root, Report r, Map<String,Long> timeouts) throws ReporterException
 	{
 		if (!(r instanceof MapReport))
 		{

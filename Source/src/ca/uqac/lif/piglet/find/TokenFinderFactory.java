@@ -17,7 +17,6 @@
  */
 package ca.uqac.lif.piglet.find;
 
-import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
 
 import ca.uqac.lif.azrael.ReadException;
@@ -138,11 +137,10 @@ public abstract class TokenFinderFactory
 	 *          The file system to use for reading the cache
 	 * @param project
 	 *          The name of the project being analyzed
-	 * @return The set of found tokens
+	 * @return The cache
 	 * @throws TokenFinderFactoryException
 	 */
-	@SuppressWarnings("unchecked")
-	public List<FoundToken> readCache(FileSystem fs, String project, boolean force_cache)
+	public FactoryCache readCache(FileSystem fs, String project, boolean force_cache)
 			throws TokenFinderFactoryException
 	{
 		try
@@ -153,33 +151,13 @@ public abstract class TokenFinderFactory
 				JsonParser parser = new JsonParser();
 				JsonElement x = parser.parse(content);
 				JsonReader r = new JsonReader();
-				List<Object> l = (List<Object>) r.read(x);
-				List<FoundToken> tokens = null;
-				String hash = null;
-				if (l.get(0) instanceof List<?> && !force_cache)
-				{
-					// Old format without hash, ignore cache
-					if (force_cache)
-					{
-						tokens = (List<FoundToken>) l.get(0);
-						System.err.println("Warning: cache file for finder \"" + m_name + "\" is outdated");
-					}
-					else
-					{
-						return null;
-					}
-				}
-				else
-				{
-					hash = (String) l.get(0);
-					tokens = (List<FoundToken>) l.get(1);
-				}
-				if (hash != null && !hash.equals(getId()))
+				FactoryCache fc = (FactoryCache) r.read(x);
+				if (fc.m_hash != null && !fc.m_hash.equals(getId()))
 				{
 					System.err.println("Warning: cache file for finder \"" + m_name + "\" is outdated");
 					return null;
 				}
-				return tokens;
+				return fc;
 			}
 			catch (JsonParseException | ReadException e)
 			{

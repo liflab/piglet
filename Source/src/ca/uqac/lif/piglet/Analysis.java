@@ -36,6 +36,7 @@ import ca.uqac.lif.fs.FilePath;
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
+import ca.uqac.lif.piglet.find.FactoryCache;
 import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
@@ -504,6 +505,11 @@ public class Analysis implements Comparable<Analysis>
 	protected Set<TokenFinderFactory> m_cachedFinders = new HashSet<>();
 	
 	/**
+	 * The set of caches 
+	 */
+	protected Set<FactoryCache> m_caches = new HashSet<>();
+	
+	/**
 	 * Whether to skip the cache integrity check (use with care!)
 	 */
 	protected boolean m_forceCache = false;
@@ -775,7 +781,12 @@ public class Analysis implements Comparable<Analysis>
 	public Set<TokenFinderCallable> processBatch(FileProvider provider,
 			Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
 	{
-		found.addAll(checkCachedFinders());
+		List<FactoryCache> caches = checkCachedFinders();
+		m_caches.addAll(caches);
+		for (FactoryCache fc : caches)
+		{
+			found.addAll(fc.getFoundTokens());
+		}
 		int count = 0;
 		Set<TokenFinderCallable> tasks = new HashSet<>();
 		while (provider.hasNext() && (m_limit == -1 || count < m_limit))
@@ -803,9 +814,9 @@ public class Analysis implements Comparable<Analysis>
 		return tasks;
 	}
 
-	protected List<FoundToken> checkCachedFinders() throws FileSystemException, TokenFinderFactoryException
+	protected List<FactoryCache> checkCachedFinders() throws FileSystemException, TokenFinderFactoryException
 	{
-		List<FoundToken> all_cached = new ArrayList<>();
+		List<FactoryCache> all_cached = new ArrayList<>();
 		// Check which finders have cached results
 		if (m_cache && !m_projectName.isEmpty())
 		{
@@ -823,8 +834,8 @@ public class Analysis implements Comparable<Analysis>
 					if (f.isCached(hd, m_projectName))
 					{
 						// Verify cache integrity by trying to read it
-						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName, m_forceCache);
-						if (cached_tokens == null)
+						FactoryCache fc = f.readCache(hd, m_projectName, m_forceCache);
+						if (fc == null || fc.getFoundTokens() == null)
 						{
 							// Cache is corrupt, ignore it
 							continue;
@@ -832,7 +843,7 @@ public class Analysis implements Comparable<Analysis>
 						else
 						{
 							m_cachedFinders.add(f);
-							all_cached.addAll(cached_tokens);
+							all_cached.add(fc);
 							it.remove();
 						}
 					}
@@ -846,8 +857,8 @@ public class Analysis implements Comparable<Analysis>
 					if (f.isCached(hd, m_projectName))
 					{
 						// Verify cache integrity by trying to read it
-						List<FoundToken> cached_tokens = f.readCache(hd, m_projectName, m_forceCache);
-						if (cached_tokens == null)
+						FactoryCache fc = f.readCache(hd, m_projectName, m_forceCache);
+						if (fc == null || fc.getFoundTokens() == null)
 						{
 							// Cache is corrupt, ignore it
 							continue;
@@ -855,7 +866,7 @@ public class Analysis implements Comparable<Analysis>
 						else
 						{
 							m_cachedFinders.add(f);
-							all_cached.addAll(cached_tokens);
+							all_cached.add(fc);
 							it.remove();
 						}
 					}

@@ -17,6 +17,8 @@
  */
 package ca.uqac.lif.piglet.report;
 
+import java.util.Map;
+
 import ca.uqac.lif.fs.FilePath;
 
 /**
@@ -29,9 +31,10 @@ public interface Reporter
 	 * Generates a report of the found tokens.
 	 * @param root The root directory where the search was performed
 	 * @param r The report data structure
+	 * @param timeouts The number of timeouts reported by each finder
 	 * @throws ReporterException If an error occurs while writing the report
 	 */
-	public void report(FilePath root, Report r) throws ReporterException;
+	public void report(FilePath root, Report r, Map<String,Long> timeouts) throws ReporterException;
 	
 	/**
 	 * An exception that can be thrown by a reporter. This class is expected

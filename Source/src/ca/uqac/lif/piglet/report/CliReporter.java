@@ -70,7 +70,7 @@ public class CliReporter implements Reporter
 		m_out.ununderline();
 	}
 	
-	protected void reportRecursive(FilePath root, Report r, String indent, int level)
+	protected void reportRecursive(FilePath root, Report r, Map<String,Long> timeouts, String path, String indent, int level)
 	{
 		if (!(r instanceof MapReport))
 		{
@@ -107,11 +107,12 @@ public class CliReporter implements Reporter
 					List<FoundToken> list = (List<FoundToken>) or.getObject();
 					m_out.setForegroundColor(Color.YELLOW);
 					m_out.print(AnsiPrinter.padToLength(Integer.toString(list.size()), 4));
-					//float percentage = 	100f * list.size() / total;
-					//m_out.setForegroundColor(Color.BROWN);
-					//m_out.print(" (");
-					//m_out.print(String.format("%.1f", percentage));
-					//m_out.print("%)");
+					m_out.setForegroundColor(Color.RED);
+					Long to = timeouts.get(path + "/" + e.getKey());
+					if (to != null && to > 0)
+					{
+						m_out.print(" (" + to + ")");
+					}
 					m_out.resetColors();
 					if (!m_summary)
 					{
@@ -130,15 +131,24 @@ public class CliReporter implements Reporter
 			else
 			{
 				m_out.println();
-				reportRecursive(root, value, indent + "  ", level + 1);
+				String new_path = "";
+				if (level > 2)
+				{
+					new_path = path + "/" + e.getKey();
+				}
+				else
+				{
+					new_path = e.getKey();
+				}
+				reportRecursive(root, value, timeouts, new_path, indent + "  ", level + 1);
 			}
 		}
 	}
 	
 	@Override
-	public void report(FilePath root, Report r) throws ReporterException
+	public void report(FilePath root, Report r, Map<String,Long> timeouts) throws ReporterException
 	{
-		reportRecursive(root, r, "", 0);
+		reportRecursive(root, r, timeouts, "", "", 0);
 	}
 	
 	/**
