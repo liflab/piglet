@@ -66,17 +66,151 @@ public class AnsiPrinter extends PrintStream
 	/**
 	 * Enables the output of ANSI codes in the output stream
 	 */
-	public void enableColors()
+	public AnsiPrinter enableColors()
 	{
 		m_enabled = true;
+		return this;
 	}
 
 	/**
 	 * Disables the output of ANSI codes in the output stream
 	 */
-	public void disableColors()
+	public AnsiPrinter disableColors()
 	{
 		m_enabled = false;
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #print(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter put(Object o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #print(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter put(int o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #print(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter put(String o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #print(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter put(long o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #print(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter put(double o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #print(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter put(float o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #println(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter putln(Object o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #println(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter putln(int o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #println(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter putln(String o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #println(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter putln(long o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #println(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter putln(double o)
+	{
+		print(o);
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #println(Object)}, but returns the printer.
+	 * @param o The thing to print
+	 * @return This printer
+	 */
+	public AnsiPrinter putln(float o)
+	{
+		print(o);
+		return this;
 	}
 	
 	/**
@@ -404,20 +538,22 @@ public class AnsiPrinter extends PrintStream
 	}
 
 	/**
-	 * Pads a string with spaces to a certain length. If the string is longer than
+	 * Pads a string with a character to a certain length. If the string is longer than
 	 * the specified length, it is truncated. If the parameter <tt>dots</tt> is
 	 * true, an ellipsis character ("...") is added at the end of the truncated
 	 * string.
 	 * 
 	 * @param s
 	 *          The string to pad
+	 * @param c
+	 *          The padding character
 	 * @param length
 	 *          The target length
 	 * @param dots
 	 *          If true, adds "..." at the end of the string if it is truncated
 	 * @return The padded (or truncated) string
 	 */
-	public static String padToLength(String s, int length, boolean dots)
+	public static String padToLength(String s, String c, int length, boolean dots)
 	{
 		if (s == null)
 		{
@@ -436,9 +572,28 @@ public class AnsiPrinter extends PrintStream
 		sb.append(s);
 		for (int i = str_len; i < length; i++)
 		{
-			sb.append(" ");
+			sb.append(c);
 		}
 		return sb.toString();
+	}
+	
+	/**
+	 * Pads a string with spaces to a certain length. If the string is longer than
+	 * the specified length, it is truncated. If the parameter <tt>dots</tt> is
+	 * true, an ellipsis character ("...") is added at the end of the truncated
+	 * string.
+	 * 
+	 * @param s
+	 *          The string to pad
+	 * @param length
+	 *          The target length
+	 * @param dots
+	 *          If true, adds "..." at the end of the string if it is truncated
+	 * @return The padded (or truncated) string
+	 */
+	public static String padToLength(String s, int length, boolean dots)
+	{
+		return padToLength(s, " ", length, dots);
 	}
 
 	/**

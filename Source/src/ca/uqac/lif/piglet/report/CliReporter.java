@@ -86,15 +86,23 @@ public class CliReporter implements Reporter
 			m_out.print(indent);
 			if (level > 0)
 			{
-				m_out.print(AnsiPrinter.padToLength(key, 36 - (level * 2), true));
 				if (value instanceof ObjectReport)
 				{
+					m_out.put(key).unbold().fg(Color.LIGHT_GRAY).put(AnsiPrinter.padToLength("", "\u2026", 36 - (level * 2) - key.length(), true));
 					m_out.print(": ");
+				}
+				else
+				{
+					m_out.put(AnsiPrinter.padToLength(key, " ", 36 - (level * 2), true));
 				}
 			}
 			else
 			{
-				m_out.print(key);
+				m_out.put(key).ununderline()
+				.put(AnsiPrinter.padToLength("", " ", 38 - key.length(), false))
+				.underline().fg(Color.YELLOW).put("Nb")
+				.ununderline().put("   ")
+				.underline().fg(Color.RED).unbold().put("TO");
 			}
 			unsetTitle(level);
 			m_out.resetColors();
