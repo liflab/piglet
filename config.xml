@@ -24,7 +24,7 @@
 
   <!-- The project's name and version number -->
 	<name>Piglet</name>
-	<version>1.1.1</version>
+	<version>1.2</version>
   
   <!-- The project's author. Currently this only
   shows up in the footer of the Javadoc documentation. -->

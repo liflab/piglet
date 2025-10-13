@@ -36,41 +36,52 @@ public class FactoryCache implements Readable, Printable
 	protected final long m_finished;
 
 	protected final String m_hash;
-	
+
 	protected final String m_name;
+
+	/**
+	 * Used only for deserialization.
+	 */
+	protected FactoryCache()
+	{
+		this(null, null, null, 0, 0);
+	}
 
 	public FactoryCache(String name, List<?> found, String hash, long expected, long finished)
 	{
 		super();
 		m_name = name;
 		m_tokens = new ArrayList<FoundToken>();
-		for (Object o : found)
+		if (found != null)
 		{
-			if (o instanceof FoundToken)
+			for (Object o : found)
 			{
-				m_tokens.add((FoundToken) o);
+				if (o instanceof FoundToken)
+				{
+					m_tokens.add((FoundToken) o);
+				}
 			}
 		}
 		m_expected = expected;
 		m_finished = finished;
 		m_hash = hash;
 	}
-	
+
 	public long getExpected()
 	{
 		return m_expected;
 	}
-	
+
 	public long getFinished()
 	{
 		return m_finished;
 	}
-	
+
 	public List<FoundToken> getFoundTokens()
 	{
 		return m_tokens;
 	}
-	
+
 	public String getName()
 	{
 		return m_name;
@@ -97,7 +108,7 @@ public class FactoryCache implements Readable, Printable
 			throw new ReadException("Expected a list");
 		}
 		List<?> list = (List<?>) o_list;
-		Object o_name = list.get(1);
+		Object o_name = list.get(0);
 		if (!(o_name instanceof String))
 		{
 			throw new ReadException("Expected a string");
@@ -107,13 +118,13 @@ public class FactoryCache implements Readable, Printable
 		{
 			throw new ReadException("Expected a string");
 		}
-		Object o_finished = list.get(2);
-		if (!(o_finished instanceof Long))
+		Object o_expected = list.get(2);
+		if (!(o_expected instanceof Long))
 		{
 			throw new ReadException("Expected a long");
 		}
-		Object o_expected = list.get(3);
-		if (!(o_expected instanceof Long))
+		Object o_finished = list.get(3);
+		if (!(o_finished instanceof Long))
 		{
 			throw new ReadException("Expected a long");
 		}

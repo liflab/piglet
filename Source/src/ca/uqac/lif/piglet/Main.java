@@ -550,7 +550,6 @@ public class Main
 			{
 				fs.mkdir(project);
 			}
-			// fs.pushd(project);
 			MapReport entries = (MapReport) r.get(project);
 			for (TokenFinderFactory tf : a.getAstFinders())
 			{
@@ -569,12 +568,9 @@ public class Main
 				{
 					list = new java.util.ArrayList<>();
 				}
+				FactoryCache fc = new FactoryCache(tf.getName(), list, tf.getId(), tf.expectedCount(), tf.finishedCount());
 				JsonPrinter xp = new JsonPrinter();
-				List<Object> to_serialize = new java.util.ArrayList<>();
-				to_serialize.add(tf.getId());
-				to_serialize.add(tf.notFinishedCount());
-				to_serialize.add(list);
-				String s = xp.print(to_serialize).toString();
+				String s = xp.print(fc).toString();
 				FileUtils.writeStringTo(fs, s, tf.getCacheFileName(project));
 			}
 			for (TokenFinderFactory tf : a.getSparqlFinders())
@@ -594,14 +590,11 @@ public class Main
 				{
 					list = new java.util.ArrayList<>();
 				}
+				FactoryCache fc = new FactoryCache(tf.getName(), list, tf.getId(), tf.expectedCount(), tf.finishedCount());
 				JsonPrinter xp = new JsonPrinter();
-				List<Object> to_serialize = new java.util.ArrayList<>();
-				to_serialize.add(tf.getId());
-				to_serialize.add(list);
-				String s = xp.print(to_serialize).toString();
+				String s = xp.print(fc).toString();
 				FileUtils.writeStringTo(fs, s, tf.getCacheFileName(project));
 			}
-			// fs.popd();
 		}
 	}
 
@@ -852,7 +845,7 @@ public class Main
 		s_stdout.italics();
 		s_stdout.print("Piglet");
 		s_stdout.fg(Color.PURPLE);
-		s_stdout.print(" v1.1.1");
+		s_stdout.print(" v1.2");
 		s_stdout.unitalics();
 		s_stdout.resetColors();
 		s_stdout.println(" - Analysis of Java source code");
