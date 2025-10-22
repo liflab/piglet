@@ -25,6 +25,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.ParseProblemException;
 
 import ca.uqac.lif.piglet.find.FoundToken;
@@ -96,8 +97,9 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 		}
 		try
 		{
-			CompilationUnit u = context.getParser().parse(code).getResult().get();
-			PushPopVisitableNode pm = new PushPopVisitableNode(u);
+			CompilationUnit cu = context.getParser().parse(code).getResult().get();
+			LexicalPreservingPrinter.setup(cu);
+			PushPopVisitableNode pm = new PushPopVisitableNode(cu);
 			ModelBuilder.ModelBuilderResult r = ModelBuilder.buildModel(pm, follow, context, file);
 			if(Thread.currentThread().isInterrupted()) { 
 				return found;

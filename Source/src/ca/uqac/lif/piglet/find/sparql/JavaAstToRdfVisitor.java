@@ -29,6 +29,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.comments.LineComment;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -176,10 +177,12 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			{
 				// Occurs when the type solver cannot reliably resolve the method;
 				// we silently ignore it
+				e.printStackTrace();
 			}
 			catch (UnsolvedSymbolException e)
 			{
 				// Ignored
+				e.printStackTrace();
 			}
 		}
 		stop();
@@ -413,6 +416,16 @@ public class JavaAstToRdfVisitor extends AstToRdfVisitor
 			to_explore.accept(body_visitor);
 			m_model.add(method_node, IN, body_visitor.getRoot());
 		}
+		stop();
+	}
+	
+	@Override
+	public void visit(LineComment n)
+	{
+		if (!genericVisit(n)) { stop(); return; }
+		Resource lc_node = m_parents.peek();
+		Literal name_node = m_model.createLiteral(n.asString());
+		m_model.add(lc_node, NAME, name_node);
 		stop();
 	}
 

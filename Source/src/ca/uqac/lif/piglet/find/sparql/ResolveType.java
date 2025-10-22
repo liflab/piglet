@@ -3,6 +3,7 @@ package ca.uqac.lif.piglet.find.sparql;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.nodeTypes.NodeWithType;
 import com.github.javaparser.resolution.TypeSolver;
 
 import ca.uqac.lif.piglet.util.TypeRdf;
@@ -25,6 +26,10 @@ public class ResolveType extends JavaAstNodeFunction
 	@Override
 	protected String calculateValue(Node n)
 	{
+		if (n instanceof NodeWithType<?,?>)
+		{
+			return TypeRdf.resolveTypeToString(((NodeWithType<?,?>) n).getType(), m_ts);
+		}
 		if (n instanceof ClassOrInterfaceDeclaration || n instanceof Expression)
 		{
 			return TypeRdf.resolveTypeToString(n, m_ts);

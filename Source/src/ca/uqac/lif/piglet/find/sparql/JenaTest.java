@@ -27,6 +27,7 @@ import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.pfunction.PropertyFunctionRegistry;
@@ -100,7 +101,7 @@ public class JenaTest
     		+ "      assertEquals(\"foo\", obj.x);\n"
     		+ "  }\n"
     		+ "}");*/
-		FileInputStream fis = new FileInputStream("/home/sylvain/Test.java");
+		FileInputStream fis = new FileInputStream("/home/sylvain/AssertionStudy/Repositories/debug/Foo.java");
 		ParseResult<CompilationUnit> cu = ctx.getParser().parse(fis);
 		fis.close();
     if (!cu.isSuccessful())
@@ -123,17 +124,19 @@ public class JenaTest
 	       (uri) -> new InstanceOf(ctx.getTypeSolver()));
 		
 		FileOutputStream fos = new FileOutputStream("/tmp/model.dot");
-		RdfRenderer renderer = new RdfRenderer(r.getModel());
-		renderer.toDot(new PrintStream(fos));
-		fos.close();;
-
+		Model m = r.getModel();
 		
-		ResultSet resultSet1 = QueryExecution.model(r.getModel())
+		ResultSet resultSet1 = QueryExecution.model(m)
 				//.query(prefixes + "SELECT ?name WHERE {   ?x lif:name \"assertTrue\" . ?x lif:args ?z . ?z lif:in ?y . ?y lif:nodetype \"NameExpr\" . ?y lif:name ?name }").select();
-				.query(prefixes + "SELECT ?n WHERE { ?t :annotations/:name \"Test\" ; :nodetype \"MethodDeclaration\" ; :in/(:in|:next)+ ?n . ?n :nodetype \"ReturnStmt\" .} "
+				.query(prefixes + "SELECT ?n WHERE { ?n :resolvedtype \"java.lang.Object\" } "
 						+ ""
 						).select();
     ResultSetFormatter.out(resultSet1);
+		
+		RdfRenderer renderer = new RdfRenderer(m);
+		renderer.toDot(new PrintStream(fos));
+		fos.close();
+    
     
 	}
 }

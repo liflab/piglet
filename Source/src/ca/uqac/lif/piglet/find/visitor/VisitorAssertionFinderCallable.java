@@ -24,6 +24,7 @@ import java.util.Set;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 
 import ca.uqac.lif.piglet.find.FoundToken;
 import ca.uqac.lif.piglet.find.TokenFinderCallable;
@@ -58,6 +59,7 @@ public class VisitorAssertionFinderCallable extends TokenFinderCallable
 		try
 		{
 			CompilationUnit u = context.getParser().parse(code).getResult().get();
+			LexicalPreservingPrinter.setup(u);
 			List<MethodDeclaration> methods = getTestCases(u);
 			/*if (methods.isEmpty() && !quiet)
 			{

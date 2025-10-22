@@ -97,6 +97,7 @@ public class VisitorAssertionFinderFactory extends TokenFinderFactory
 
 			code.append(new String(
 					FileUtils.toBytes(VisitorAssertionFinder.class.getResourceAsStream("bottom.bsh"))));
+			System.out.println("BeanShell code for finder \"" + name + "\":\n" + code.toString());
 			Object o = interpreter.eval(code.toString());
 			if (o == null || !(o instanceof VisitorAssertionFinderFactory))
 			{

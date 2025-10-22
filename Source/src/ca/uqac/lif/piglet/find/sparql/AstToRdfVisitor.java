@@ -1312,6 +1312,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	@Override
 	public void visit(MethodCallExpr n)
 	{
+		System.out.println("Visiting method call: " + n.getNameAsString());
 		if (!genericVisit(n))
 			m_shouldStop = true;
 	}
@@ -1319,6 +1320,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 	@Override
 	public void visit(MethodDeclaration n)
 	{
+		System.out.println("Visiting method: " + n.getNameAsString());
 		if (!genericVisit(n))
 			m_shouldStop = true;
 	}
@@ -1682,6 +1684,7 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 		handleAnnotations(n);
 		handleModifiers(n);
 		handleDeclaredType(n);
+		handleComments(n);
 		return true;
 	}
 
@@ -1818,6 +1821,20 @@ public abstract class AstToRdfVisitor implements PushPopVisitor
 				Literal mod_name = m_model.createLiteral(m.getKeyword().asString());
 				m_model.add(mod_node, NAME, mod_name);
 			});
+		}
+	}
+	
+	/**
+	 * Handles comments associated with a node, if any.
+	 * @param n The node to inspect
+	 */
+	private void handleComments(Node n)
+	{
+		if (n.getComment().isPresent())
+		{
+			String comment = n.getComment().get().getContent();
+			Literal comment_node = m_model.createLiteral(comment);
+			m_model.add(m_parents.peek(), NAME, comment_node);
 		}
 	}
 	
