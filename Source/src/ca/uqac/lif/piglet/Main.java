@@ -848,7 +848,7 @@ public class Main
 		s_stdout.italics();
 		s_stdout.print("Piglet");
 		s_stdout.fg(Color.PURPLE);
-		s_stdout.print(" v1.2");
+		s_stdout.print(" v1.2.1");
 		s_stdout.unitalics();
 		s_stdout.resetColors();
 		s_stdout.println(" - Analysis of Java source code");
