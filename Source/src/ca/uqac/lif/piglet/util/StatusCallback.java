@@ -47,12 +47,15 @@ public abstract class StatusCallback implements Runnable
 	/** The number of threads used */
 	protected final int m_numThreads;
 	
+	/** An optional filter condition */
+	protected final String m_filterCondition;
+	
 	/**
 	 * Creates a new status callback.
 	 * @param out The output printer
 	 * @param total The total number of items to process
 	 */
-	public StatusCallback(AnsiPrinter out, int total, int threads)
+	public StatusCallback(AnsiPrinter out, int total, int threads, String filter_condition)
 	{
 		super();
 		m_out = out;
@@ -60,6 +63,7 @@ public abstract class StatusCallback implements Runnable
 		m_currentlyDone = new AtomicInteger(0);
 		m_resolutionTimeouts = new AtomicInteger(0);
 		m_numThreads = threads;
+		m_filterCondition = filter_condition;
 	}
 	
 	public abstract void cleanup();

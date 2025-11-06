@@ -37,7 +37,10 @@ import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
 import ca.uqac.lif.fs.HardDisk;
 import ca.uqac.lif.piglet.find.FactoryCache;
+import ca.uqac.lif.piglet.find.FileFilter;
 import ca.uqac.lif.piglet.find.FoundToken;
+import ca.uqac.lif.piglet.find.PassthroughFileFilter;
+import ca.uqac.lif.piglet.find.SubstringFileFilter;
 import ca.uqac.lif.piglet.find.TokenFinderCallable;
 import ca.uqac.lif.piglet.find.TokenFinderFactory;
 import ca.uqac.lif.piglet.find.TokenFinderFactory.TokenFinderFactoryException;
@@ -66,6 +69,14 @@ public class Analysis implements Comparable<Analysis>
 		super();
 	}
 
+	/**
+	 * Compare this analysis to another by project name.
+	 *
+	 * @param o the other Analysis object to compare with
+	 * @return a negative integer, zero, or a positive integer as this
+	 *         object's project name is less than, equal to, or greater than
+	 *         the specified object's project name
+	 */
 	@Override
 	public int compareTo(Analysis o)
 	{
@@ -227,10 +238,26 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Minimal printout of progress to the console");
 			cli.addArgument(arg);
 		}
+		{
+			Argument arg = new Argument().withShortName("F").withLongName("filteron").withArgument("substring")
+				.withDescription("Only analyze files whose code contains the given substring");
+			cli.addArgument(arg);
+		}
 		return cli;
 	}
 
 
+	/**
+	 * Reads command line arguments into the provided Analysis object.
+	 * This method sets fields on the given Analysis instance according to
+	 * the options present in the parsed argument map.
+	 *
+	 * @param cli the command line parser used to display help and parse profiles
+	 * @param map the parsed argument map containing options and values
+	 * @param a   the Analysis object to populate
+	 * @throws AnalysisCliException if an error occurs while reading or parsing
+	 *                              numerical options
+	 */
 	protected static void read(CliParser cli, ArgumentMap map, Analysis a) throws AnalysisCliException
 	{
 		if (map == null)
@@ -303,7 +330,7 @@ public class Analysis implements Comparable<Analysis>
 			try
 			{
 				long to = Long.parseLong(map.getOptionValue("global-timeout").trim());
-				a.m_globalTimeout = to;
+			 a.m_globalTimeout = to;
 			}
 			catch (NumberFormatException e)
 			{
@@ -314,6 +341,10 @@ public class Analysis implements Comparable<Analysis>
 		{
 			a.getStdout().disableColors();
 			a.getStderr().disableColors();
+		}
+		if (map.containsKey("filteron"))
+		{
+			a.m_filterSubstring = map.getOptionValue("filteron");
 		}
 		if (map.containsKey("quiet"))
 		{
@@ -337,7 +368,7 @@ public class Analysis implements Comparable<Analysis>
 		}
 		if (map.containsKey("follow"))
 		{
-			a.setFollow(Integer.parseInt(map.getOptionValue("follow").trim()));
+		 a.setFollow(Integer.parseInt(map.getOptionValue("follow").trim()));
 		}
 		if (map.containsKey("source"))
 		{
@@ -375,11 +406,22 @@ public class Analysis implements Comparable<Analysis>
 		}
 	}
 
+	/**
+	 * Returns the repository path associated with this analysis.
+	 *
+	 * @return the repository path as a String (may be empty)
+	 */
 	public String getRepositoryPath()
 	{
 		return m_repositoryPath;
 	}
 
+	/**
+	 * Returns the path of the report file where results will be written.
+	 * If no output file has been set, a default name is returned.
+	 *
+	 * @return the report file path
+	 */
 	public String getReportPath()
 	{
 		if (m_outputFile == null || m_outputFile.isEmpty())
@@ -520,6 +562,12 @@ public class Analysis implements Comparable<Analysis>
 	protected Set<TokenFinderFactory> m_cachedFinders = new HashSet<>();
 	
 	/**
+	 * A substring to filter files on. If non-null, only files whose code
+	 * contains this substring will be analyzed.
+	 */
+	protected String m_filterSubstring = null;
+	
+	/**
 	 * The set of caches 
 	 */
 	protected Set<FactoryCache> m_caches = new HashSet<>();
@@ -541,113 +589,220 @@ public class Analysis implements Comparable<Analysis>
 
 	protected Map<Future<TokenFinderCallable.CallableFuture>,String> m_futureToFile = new IdentityHashMap<>();
 
+	/**
+	 * Sets the repository path used by the analysis.
+	 *
+	 * @param path the repository path to set
+	 */
 	public void setRepositoryPath(String path)
 	{
 		m_repositoryPath = path;
 	}
 
+	/**
+	 * Sets the printer used for standard output messages.
+	 *
+	 * @param stdout an AnsiPrinter to use for standard output
+	 */
 	public void setStdout(AnsiPrinter stdout)
 	{
 		m_stdout = stdout;
 	}
 
+	/**
+	 * Sets the printer used for error messages.
+	 *
+	 * @param stderr an AnsiPrinter to use for error output
+	 */
 	public void setStderr(AnsiPrinter stderr)
 	{
 		m_stderr = stderr;
 	}
 
+	/**
+	 * Gets the printer used for standard output.
+	 *
+	 * @return the AnsiPrinter used for standard output (may be null)
+	 */
 	public AnsiPrinter getStdout()
 	{
 		return m_stdout;
 	}
 
+	/**
+	 * Gets the printer used for error output.
+	 *
+	 * @return the AnsiPrinter used for error output (may be null)
+	 */
 	public AnsiPrinter getStderr()
 	{
 		return m_stderr;
 	}
 
+	/**
+	 * Returns the project name associated with this analysis.
+	 *
+	 * @return the project name (may be null)
+	 */
 	public String getProjectName()
 	{
 		return m_projectName;
 	}
 
+	/**
+	 * Sets the project name for this analysis (used for caching and display).
+	 *
+	 * @param projectName the project name to set
+	 */
 	public void setProjectName(String projectName)
 	{
 		this.m_projectName = projectName;
 	}
 
+	/**
+	 * Enable or disable display of unresolved symbols.
+	 *
+	 * @param unresolved true to show unresolved symbols, false otherwise
+	 */
 	public void setUnresolved(boolean unresolved)
 	{
 		this.m_unresolved = unresolved;
 	}
 
+	/**
+	 * Returns whether unresolved symbols are shown.
+	 *
+	 * @return true if unresolved symbols are shown, false otherwise
+	 */
 	public boolean getUnresolved()
 	{
 		return m_unresolved;
 	}
 
+	/**
+	 * Returns the additional source paths configured for the analysis.
+	 *
+	 * @return a list of source path strings
+	 */
 	public List<String> getSourcePaths()
 	{
 		return m_sourcePaths;
 	}
 
+	/**
+	 * Sets the additional source paths for the analysis.
+	 *
+	 * @param sourcePaths a list of source path strings
+	 */
 	public void setSourcePaths(List<String> sourcePaths)
 	{
 		this.m_sourcePaths = sourcePaths;
 	}
 
+	/**
+	 * Returns the set of additional jar paths configured for the analysis.
+	 *
+	 * @return a set of jar path strings
+	 */
 	public Set<String> getJarPaths()
 	{
 		return m_jarPaths;
 	}
 
+	/**
+	 * Sets the jar paths to use for the analysis.
+	 *
+	 * @param jarPaths a set of jar path strings
+	 */
 	public void setJarPaths(Set<String> jarPaths)
 	{
 		this.m_jarPaths = jarPaths;
 	}
 
+	/**
+	 * Returns the file name associated with a submitted future task.
+	 *
+	 * @param f the Future returned when submitting a TokenFinderCallable
+	 * @return the filename mapped to that future, or null if none
+	 */
 	public String getFileForFuture(Future<TokenFinderCallable.CallableFuture> f)
 	{
 		return m_futureToFile.get(f);
 	}
 
+	/**
+	 * Returns the status callback used to send notifications about the analysis.
+	 *
+	 * @return the StatusCallback instance (may be null)
+	 */
 	public StatusCallback getCallback()
 	{
 		return m_callback;
 	}
 
+	/**
+	 * Sets the status callback used during the analysis.
+	 *
+	 * @param callback the StatusCallback to set
+	 */
 	public void setCallback(StatusCallback callback)
 	{
 		this.m_callback = callback;
 	}
 
+	/**
+	 * Returns the home path (current working directory) for the analysis.
+	 *
+	 * @return the FilePath representing the home path
+	 */
 	public FilePath getHomePath()
 	{
 		return m_homePath;
 	}
 
+	/**
+	 * Returns the configured output file name for the analysis.
+	 *
+	 * @return the output file name, or null if none set
+	 */
 	public String getOutputFile()
 	{
 		return m_outputFile;
 	}
 
+	/**
+	 * Sets the output file name where analysis results will be written.
+	 *
+	 * @param outputFile the output file name to set
+	 */
 	public void setOutputFile(String outputFile)
 	{
 		this.m_outputFile = outputFile;
 	}
 
+	/**
+	 * Returns whether the analysis is in quiet mode (no error messages).
+	 *
+	 * @return true if quiet mode is enabled, false otherwise
+	 */
 	public boolean isQuiet()
 	{
 		return m_quiet;
 	}
 
+	/**
+	 * Enable or disable quiet mode for the analysis.
+	 *
+	 * @param quiet true to enable quiet mode, false to disable
+	 */
 	public void setQuiet(boolean quiet)
 	{
 		this.m_quiet = quiet;
 	}
-	
+
 	/**
-	 * Determines if a finder has cached results.
+	 * Determines if a finder (by name) has cached results.
+	 *
 	 * @param name The name of the finder
 	 * @return true if the finder has cached results, false otherwise
 	 */
@@ -656,111 +811,237 @@ public class Analysis implements Comparable<Analysis>
 		return m_cachedFinders.stream().anyMatch(f -> f.getName().equals(name));
 	}
 
+	/**
+	 * Returns the root package names configured for the analysis.
+	 *
+	 * @return an array of root package strings, or null if none
+	 */
 	public String[] getRoots()
 	{
 		return m_root;
 	}
 
+	/**
+	 * Sets the root package names to search in the source tree.
+	 *
+	 * @param roots an array of root package strings
+	 */
 	public void setRoots(String[] roots)
 	{
 		m_root = roots;
 	}
 
+	/**
+	 * Returns the number of threads configured for the analysis.
+	 *
+	 * @return the number of threads
+	 */
 	public int getThreads()
 	{
 		return m_threads;
 	}
 
+	/**
+	 * Sets the maximum number of threads to use for the analysis.
+	 *
+	 * @param threads the number of threads to use
+	 */
 	public void setThreads(int threads)
 	{
 		this.m_threads = threads;
 	}
 
+	/**
+	 * Returns whether only a summary is displayed at the command line.
+	 *
+	 * @return true if summary mode is enabled, false otherwise
+	 */
 	public boolean getSummary()
 	{
 		return m_summary;
 	}
 
+	/**
+	 * Enable or disable summary-only CLI output.
+	 *
+	 * @param summary true to enable summary mode, false to disable
+	 */
 	public void setSummary(boolean summary)
 	{
 		m_summary = summary;
 	}
 
+	/**
+	 * Returns the limit on the number of files to process (-1 means no limit).
+	 *
+	 * @return the file processing limit
+	 */
 	public int getLimit()
 	{
 		return m_limit;
 	}
 
+	/**
+	 * Sets a limit on the number of files to process (for testing purposes).
+	 *
+	 * @param limit the maximum number of files to process, or -1 for no limit
+	 */
 	public void setLimit(int limit)
 	{
 		this.m_limit = limit;
 	}
 
+	/**
+	 * Returns how deep method calls should be followed during analysis.
+	 *
+	 * @return the follow depth
+	 */
 	public int getFollow()
 	{
 		return m_follow;
 	}
 
+	/**
+	 * Sets the depth to which method calls should be followed.
+	 *
+	 * @param follow the follow depth
+	 */
 	public void setFollow(int follow)
 	{
 		this.m_follow = follow;
 	}
 
+	/**
+	 * Returns the timeout used for type resolution operations (ms).
+	 *
+	 * @return the resolution timeout in milliseconds
+	 */
 	public long getResolutionTimeout()
 	{
 		return m_resolutionTimeout;
 	}
 
+	/**
+	 * Sets the timeout used for type resolution operations (ms).
+	 *
+	 * @param resolutionTimeout the resolution timeout in milliseconds
+	 */
 	public void setResolutionTimeout(long resolutionTimeout)
 	{
 		this.m_resolutionTimeout = resolutionTimeout;
 	}
 
+	/**
+	 * Returns whether caching of analysis results is enabled.
+	 *
+	 * @return true if caching is enabled, false otherwise
+	 */
 	public boolean isCache()
 	{
 		return m_cache;
 	}
 
+	/**
+	 * Enable or disable caching of analysis results.
+	 *
+	 * @param cache true to enable caching, false to disable
+	 */
 	public void setCache(boolean cache)
 	{
 		this.m_cache = cache;
 	}
 
+	/**
+	 * Returns the folder name used for caching analysis results.
+	 *
+	 * @return the cache folder name
+	 */
 	public String getCacheFolder()
 	{
 		return m_cacheFolder;
 	}
 
+	/**
+	 * Sets the folder name used to store cached analysis results.
+	 *
+	 * @param cacheFolder the cache folder name to set
+	 */
 	public void setCacheFolder(String cacheFolder)
 	{
 		this.m_cacheFolder = cacheFolder;
 	}
 
+	/**
+	 * Returns the set of AST-based assertion finder factories configured.
+	 *
+	 * @return a set of VisitorAssertionFinderFactory instances
+	 */
 	public Set<VisitorAssertionFinderFactory> getAstFinders()
 	{
 		return m_visitorFinders;
 	}
+	
+	/**
+	 * Gets the file filter applied to files before analysis. If a substring
+	 * filter is configured, returns a SubstringFileFilter; otherwise returns
+	 * a PassthroughFileFilter.
+	 *
+	 * @return the FileFilter to use for the analysis
+	 */
+	public FileFilter getFilter()
+	{
+		if (m_filterSubstring != null)
+		{
+			return new SubstringFileFilter(m_filterSubstring);
+		}
+		return new PassthroughFileFilter();
+	}
 
+	/**
+	 * Sets the AST-based assertion finder factories to use during analysis.
+	 *
+	 * @param astFinders the set of VisitorAssertionFinderFactory instances
+	 */
 	public void setAstFinders(Set<VisitorAssertionFinderFactory> astFinders)
 	{
 		this.m_visitorFinders = astFinders;
 	}
 
+	/**
+	 * Returns the set of SPARQL-based assertion finder factories configured.
+	 *
+	 * @return a set of SparqlTokenFinderFactory instances
+	 */
 	public Set<SparqlTokenFinderFactory> getSparqlFinders()
 	{
 		return m_sparqlFinders;
 	}
 
+	/**
+	 * Sets the SPARQL-based assertion finder factories to use.
+	 *
+	 * @param sparqlFinders the set of SparqlTokenFinderFactory instances
+	 */
 	public void setSparqlFinders(Set<SparqlTokenFinderFactory> sparqlFinders)
 	{
 		this.m_sparqlFinders = sparqlFinders;
 	}
 
+	/**
+	 * Returns the set of token finder factories that had cached results.
+	 *
+	 * @return a set of TokenFinderFactory instances with cached results
+	 */
 	public Set<TokenFinderFactory> getCachedFinders()
 	{
 		return m_cachedFinders;
 	}
 
+	/**
+	 * Sets the set of token finder factories that had cached results.
+	 *
+	 * @param cachedFinders the set of TokenFinderFactory instances
+	 */
 	public void setCachedFinders(Set<TokenFinderFactory> cachedFinders)
 	{
 		this.m_cachedFinders = cachedFinders;
@@ -785,16 +1066,29 @@ public class Analysis implements Comparable<Analysis>
 	}
 
 	/**
-	 * Returns other command line arguments (not parsed)
-	 * @return The other arguments
+	 * Returns other command line arguments (not parsed).
+	 *
+	 * @return list of other arguments
 	 */
 	public List<String> getOthers()
 	{
 		return m_others;
 	}
 
+	/**
+	 * Processes a batch of files provided by a FileProvider and creates the
+	 * corresponding TokenFinderCallable tasks. This also incorporates any
+	 * cached found tokens from cached finders.
+	 *
+	 * @param provider the FileProvider supplying files to analyze
+	 * @param found    a set to which found tokens from caches will be added
+	 * @return a set of TokenFinderCallable tasks to execute
+	 * @throws IOException when an I/O error occurs
+	 * @throws FileSystemException when filesystem operations fail
+	 * @throws TokenFinderFactoryException when finder factory operations fail
+	 */
 	public Set<TokenFinderCallable> processBatch(FileProvider provider,
-			Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
+				Set<FoundToken> found) throws IOException, FileSystemException, TokenFinderFactoryException
 	{
 		List<FactoryCache> caches = checkCachedFinders();
 		m_caches.addAll(caches);
@@ -829,6 +1123,15 @@ public class Analysis implements Comparable<Analysis>
 		return tasks;
 	}
 
+	/**
+	 * Checks which configured finders have cached results and returns the
+	 * corresponding caches. This will remove factories that have valid caches
+	 * from the active finder sets and add them to the cached set.
+	 *
+	 * @return a list of FactoryCache objects representing available caches
+	 * @throws FileSystemException when filesystem operations fail
+	 * @throws TokenFinderFactoryException when factory operations fail
+	 */
 	protected List<FactoryCache> checkCachedFinders() throws FileSystemException, TokenFinderFactoryException
 	{
 		List<FactoryCache> all_cached = new ArrayList<>();
@@ -892,11 +1195,26 @@ public class Analysis implements Comparable<Analysis>
 		return all_cached;
 	}
 
+	/**
+	 * Displays usage information using the provided CliParser and the analysis'
+	 * configured stdout printer.
+	 *
+	 * @param cli the CliParser used to print help
+	 */
 	protected void showUsage(CliParser cli)
 	{
 		cli.printHelp("", m_stdout);
 	}
 
+	/**
+	 * Reads queries (BeanShell or SPARQL) from a file or directory and
+	 * populates the analysis with the corresponding finder factories. This
+	 * method clears any previously configured AST and SPARQL finders.
+	 *
+	 * @param a   the Analysis instance to populate
+	 * @param map the argument map containing the "query" option
+	 * @throws AnalysisCliException if an error occurs while reading factories
+	 */
 	protected static void fetchQueries(Analysis a, ArgumentMap map) throws AnalysisCliException
 	{
 		a.getAstFinders().clear(); // Override whatever the profile says
@@ -973,6 +1291,14 @@ public class Analysis implements Comparable<Analysis>
 		}
 	}
 
+	/**
+	 * Reads lines from an InputStream, skipping blank lines and lines
+	 * starting with '#'. The returned string concatenates the non-comment
+	 * lines separated by spaces.
+	 *
+	 * @param is the InputStream to read
+	 * @return a single String containing the non-comment lines separated by spaces
+	 */
 	protected static String readLinesWithComments(InputStream is)
 	{
 		StringBuilder contents = new StringBuilder();

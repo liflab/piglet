@@ -33,9 +33,9 @@ public class PrintoutCallback extends StatusCallback
 	 * @param out The output printer
 	 * @param total The total number of items to process
 	 */
-	public PrintoutCallback(AnsiPrinter out, int total, int threads)
+	public PrintoutCallback(AnsiPrinter out, int total, int threads, String filter_condition)
 	{
-		super(out, total, threads);
+		super(out, total, threads, filter_condition);
 		m_out.disableColors();
 	}
 	
@@ -50,6 +50,10 @@ public class PrintoutCallback extends StatusCallback
 	{
 		m_startTime = System.currentTimeMillis();
 		m_out.println("Project: " + m_currentProject);
+		if (!m_filterCondition.isEmpty())
+		{
+			m_out.println("Filter: " + m_filterCondition);
+		}
 		m_out.println("Starting processing of " + m_total + " items... (" + m_numThreads + " threads)");
 		printBar();
 		while (m_currentlyDone.get() < m_total)

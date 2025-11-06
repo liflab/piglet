@@ -19,15 +19,9 @@ package ca.uqac.lif.piglet.find;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.AnnotationExpr;
 
 import ca.uqac.lif.fs.FileSystemException;
 import ca.uqac.lif.fs.FileUtils;
@@ -91,46 +85,6 @@ public abstract class TokenFinderCallable implements Callable<TokenFinderCallabl
 		m_quiet = quiet;
 		m_callback = status;
 		m_finders = new HashSet<TokenFinderFactory>(finders);
-	}
-
-	/**
-	 * Gets the list of test cases in a compilation unit.
-	 * 
-	 * @param u
-	 *          The compilation unit
-	 * @return The list of test cases
-	 */
-	protected static List<MethodDeclaration> getTestCases(CompilationUnit u)
-	{
-		List<MethodDeclaration> list = new ArrayList<MethodDeclaration>();
-		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
-		for (MethodDeclaration m : methods)
-		{
-			// if (isTest(m))
-			{
-				list.add(m);
-			}
-		}
-		return list;
-	}
-
-	/**
-	 * Determines whether a method is a test case.
-	 * 
-	 * @param m
-	 *          The method
-	 * @return <tt>true</tt> if the method is a test case, <tt>false</tt> otherwise
-	 */
-	protected static boolean isTest(MethodDeclaration m)
-	{
-		for (AnnotationExpr a : m.getAnnotations())
-		{
-			if (a.getName().asString().compareTo("Test") == 0)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override

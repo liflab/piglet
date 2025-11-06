@@ -17,6 +17,7 @@
  */
 package ca.uqac.lif.piglet.find.visitor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -24,6 +25,7 @@ import java.util.Set;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 
 import ca.uqac.lif.piglet.find.FoundToken;
@@ -98,16 +100,42 @@ public class VisitorAssertionFinderCallable extends TokenFinderCallable
 	}
 	
 	/**
-	 * Processes a single Java file to find assertions.
-	 * @param p The Java parser to use
-	 * @param file The file name
-	 * @param code The contents of the file
-	 * @param finders The set of finders to use
-	 * @param found The set of found tokens
-	 * @param quiet Whether to suppress warnings
+	 * Gets the list of test cases in a compilation unit.
+	 * 
+	 * @param u
+	 *          The compilation unit
+	 * @return The list of test cases
 	 */
-	protected void processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet)
+	protected static List<MethodDeclaration> getTestCases(CompilationUnit u)
 	{
-		
+		List<MethodDeclaration> list = new ArrayList<MethodDeclaration>();
+		List<MethodDeclaration> methods = u.findAll(MethodDeclaration.class);
+		for (MethodDeclaration m : methods)
+		{
+			// if (isTest(m))
+			{
+				list.add(m);
+			}
+		}
+		return list;
+	}
+
+	/**
+	 * Determines whether a method is a test case.
+	 * 
+	 * @param m
+	 *          The method
+	 * @return <tt>true</tt> if the method is a test case, <tt>false</tt> otherwise
+	 */
+	protected static boolean isTest(MethodDeclaration m)
+	{
+		for (AnnotationExpr a : m.getAnnotations())
+		{
+			if (a.getName().asString().compareTo("Test") == 0)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

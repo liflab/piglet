@@ -48,6 +48,9 @@ public final class TokenFinderContext
 	 * A timeout for type resolution operations (in milliseconds).
 	 */
 	final long m_resolutionTimeout;
+	
+	/** The file filter to use */
+	final FileFilter m_filter;
 
 	/**
 	 * Creates a new thread context.
@@ -56,12 +59,13 @@ public final class TokenFinderContext
 	 * @param facade A Java parser facade
 	 * @param resolutionTimeout A timeout for type resolution operations (in milliseconds)
 	 */
-	public TokenFinderContext(CombinedTypeSolver ts, JavaParser parser, JavaParserFacade facade, long resolutionTimeout)
+	public TokenFinderContext(CombinedTypeSolver ts, JavaParser parser, JavaParserFacade facade, long resolutionTimeout, FileFilter filter)
 	{
 		this.ts = ts;
 		this.parser = parser;
 		this.facade = facade;
 		m_resolutionTimeout = resolutionTimeout;
+		m_filter = filter;
 	}
 	
 	/**
@@ -72,6 +76,15 @@ public final class TokenFinderContext
 	public CombinedTypeSolver getTypeSolver()
 	{
 		return ts;
+	}
+	
+	/**	
+	 * Gets the file filter.
+	 * @return The file filter
+	 */
+	public FileFilter getFileFilter()
+	{
+		return m_filter;
 	}
 	
 	/**

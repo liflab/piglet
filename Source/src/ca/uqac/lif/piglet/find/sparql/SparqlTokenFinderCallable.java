@@ -82,6 +82,11 @@ public class SparqlTokenFinderCallable extends TokenFinderCallable
 	protected Set<FoundToken> processFile(TokenFinderContext context, String file, String code, Set<? extends TokenFinderFactory> finders, boolean quiet, int follow) throws TokenFinderException
 	{
 		Set<FoundToken> found = new HashSet<>();
+		if (!context.getFileFilter().accept(code))
+		{
+			// File is filtered out
+			return found;
+		}
 		Set<SparqlTokenFinderFactory> localFinders = new HashSet<>();
 		for (TokenFinderFactory fac : finders)
 		{

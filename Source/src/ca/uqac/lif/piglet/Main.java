@@ -352,7 +352,7 @@ public class Main
 
 				return new TokenFinderContext(ts, new JavaParser(threadPc),
 						com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
-						resolution_timeout);
+						resolution_timeout, analysis.getFilter());
 			}
 			catch (Exception e)
 			{
@@ -365,12 +365,12 @@ public class Main
 		if (analysis.m_printout)
 		{
 			status = new PrintoutCallback(s_stdout,
-					(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total), analysis.getThreads());
+					(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total), analysis.getThreads(), analysis.m_filterSubstring != null ? analysis.m_filterSubstring : "");
 		}
 		else
 		{
 			status = new AnsiCallback(s_stdout,
-					(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total), analysis.getThreads());
+					(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total), analysis.getThreads(), analysis.m_filterSubstring != null ? analysis.m_filterSubstring : "");
 		}
 		analysis.setCallback(status);
 		if (analysis.m_globalTimeout > 0)
@@ -861,7 +861,7 @@ public class Main
 	{
 		if (printout)
 		{
-			s_stdout.println("Piglet v1.2.2b - Analysis of Java source code");
+			s_stdout.println("Piglet v1.3 - Analysis of Java source code");
 			s_stdout.println(
 					"\u00A9 2025 Laboratoire d'informatique formelle, Universit\u00E9 du Qu\u00E9bec \u00E0 Chicoutimi");
 		}
@@ -871,7 +871,7 @@ public class Main
 			s_stdout.italics();
 			s_stdout.print("Piglet");
 			s_stdout.fg(Color.PURPLE);
-			s_stdout.print(" v1.2.2b");
+			s_stdout.print(" v1.3");
 			s_stdout.unitalics();
 			s_stdout.resetColors();
 			s_stdout.println(" - Analysis of Java source code");

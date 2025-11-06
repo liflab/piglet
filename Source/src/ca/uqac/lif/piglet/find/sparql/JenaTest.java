@@ -84,7 +84,7 @@ public class JenaTest
 		        ts,
 		        new JavaParser(threadPc),
 		        com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade.get(ts),
-		        100
+		        100, new ca.uqac.lif.piglet.find.PassthroughFileFilter()
 		    );
 		  } catch (Exception e) {
 		    throw new RuntimeException("Failed to init per-thread context", e);

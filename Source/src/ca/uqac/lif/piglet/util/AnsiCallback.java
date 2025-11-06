@@ -34,9 +34,9 @@ public class AnsiCallback extends StatusCallback
 	 * @param out The output printer
 	 * @param total The total number of items to process
 	 */
-	public AnsiCallback(AnsiPrinter out, int total, int threads)
+	public AnsiCallback(AnsiPrinter out, int total, int threads, String filter_condition)
 	{
-		super(out, total, threads);
+		super(out, total, threads, filter_condition);
 		printBar();
 	}
 	
