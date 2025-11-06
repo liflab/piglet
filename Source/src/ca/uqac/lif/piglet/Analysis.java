@@ -222,6 +222,11 @@ public class Analysis implements Comparable<Analysis>
 				.withDescription("Export file to RDF");
 			cli.addArgument(arg);
 		}
+		{
+			Argument arg = new Argument().withShortName("P").withLongName("printout")
+				.withDescription("Minimal printout of progress to the console");
+			cli.addArgument(arg);
+		}
 		return cli;
 	}
 
@@ -245,6 +250,10 @@ public class Analysis implements Comparable<Analysis>
 		if (map.containsKey("force-cache"))
 		{
 			a.m_forceCache = true;
+		}
+		if (map.containsKey("printout"))
+		{
+			a.m_printout = true;
 		}
 		if (map.containsKey("project"))
 		{
@@ -445,6 +454,12 @@ public class Analysis implements Comparable<Analysis>
 	 * Depth to which method calls should be followed
 	 */
 	protected int m_follow = 0;
+	
+	/**
+	 * Whether to use a minimal printout of progress to the console
+	 * (default: false).
+	 */
+	protected boolean m_printout = false;
 
 	/**
 	 * Timeout for type resolution operations (in milliseconds)

@@ -75,9 +75,12 @@ import ca.uqac.lif.piglet.report.Report.ObjectReport;
 import ca.uqac.lif.piglet.report.Reporter.ReporterException;
 import ca.uqac.lif.piglet.util.Solvers;
 import ca.uqac.lif.piglet.util.StatusCallback;
+import ca.uqac.lif.piglet.util.AnsiCallback;
+import ca.uqac.lif.piglet.util.PrintoutCallback;
 import ca.uqac.lif.util.AnsiPrinter;
 import ca.uqac.lif.util.AnsiPrinter.Color;
 import ca.uqac.lif.util.CliParser;
+import ca.uqac.lif.util.CliParser.ArgumentMap;
 
 /**
  * Main class of the CodeFinder application. Parses command line arguments, sets
@@ -196,20 +199,23 @@ public class Main
 		{
 		}
 
-		/* Print greeting */
-		printGreeting();
-
 		/* Setup command line options */
 		CliParser cli = Analysis.setupCli();
 		final Set<Analysis> analyses = new TreeSet<>();
+		boolean printout = false;
 		try
 		{
-			Analysis.read(analyses, cli, cli.parse(args), s_stdout, s_stderr);
+			ArgumentMap amap = cli.parse(args);
+			printout = amap.containsKey("printout");
+			Analysis.read(analyses, cli, amap, s_stdout, s_stderr);
 		}
 		catch (AnalysisCliException e)
 		{
 			return handleException(e);
 		}
+		/* Print greeting */
+		printGreeting(printout);
+
 		/* Adding a shutdown hook to display/save partial results if interrupted */
 		Thread printingHook = new Thread(() -> {
 			try
@@ -250,9 +256,9 @@ public class Main
 				}
 				Analysis an = CURRENT_ANALYSIS;
 				if (an != null) {
-				  synchronized (found) {
-				    PER_PROJECT.put(an.getProjectName(), new TreeSet<>(found));
-				  }
+					synchronized (found) {
+						PER_PROJECT.put(an.getProjectName(), new TreeSet<>(found));
+					}
 				}
 
 				// 3) Same finalization path as normal completion
@@ -283,16 +289,16 @@ public class Main
 		}, "piglet-shutdown");
 		Runtime.getRuntime().addShutdownHook(printingHook);
 		for (Analysis a : analyses) {
-		  // Start this analysis with a clean bag
-		  synchronized (found) { found.clear(); }
+			// Start this analysis with a clean bag
+			synchronized (found) { found.clear(); }
 
-		  int ret = runAnalysis(a);
-		  if (ret != RET_OK) return ret;
+			int ret = runAnalysis(a);
+			if (ret != RET_OK) return ret;
 
-		  // Snapshot results for THIS project
-		  synchronized (found) {
-		    PER_PROJECT.put(a.getProjectName(), new TreeSet<>(found));
-		  }
+			// Snapshot results for THIS project
+			synchronized (found) {
+				PER_PROJECT.put(a.getProjectName(), new TreeSet<>(found));
+			}
 		}
 
 		// Remove the shutdown hook, we are done
@@ -339,9 +345,9 @@ public class Main
 				// Wire parser to THIS thread’s solver
 				ParserConfiguration threadPc = new ParserConfiguration()
 						.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)
-				    .setLexicalPreservationEnabled(true)
-				    .setStoreTokens(true)
-				    .setAttributeComments(true)
+						.setLexicalPreservationEnabled(true)
+						.setStoreTokens(true)
+						.setAttributeComments(true)
 						.setSymbolResolver(new com.github.javaparser.symbolsolver.JavaSymbolSolver(ts));
 
 				return new TokenFinderContext(ts, new JavaParser(threadPc),
@@ -355,8 +361,17 @@ public class Main
 		});
 
 		// Read file(s)
-		StatusCallback status = new StatusCallback(s_stdout,
-				(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total));
+		StatusCallback status;
+		if (analysis.m_printout)
+		{
+			status = new PrintoutCallback(s_stdout,
+					(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total), analysis.getThreads());
+		}
+		else
+		{
+			status = new AnsiCallback(s_stdout,
+					(analysis.getLimit() >= 0 ? Math.min(total, analysis.getLimit()) : total), analysis.getThreads());
+		}
 		analysis.setCallback(status);
 		if (analysis.m_globalTimeout > 0)
 		{
@@ -799,7 +814,7 @@ public class Main
 		{
 			for (Analysis analysis : analyses)
 			{
-		    Set<FoundToken> per = PER_PROJECT.getOrDefault(analysis.getProjectName(), Collections.emptySet());
+				Set<FoundToken> per = PER_PROJECT.getOrDefault(analysis.getProjectName(), Collections.emptySet());
 				try
 				{
 					finish(global, analysis, timeouts, per);
@@ -842,18 +857,27 @@ public class Main
 	/**
 	 * Prints a greeting to standard output, if the terminal supports it.
 	 */
-	protected static void printGreeting()
+	protected static void printGreeting(boolean printout)
 	{
-		s_stdout.fg(Color.LIGHT_PURPLE);
-		s_stdout.italics();
-		s_stdout.print("Piglet");
-		s_stdout.fg(Color.PURPLE);
-		s_stdout.print(" v1.2.1");
-		s_stdout.unitalics();
-		s_stdout.resetColors();
-		s_stdout.println(" - Analysis of Java source code");
-		s_stdout.println(
-				"\u00A9 2025 Laboratoire d'informatique formelle, Universit\u00E9 du Qu\u00E9bec \u00E0 Chicoutimi");
+		if (printout)
+		{
+			s_stdout.println("Piglet v1.2.2b - Analysis of Java source code");
+			s_stdout.println(
+					"\u00A9 2025 Laboratoire d'informatique formelle, Universit\u00E9 du Qu\u00E9bec \u00E0 Chicoutimi");
+		}
+		else
+		{
+			s_stdout.fg(Color.LIGHT_PURPLE);
+			s_stdout.italics();
+			s_stdout.print("Piglet");
+			s_stdout.fg(Color.PURPLE);
+			s_stdout.print(" v1.2.2b");
+			s_stdout.unitalics();
+			s_stdout.resetColors();
+			s_stdout.println(" - Analysis of Java source code");
+			s_stdout.println(
+					"\u00A9 2025 Laboratoire d'informatique formelle, Universit\u00E9 du Qu\u00E9bec \u00E0 Chicoutimi");
+		}
 
 		/*
 		 * if (Terminal.likelySupportsSixel()) { try { String sixel_data = new

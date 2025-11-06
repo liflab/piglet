@@ -26,7 +26,7 @@
   <antversion property="antversion.running" />
   
   <!-- The build script's version number. Do not edit! -->
-  <property name="antrun.version" value="1.11.2"/>
+  <property name="antrun.version" value="1.11.3"/>
   
   <!-- Load project properties from XML file -->
   <xmlproperty file="config.xml"/>
@@ -178,6 +178,7 @@
   <target name="compile" depends="init,junit,download-deps" description="Compile the sources">
     <mkdir dir="${build.bindir}"/>
     <javac
+      release="${build.targetjdk}"
       srcdir="${build.srcdir}"
       destdir="${build.bindir}"
       debug="${build.debug}"
